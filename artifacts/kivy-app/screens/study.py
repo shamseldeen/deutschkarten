@@ -2,17 +2,18 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.image import AsyncImage
 from kivy.graphics import Color, RoundedRectangle, Rectangle
 from kivy.metrics import dp
 from kivy.animation import Animation
-import api_client
+import local_storage
+import image_cache
 from utils import get_article_color, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY
 
 
-def rounded_btn(text, color, on_press, width=None):
-    kw = {'size_hint_x': None, 'width': width} if width else {}
+def _rnd_btn(text, color, on_press):
     b = Button(text=text, background_normal='', background_color=(0, 0, 0, 0),
-               color=(1, 1, 1, 1), bold=True, font_size=dp(14), **kw)
+               color=(1, 1, 1, 1), bold=True, font_size=dp(14))
     b.bind(on_release=lambda *a: on_press())
     with b.canvas.before:
         Color(*color)
@@ -22,148 +23,179 @@ def rounded_btn(text, color, on_press, width=None):
     return b
 
 
-class FlashCardWidget(BoxLayout):
-    """Card that flips between front (German) and back (translations)."""
-
+class CardImageBox(BoxLayout):
+    """Shows photo if available, otherwise article-coloured placeholder."""
     def __init__(self, card, **kwargs):
-        super().__init__(orientation='vertical', padding=dp(20),
-                         spacing=dp(10), **kwargs)
-        self.card = card
-        self._showing_front = True
-        self._build_front()
+        super().__init__(size_hint_y=None, height=dp(150),
+                         orientation='vertical', **kwargs)
+        article_color = get_article_color(card.get('article'))
+        url = card.get('imageUrl')
 
+        cached = image_cache.get_cached_path(url) if url else None
+        if cached:
+            self.add_widget(AsyncImage(source=cached, allow_stretch=True,
+                                       keep_ratio=True))
+        elif url:
+            # Placeholder while downloading
+            self._placeholder(article_color, card.get('article') or '•')
+            image_cache.fetch_image(url, self._on_image)
+        else:
+            self._placeholder(article_color, card.get('article') or '•')
+
+    def _placeholder(self, color, text):
+        box = BoxLayout()
+        with box.canvas.before:
+            Color(*color)
+            rr = RoundedRectangle(pos=box.pos, size=box.size, radius=[dp(12)])
+        box.bind(pos=lambda w, v: setattr(rr, 'pos', v),
+                 size=lambda w, v: setattr(rr, 'size', v))
+        lbl = Label(text=text, bold=True, font_size=dp(36), color=(1, 1, 1, 1))
+        box.add_widget(lbl)
+        self._ph = box
+        self.add_widget(box)
+
+    def _on_image(self, path):
+        if path:
+            self.clear_widgets()
+            self.add_widget(AsyncImage(source=path, allow_stretch=True,
+                                        keep_ratio=True))
+
+
+class FlashCardWidget(BoxLayout):
+    def __init__(self, card, **kwargs):
+        super().__init__(orientation='vertical', padding=dp(16),
+                         spacing=dp(8), **kwargs)
+        self.card = card
+        self._front = True
         with self.canvas.before:
             Color(*CARD_BG)
-            self._bg_rect = RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(16)])
-        self.bind(pos=lambda w, v: setattr(self._bg_rect, 'pos', v),
-                  size=lambda w, v: setattr(self._bg_rect, 'size', v))
+            self._bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(16)])
+        self.bind(pos=lambda w, v: setattr(self._bg, 'pos', v),
+                  size=lambda w, v: setattr(self._bg, 'size', v))
+        self._show_front()
+        self.bind(on_touch_up=self._on_tap)
 
     def _clear(self):
         self.clear_widgets()
 
-    def _build_front(self):
+    def _show_front(self):
         self._clear()
         card = self.card
+        level_color  = get_level_color(card.get('level', 'A1'))
         article_color = get_article_color(card.get('article'))
-        level_color = get_level_color(card.get('level', 'A1'))
 
-        # Level badge
-        badge_row = BoxLayout(size_hint_y=None, height=dp(30))
+        # Badge + category row
+        top = BoxLayout(size_hint_y=None, height=dp(28))
         badge = Label(text=card.get('level', ''), bold=True, color=(1, 1, 1, 1),
                       size_hint=(None, None), size=(dp(40), dp(24)))
         with badge.canvas.before:
             Color(*level_color)
-            b_bg = RoundedRectangle(pos=badge.pos, size=badge.size, radius=[dp(6)])
-        badge.bind(pos=lambda w, v: setattr(b_bg, 'pos', v),
-                   size=lambda w, v: setattr(b_bg, 'size', v))
+            bb = RoundedRectangle(pos=badge.pos, size=badge.size, radius=[dp(6)])
+        badge.bind(pos=lambda w, v: setattr(bb, 'pos', v),
+                   size=lambda w, v: setattr(bb, 'size', v))
         cat = Label(text=card.get('category', '').upper(), color=TEXT_GREY,
                     font_size=dp(11), halign='right', text_size=(None, None))
         cat.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        badge_row.add_widget(badge)
-        badge_row.add_widget(cat)
-        self.add_widget(badge_row)
+        top.add_widget(badge)
+        top.add_widget(cat)
+        self.add_widget(top)
 
-        # German word (article colored)
-        word_box = BoxLayout(size_hint_y=None, height=dp(60),
-                             orientation='horizontal')
+        # Photo / placeholder
+        self.add_widget(CardImageBox(card))
+
+        # German word
+        word_row = BoxLayout(size_hint_y=None, height=dp(48), spacing=dp(4))
         article = card.get('article', '')
         if article:
-            art_lbl = Label(text=article, bold=True, font_size=dp(28),
-                            color=article_color, size_hint_x=None,
-                            width=dp(60), halign='right',
-                            text_size=(dp(60), None))
-            word_box.add_widget(art_lbl)
-        base_lbl = Label(text=card.get('baseWord', card.get('word', '')),
-                         bold=True, font_size=dp(28), color=TEXT_DARK,
-                         halign='left', text_size=(None, None))
-        base_lbl.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        word_box.add_widget(base_lbl)
-        self.add_widget(word_box)
+            art = Label(text=article, bold=True, font_size=dp(26),
+                        color=article_color, size_hint_x=None, width=dp(54),
+                        halign='right', text_size=(dp(54), None))
+            word_row.add_widget(art)
+        base = Label(text=card.get('baseWord', card.get('word', '')),
+                     bold=True, font_size=dp(26), color=TEXT_DARK,
+                     halign='left', text_size=(None, None))
+        base.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
+        word_row.add_widget(base)
+        self.add_widget(word_row)
 
-        # Pronunciation hint
-        self.add_widget(Label(text='Tap card to reveal translation',
-                              color=TEXT_GREY, font_size=dp(12),
-                              size_hint_y=None, height=dp(20)))
+        # Speak + flip hint
+        bottom = BoxLayout(size_hint_y=None, height=dp(36), spacing=dp(8))
+        speak = Button(text='🔊 Pronounce', background_normal='',
+                       background_color=(0, 0, 0, 0), color=(0.13, 0.59, 0.95, 1),
+                       bold=True, font_size=dp(13), size_hint_x=None, width=dp(140))
+        speak.bind(on_release=lambda *a: self._speak())
+        with speak.canvas.before:
+            Color(0.13, 0.59, 0.95, 0.12)
+            sb = RoundedRectangle(pos=speak.pos, size=speak.size, radius=[dp(8)])
+        speak.bind(pos=lambda w, v: setattr(sb, 'pos', v),
+                   size=lambda w, v: setattr(sb, 'size', v))
+        hint = Label(text='Tap card to flip', color=TEXT_GREY, font_size=dp(11),
+                     halign='right', text_size=(None, None))
+        hint.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
+        bottom.add_widget(speak)
+        bottom.add_widget(hint)
+        self.add_widget(bottom)
 
-        # Spacer
-        self.add_widget(Label())
-
-        # Speak button
-        speak_btn = rounded_btn('🔊  Pronounce', (0.13, 0.59, 0.95, 1),
-                                lambda: self._speak(), width=dp(140))
-        speak_row = BoxLayout(size_hint_y=None, height=dp(40))
-        speak_row.add_widget(Label())
-        speak_row.add_widget(speak_btn)
-        speak_row.add_widget(Label())
-        self.add_widget(speak_row)
-
-        # Tap to flip
-        self.bind(on_touch_up=self._on_tap)
-
-    def _build_back(self):
+    def _show_back(self):
         self._clear()
         self.unbind(on_touch_up=self._on_tap)
         card = self.card
 
-        # English
-        self.add_widget(Label(text='English', color=TEXT_GREY, font_size=dp(11),
-                              size_hint_y=None, height=dp(18), halign='left',
-                              text_size=(None, None)))
-        en = Label(text=card.get('englishTranslation', ''), bold=True,
-                   font_size=dp(20), color=TEXT_DARK, size_hint_y=None,
-                   height=dp(36), halign='left', text_size=(None, None))
-        en.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        self.add_widget(en)
+        for label, key, align in [
+            ('English', 'englishTranslation', 'left'),
+            ('Arabic  (العربية)', 'arabicTranslation', 'right'),
+        ]:
+            self.add_widget(Label(text=label, color=TEXT_GREY, font_size=dp(11),
+                                  size_hint_y=None, height=dp(16),
+                                  halign=align, text_size=(None, None)))
+            val = Label(text=card.get(key, ''), bold=True, font_size=dp(20),
+                        color=TEXT_DARK, size_hint_y=None, height=dp(34),
+                        halign=align, text_size=(None, None))
+            val.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
+            self.add_widget(val)
 
-        # Arabic (RTL)
-        self.add_widget(Label(text='العربية', color=TEXT_GREY, font_size=dp(11),
-                              size_hint_y=None, height=dp(18), halign='right',
-                              text_size=(None, None)))
-        ar = Label(text=card.get('arabicTranslation', ''), font_size=dp(20),
-                   bold=True, color=TEXT_DARK, size_hint_y=None, height=dp(36),
-                   halign='right', text_size=(None, None))
-        ar.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        self.add_widget(ar)
+        self.add_widget(Label(text='Example sentence', color=TEXT_GREY,
+                              font_size=dp(11), size_hint_y=None, height=dp(16)))
+        for key in ('exampleSentenceDe', 'exampleSentenceEn'):
+            ex = Label(text=card.get(key, ''), color=(0.3, 0.3, 0.3, 1),
+                       font_size=dp(12), halign='left', text_size=(None, None))
+            ex.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
+            self.add_widget(ex)
 
-        # Example sentence
-        self.add_widget(Label(text='Example', color=TEXT_GREY, font_size=dp(11),
-                              size_hint_y=None, height=dp(18)))
-        ex = Label(text=card.get('exampleSentenceDe', ''), color=(0.3, 0.3, 0.3, 1),
-                   font_size=dp(13), halign='left', text_size=(None, None))
-        ex.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        self.add_widget(ex)
-        ex_en = Label(text=card.get('exampleSentenceEn', ''), color=TEXT_GREY,
-                      font_size=dp(12), halign='left', text_size=(None, None))
-        ex_en.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        self.add_widget(ex_en)
+        # Speak again on back
+        speak = Button(text='🔊 Pronounce', background_normal='',
+                       background_color=(0, 0, 0, 0), color=(0.13, 0.59, 0.95, 1),
+                       bold=True, font_size=dp(13), size_hint_y=None, height=dp(34))
+        speak.bind(on_release=lambda *a: self._speak())
+        self.add_widget(speak)
 
     def _on_tap(self, widget, touch):
-        if self.collide_point(*touch.pos) and touch.is_mouse_scrolling is False:
-            self.flip()
+        if self.collide_point(*touch.pos) and not getattr(touch, 'is_mouse_scrolling', False):
+            self._flip()
 
-    def flip(self):
-        def _swap(anim, widget):
-            if self._showing_front:
-                self._build_back()
+    def _flip(self):
+        def _swap(anim, w):
+            if self._front:
+                self._show_back()
             else:
-                self._build_front()
-            self._showing_front = not self._showing_front
+                self._show_front()
+            self._front = not self._front
             Animation(size_hint_x=1, duration=0.12).start(self)
-
         anim = Animation(size_hint_x=0, duration=0.12)
         anim.bind(on_complete=_swap)
         anim.start(self)
 
     def _speak(self):
+        word = self.card.get('word', '')
         try:
             import pyttsx3
             engine = pyttsx3.init()
-            for voice in engine.getProperty('voices'):
-                if 'german' in voice.name.lower() or 'de' in voice.id.lower():
-                    engine.setProperty('voice', voice.id)
+            for v in engine.getProperty('voices'):
+                if 'german' in v.name.lower() or 'de' in v.id.lower():
+                    engine.setProperty('voice', v.id)
                     break
             engine.setProperty('rate', 130)
-            engine.say(self.card.get('word', ''))
+            engine.say(word)
             engine.runAndWait()
         except Exception:
             pass
@@ -175,7 +207,6 @@ class StudyScreen(Screen):
         self._level = 'A1'
         self._cards = []
         self._idx = 0
-        self._card_widget = None
         self._build()
 
     def set_level(self, level):
@@ -190,93 +221,64 @@ class StudyScreen(Screen):
 
         root = BoxLayout(orientation='vertical', padding=dp(16), spacing=dp(12))
 
-        # Top bar
         top = BoxLayout(size_hint_y=None, height=dp(46))
-        back_btn = rounded_btn('← Back', (0.5, 0.5, 0.5, 1),
-                               lambda: self._go_back(), width=dp(80))
-        self._title_lbl = Label(text='STUDY', bold=True, color=TEXT_DARK,
-                                font_size=dp(16))
-        self._counter_lbl = Label(text='', color=TEXT_GREY, font_size=dp(14),
-                                  size_hint_x=None, width=dp(60), halign='right',
-                                  text_size=(None, None))
-        self._counter_lbl.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        top.add_widget(back_btn)
+        back = _rnd_btn('← Back', (0.6, 0.6, 0.6, 1), self._go_back)
+        back.size_hint_x = None
+        back.width = dp(80)
+        self._title_lbl = Label(text='STUDY', bold=True, color=TEXT_DARK, font_size=dp(16))
+        self._counter = Label(text='', color=TEXT_GREY, font_size=dp(14),
+                              size_hint_x=None, width=dp(60),
+                              halign='right', text_size=(None, None))
+        self._counter.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
+        top.add_widget(back)
         top.add_widget(self._title_lbl)
-        top.add_widget(self._counter_lbl)
+        top.add_widget(self._counter)
         root.add_widget(top)
 
-        # Card area
         self._card_area = BoxLayout(orientation='vertical')
-        self._status_lbl = Label(text='Loading…', color=TEXT_GREY, font_size=dp(15))
-        self._card_area.add_widget(self._status_lbl)
+        self._card_area.add_widget(Label(text='Loading…', color=TEXT_GREY))
         root.add_widget(self._card_area)
 
-        # Action buttons
         actions = BoxLayout(size_hint_y=None, height=dp(52), spacing=dp(12))
-        self._unknown_btn = rounded_btn('✗  Unknown', (0.96, 0.26, 0.21, 1),
-                                        self._mark_unknown)
-        self._known_btn = rounded_btn('✓  Known', (0.30, 0.69, 0.31, 1),
-                                      self._mark_known)
-        actions.add_widget(self._unknown_btn)
-        actions.add_widget(self._known_btn)
+        actions.add_widget(_rnd_btn('✗  Unknown', (0.96, 0.26, 0.21, 1), self._mark_unknown))
+        actions.add_widget(_rnd_btn('✓  Known',   (0.30, 0.69, 0.31, 1), self._mark_known))
         root.add_widget(actions)
 
-        # Next / Prev
         nav = BoxLayout(size_hint_y=None, height=dp(40), spacing=dp(12))
-        prev_btn = rounded_btn('← Prev', (0.7, 0.7, 0.7, 1), self._prev)
-        next_btn = rounded_btn('Next →', (0.7, 0.7, 0.7, 1), self._next)
-        nav.add_widget(prev_btn)
-        nav.add_widget(next_btn)
+        nav.add_widget(_rnd_btn('← Prev', (0.7, 0.7, 0.7, 1), self._prev))
+        nav.add_widget(_rnd_btn('Next →', (0.7, 0.7, 0.7, 1), self._next))
         root.add_widget(nav)
 
         self.add_widget(root)
 
     def on_enter(self):
         self._title_lbl.text = f'{self._level} STUDY'
-        self._cards = []
         self._idx = 0
-        self._status('Loading…')
-        api_client.list_flashcards(level=self._level, limit=50,
-                                   callback=self._on_cards,
-                                   error_callback=self._on_error)
-
-    def _on_cards(self, data):
+        data = local_storage.get_cards(level=self._level, limit=50)
         self._cards = data.get('items', [])
-        if not self._cards:
-            self._status('No cards found for this level.')
-            return
-        self._show_card()
-
-    def _on_error(self, msg):
-        self._status(f'Error: {msg}')
+        if self._cards:
+            self._show_card()
+        else:
+            self._status('No cards for this level.')
 
     def _status(self, msg):
         self._card_area.clear_widgets()
-        self._card_widget = None
-        self._counter_lbl.text = ''
+        self._counter.text = ''
         self._card_area.add_widget(Label(text=msg, color=TEXT_GREY, font_size=dp(14)))
 
     def _show_card(self):
-        if not self._cards:
-            return
         card = self._cards[self._idx]
-        self._counter_lbl.text = f'{self._idx + 1}/{len(self._cards)}'
+        self._counter.text = f'{self._idx + 1}/{len(self._cards)}'
         self._card_area.clear_widgets()
-        cw = FlashCardWidget(card)
-        self._card_widget = cw
-        self._card_area.add_widget(cw)
+        self._card_area.add_widget(FlashCardWidget(card))
 
-    def _mark_known(self):
-        self._mark(True)
-
-    def _mark_unknown(self):
-        self._mark(False)
+    def _mark_known(self):   self._mark(True)
+    def _mark_unknown(self): self._mark(False)
 
     def _mark(self, known):
         if not self._cards:
             return
-        card = self._cards[self._idx]
-        api_client.update_progress(card['id'], known)
+        local_storage.update_progress(self._cards[self._idx]['id'], known)
         self._next()
 
     def _next(self):
