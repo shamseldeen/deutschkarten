@@ -194,19 +194,18 @@ class FlashCardWidget(BoxLayout):
         anim.start(self)
 
     def _speak(self):
+        from tts import speak as tts_speak, last_error
+        from kivy.uix.popup import Popup
+        from kivy.uix.label import Label as _L
         word = self.card.get('word', '')
-        try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            for v in engine.getProperty('voices'):
-                if 'german' in v.name.lower() or 'de' in v.id.lower():
-                    engine.setProperty('voice', v.id)
-                    break
-            engine.setProperty('rate', 130)
-            engine.say(word)
-            engine.runAndWait()
-        except Exception:
-            pass
+        tts_speak(word)
+        err = last_error()
+        if err:
+            Popup(title='Pronunciation unavailable',
+                  content=_L(text=err + '\n\nOn Windows, ensure a German voice is\n'
+                                        'installed: Settings → Time & Language →\n'
+                                        'Speech → Add voice → German.'),
+                  size_hint=(0.85, 0.4)).open()
 
 
 class StudyScreen(Screen):
