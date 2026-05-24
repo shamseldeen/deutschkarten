@@ -1,22 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: German Flashcard App API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: flashcards
+    description: German flashcard operations
+  - name: progress
+    description: User study progress
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +26,158 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /flashcards:
+    get:
+      operationId: listFlashcards
+      tags: [flashcards]
+      summary: List flashcards with optional level filter
+      parameters:
+        - name: level
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [A1, A2, B1, B2, C1]
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of flashcards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlashcardList"
+
+  /flashcards/generate:
+    post:
+      operationId: generateFlashcards
+      tags: [flashcards]
+      summary: Generate new flashcards using AI for a specific level
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashcardGenerateInput"
+      responses:
+        "201":
+          description: Generated flashcards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Flashcard"
+
+  /flashcards/stats:
+    get:
+      operationId: getFlashcardStats
+      tags: [flashcards]
+      summary: Get study stats grouped by level
+      responses:
+        "200":
+          description: Stats by level
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LevelStats"
+
+  /flashcards/daily:
+    get:
+      operationId: getDailyFlashcards
+      tags: [flashcards]
+      summary: Get today's recommended flashcard set
+      parameters:
+        - name: level
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [A1, A2, B1, B2, C1]
+      responses:
+        "200":
+          description: Daily flashcard set
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Flashcard"
+
+  /flashcards/{id}:
+    get:
+      operationId: getFlashcard
+      tags: [flashcards]
+      summary: Get a single flashcard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A flashcard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flashcard"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /flashcards/{id}/progress:
+    patch:
+      operationId: updateFlashcardProgress
+      tags: [progress]
+      summary: Mark a flashcard as known or unknown
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgressUpdate"
+      responses:
+        "200":
+          description: Updated flashcard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flashcard"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +188,123 @@ components:
       required:
         - status
 
+    Flashcard:
+      type: object
+      properties:
+        id:
+          type: integer
+        word:
+          type: string
+          description: German word with article e.g. "der Hund"
+        article:
+          type: ["string", "null"]
+          description: der / die / das / null for verbs/adjectives
+        baseWord:
+          type: string
+          description: The word without article
+        level:
+          type: string
+          enum: [A1, A2, B1, B2, C1]
+        category:
+          type: string
+        englishTranslation:
+          type: string
+        arabicTranslation:
+          type: string
+        exampleSentenceDe:
+          type: string
+        exampleSentenceEn:
+          type: string
+        exampleSentenceAr:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        known:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - word
+        - article
+        - baseWord
+        - level
+        - category
+        - englishTranslation
+        - arabicTranslation
+        - exampleSentenceDe
+        - exampleSentenceEn
+        - exampleSentenceAr
+        - imageUrl
+        - known
+        - createdAt
+
+    FlashcardList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Flashcard"
+        total:
+          type: integer
+        offset:
+          type: integer
+        limit:
+          type: integer
+      required:
+        - items
+        - total
+        - offset
+        - limit
+
+    FlashcardGenerateInput:
+      type: object
+      properties:
+        level:
+          type: string
+          enum: [A1, A2, B1, B2, C1]
+        category:
+          type: string
+        count:
+          type: integer
+          default: 10
+      required:
+        - level
+
+    LevelStats:
+      type: object
+      properties:
+        level:
+          type: string
+        total:
+          type: integer
+        known:
+          type: integer
+        unknown:
+          type: integer
+        percentage:
+          type: integer
+      required:
+        - level
+        - total
+        - known
+        - unknown
+        - percentage
+
+    ProgressUpdate:
+      type: object
+      properties:
+        known:
+          type: boolean
+      required:
+        - known
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

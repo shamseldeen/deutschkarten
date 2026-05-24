@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "oRYA8vuIgmAEnYaaBVYDO"
+uri = "file://artifacts/german-flashcards-mobile/assets/images/icon.png"
+type = "image"
+title = "german flashcard app icon"
+
+[[generated]]
+id = "QI4f4lK6ebwnVOhR0jdik"
+uri = "file://artifacts/german-flashcards-mobile/assets/images/splash-icon.png"
+type = "image"
+title = "german flashcard splash"
+
+[[generated]]
+id = "0primnodgQ3vl7068_Uuh"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "deutschkarten app icon"
