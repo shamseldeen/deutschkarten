@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { flashcardsTable } from "@workspace/db";
+import { flashcardsTable, userProgressTable, userStreaksTable } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { getAuth } from "@clerk/express";
+import { randomUUID } from "crypto";
 import {
   ListFlashcardsQueryParams,
   GenerateFlashcardsBody,
@@ -78,23 +80,50 @@ router.get("/flashcards", async (req, res) => {
 });
 
 // GET /api/flashcards/stats
-router.get("/flashcards/stats", async (_req, res) => {
+router.get("/flashcards/stats", async (req, res) => {
+  const userId = getAuth(req)?.userId ?? null;
   const levels = ["A1", "A2", "B1", "B2", "C1"];
+
+  if (userId) {
+    const rows = await db
+      .select({
+        level: flashcardsTable.level,
+        total: sql<number>`count(${flashcardsTable.id})::int`,
+        known: sql<number>`count(case when ${userProgressTable.known} = 1 then 1 end)::int`,
+      })
+      .from(flashcardsTable)
+      .leftJoin(
+        userProgressTable,
+        and(
+          eq(userProgressTable.flashcardId, flashcardsTable.id),
+          eq(userProgressTable.userId, userId),
+        ),
+      )
+      .groupBy(flashcardsTable.level);
+
+      const byLevel = new Map(rows.map((r) => [r.level, r]));
+      const stats = levels.map((level) => {
+        const r = byLevel.get(level) ?? { total: 0, known: 0 };
+        return {
+          level,
+          total: r.total,
+          known: r.known,
+          unknown: r.total - r.known,
+          percentage: r.total > 0 ? Math.round((r.known / r.total) * 100) : 0,
+        };
+      });
+      res.json(stats);
+      return;
+  }
+
   const stats = await Promise.all(
     levels.map(async (level) => {
       const rows = await db
-        .select({ known: flashcardsTable.known })
+        .select({ id: flashcardsTable.id })
         .from(flashcardsTable)
         .where(eq(flashcardsTable.level, level));
       const total = rows.length;
-      const known = rows.filter((r) => r.known).length;
-      return {
-        level,
-        total,
-        known,
-        unknown: total - known,
-        percentage: total > 0 ? Math.round((known / total) * 100) : 0,
-      };
+      return { level, total, known: 0, unknown: total, percentage: 0 };
     })
   );
   res.json(stats);
@@ -260,16 +289,81 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
     return;
   }
 
-  const [updated] = await db
-    .update(flashcardsTable)
-    .set({ known: bodyParsed.data.known })
-    .where(eq(flashcardsTable.id, paramsParsed.data.id))
-    .returning();
+  const userId = getAuth(req)?.userId ?? null;
+  const flashcardId = paramsParsed.data.id;
+  const known = bodyParsed.data.known;
 
-  if (!updated) {
+  const [card] = await db
+    .select()
+    .from(flashcardsTable)
+    .where(eq(flashcardsTable.id, flashcardId))
+    .limit(1);
+
+  if (!card) {
     res.status(404).json({ error: "Flashcard not found" });
     return;
   }
+
+  if (userId) {
+    await db
+      .insert(userProgressTable)
+      .values({
+        id: randomUUID(),
+        userId,
+        flashcardId,
+        known: known ? 1 : 0,
+        timesReviewed: 1,
+        lastReviewedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [userProgressTable.userId, userProgressTable.flashcardId],
+        set: {
+          known: known ? 1 : 0,
+          timesReviewed: sql`${userProgressTable.timesReviewed} + 1`,
+          lastReviewedAt: new Date(),
+        },
+      });
+
+    // bump streak inline
+    const today = new Date().toISOString().slice(0, 10);
+    const [s] = await db
+      .select()
+      .from(userStreaksTable)
+      .where(eq(userStreaksTable.userId, userId))
+      .limit(1);
+
+    if (!s) {
+      await db.insert(userStreaksTable).values({
+        userId,
+        currentStreak: 1,
+        longestStreak: 1,
+        lastActiveDate: today,
+      });
+    } else if (s.lastActiveDate !== today) {
+      const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+      const isConsecutive = s.lastActiveDate === yesterday;
+      const newCurrent = isConsecutive ? s.currentStreak + 1 : 1;
+      await db
+        .update(userStreaksTable)
+        .set({
+          currentStreak: newCurrent,
+          longestStreak: Math.max(newCurrent, s.longestStreak),
+          lastActiveDate: today,
+          updatedAt: new Date(),
+        })
+        .where(eq(userStreaksTable.userId, userId));
+    }
+
+    res.json({ ...card, known });
+    return;
+  }
+
+  // anonymous: update shared known (legacy behavior)
+  const [updated] = await db
+    .update(flashcardsTable)
+    .set({ known })
+    .where(eq(flashcardsTable.id, flashcardId))
+    .returning();
   res.json(updated);
 });
 

@@ -12,7 +12,9 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { setApiBaseUrl } from "@/lib/api";
+import { ClerkProvider, useAuth } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
+import { setApiBaseUrl, setAuthTokenGetter } from "@/lib/api";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -20,15 +22,33 @@ const PROD_API = process.env.EXPO_PUBLIC_API_BASE_URL;
 const DEV_DOMAIN = process.env.EXPO_PUBLIC_DOMAIN;
 setApiBaseUrl(PROD_API ?? (DEV_DOMAIN ? `https://${DEV_DOMAIN}` : ""));
 
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+function AuthBridge() {
+  const { getToken } = useAuth();
+  useEffect(() => {
+    setAuthTokenGetter(async () => {
+      try {
+        return await getToken();
+      } catch {
+        return null;
+      }
+    });
+  }, [getToken]);
+  return null;
+}
 
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="study/[level]" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false, presentation: "modal" }} />
+      <Stack.Screen name="(auth)/sign-up" options={{ headerShown: false, presentation: "modal" }} />
     </Stack>
   );
 }
@@ -49,17 +69,37 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) return null;
 
+  if (!CLERK_PUBLISHABLE_KEY) {
+    console.warn("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY — running without auth");
+    return (
+      <SafeAreaProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView>
-            <KeyboardProvider>
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <SafeAreaProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView>
+              <KeyboardProvider>
+                <AuthBridge />
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
+    </ClerkProvider>
   );
 }

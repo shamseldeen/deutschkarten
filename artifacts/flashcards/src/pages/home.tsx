@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getLevelColor } from "@/lib/colors";
 import { cn } from "@/lib/utils";
-import { BrainCircuit, Play, TrendingUp } from "lucide-react";
+import { BrainCircuit, Play, TrendingUp, Flame, Trophy } from "lucide-react";
+import { useMe } from "@/lib/useMe";
 
 export default function Home() {
   const { data: stats, isLoading: statsLoading } = useGetFlashcardStats();
   const { data: dailyCards, isLoading: dailyLoading } = useGetDailyFlashcards();
+  const { data: me } = useMe();
 
   const totalCards = stats?.reduce((acc, curr) => acc + curr.total, 0) || 0;
   const knownCards = stats?.reduce((acc, curr) => acc + curr.known, 0) || 0;
@@ -25,6 +27,24 @@ export default function Home() {
             <h1 className="text-3xl font-black tracking-tight text-foreground font-serif">Willkommen zurück!</h1>
             <p className="text-muted-foreground mt-2">Ready to level up your German vocabulary today?</p>
           </div>
+          {me && (
+            <div className="flex gap-3">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/30">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <div>
+                  <div className="text-xl font-black leading-none text-foreground">{me.streak.currentStreak}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Day Streak</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+                <div>
+                  <div className="text-xl font-black leading-none text-foreground">{me.streak.longestStreak}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Best</div>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

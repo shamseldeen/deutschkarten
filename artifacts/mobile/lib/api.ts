@@ -1,14 +1,25 @@
 let BASE_URL = "";
+let authTokenGetter: (() => Promise<string | null>) | null = null;
 
 export function setApiBaseUrl(url: string) {
   BASE_URL = url;
 }
 
+export function setAuthTokenGetter(fn: () => Promise<string | null>) {
+  authTokenGetter = fn;
+}
+
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
-    ...init,
-  });
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (authTokenGetter) {
+    const token = await authTokenGetter();
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+  const { headers: _ignored, ...rest } = init ?? {};
+  const res = await fetch(`${BASE_URL}${path}`, { ...rest, headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw Object.assign(new Error((body as any).error ?? res.statusText), { status: res.status, body });
