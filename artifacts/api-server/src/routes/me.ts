@@ -3,6 +3,7 @@ import { db, usersTable, userProgressTable, userStreaksTable, flashcardsTable } 
 import { requireAuth } from "../middlewares/requireAuth";
 import { eq, and, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { bumpStreak } from "../lib/streak";
 
 const router = Router();
 
@@ -74,36 +75,5 @@ router.post("/me/progress/:flashcardId", requireAuth, async (req, res) => {
 
   res.json({ ok: true });
 });
-
-async function bumpStreak(userId: string) {
-  const today = new Date().toISOString().slice(0, 10);
-  const [s] = await db.select().from(userStreaksTable).where(eq(userStreaksTable.userId, userId)).limit(1);
-
-  if (!s) {
-    await db.insert(userStreaksTable).values({
-      userId,
-      currentStreak: 1,
-      longestStreak: 1,
-      lastActiveDate: today,
-    });
-    return;
-  }
-  if (s.lastActiveDate === today) return;
-
-  const yesterday = new Date(Date.now() - 24 * 3600 * 1000).toISOString().slice(0, 10);
-  const isConsecutive = s.lastActiveDate === yesterday;
-  const newCurrent = isConsecutive ? s.currentStreak + 1 : 1;
-  const newLongest = Math.max(newCurrent, s.longestStreak);
-
-  await db
-    .update(userStreaksTable)
-    .set({
-      currentStreak: newCurrent,
-      longestStreak: newLongest,
-      lastActiveDate: today,
-      updatedAt: new Date(),
-    })
-    .where(eq(userStreaksTable.userId, userId));
-}
 
 export default router;

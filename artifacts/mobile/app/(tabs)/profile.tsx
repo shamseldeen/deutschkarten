@@ -50,11 +50,11 @@ const MODE_LABEL: Record<string, string> = {
   "typing": "Typing",
 };
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "");
+import { apiFetch } from "@/lib/api";
 
 export default function ProfileTab() {
   const { user, isLoaded } = useUser();
-  const { signOut, getToken } = useAuth();
+  const { signOut } = useAuth();
   const router = useRouter();
   const colors = useColors();
   const [me, setMe] = useState<Me | null>(null);
@@ -68,14 +68,12 @@ export default function ProfileTab() {
     if (!user) return;
     setLoading(true);
     try {
-      const token = await getToken();
-      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
       const [meRes, statsRes, histRes, lbRes, comRes] = await Promise.all([
-        fetch(`${BASE_URL}/api/me`, { headers }),
-        fetch(`${BASE_URL}/api/me/quiz-stats`, { headers }),
-        fetch(`${BASE_URL}/api/me/quiz-history`, { headers }),
-        fetch(`${BASE_URL}/api/leaderboard`, { headers }),
-        fetch(`${BASE_URL}/api/community/stats`),
+        apiFetch("/api/me"),
+        apiFetch("/api/me/quiz-stats"),
+        apiFetch("/api/me/quiz-history"),
+        apiFetch("/api/leaderboard"),
+        apiFetch("/api/community/stats"),
       ]);
       if (meRes.ok) setMe(await meRes.json());
       if (statsRes.ok) setQuizStats(await statsRes.json());
@@ -87,7 +85,7 @@ export default function ProfileTab() {
     } finally {
       setLoading(false);
     }
-  }, [user, getToken]);
+  }, [user]);
 
   useEffect(() => { load(); }, [load]);
   useFocusEffect(useCallback(() => { load(); }, [load]));

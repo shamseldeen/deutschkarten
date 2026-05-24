@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/expo";
 import { api, Level } from "./api";
 
 export const KEYS = {
@@ -43,9 +44,15 @@ export function useGenerateFlashcards() {
 
 export function useUpdateProgress() {
   const qc = useQueryClient();
+  const { isSignedIn } = useAuth();
   return useMutation({
-    mutationFn: ({ id, known }: { id: number; known: boolean }) =>
-      api.updateProgress(id, known),
+    mutationFn: async ({ id, known }: { id: number; known: boolean }) => {
+      // Guests can study but cannot persist progress server-side (would
+      // require mutating shared state). Resolve as a no-op locally so the
+      // UI can still advance to the next card.
+      if (!isSignedIn) return { id, known };
+      return api.updateProgress(id, known);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flashcards"] });
       qc.invalidateQueries({ queryKey: KEYS.stats });

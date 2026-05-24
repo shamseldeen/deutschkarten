@@ -17,6 +17,7 @@ import { eq, and, count, sql, isNull } from "drizzle-orm";
 import { isSupportedLang } from "../lib/languages";
 import { requireAuth } from "../middlewares/requireAuth";
 import { invalidateCommunityStats } from "./community";
+import { bumpStreak } from "../lib/streak";
 
 const router = Router();
 
@@ -121,16 +122,19 @@ router.get("/flashcards/stats", async (req, res) => {
       return;
   }
 
-  const stats = await Promise.all(
-    levels.map(async (level) => {
-      const rows = await db
-        .select({ id: flashcardsTable.id })
-        .from(flashcardsTable)
-        .where(and(eq(flashcardsTable.level, level), isNull(flashcardsTable.hiddenAt)));
-      const total = rows.length;
-      return { level, total, known: 0, unknown: total, percentage: 0 };
+  const totalsByLevel = await db
+    .select({
+      level: flashcardsTable.level,
+      total: sql<number>`count(${flashcardsTable.id})::int`,
     })
-  );
+    .from(flashcardsTable)
+    .where(isNull(flashcardsTable.hiddenAt))
+    .groupBy(flashcardsTable.level);
+  const totals = new Map(totalsByLevel.map((r) => [r.level, r.total]));
+  const stats = levels.map((level) => {
+    const total = totals.get(level) ?? 0;
+    return { level, total, known: 0, unknown: total, percentage: 0 };
+  });
   res.json(stats);
 });
 
@@ -229,7 +233,7 @@ Return a JSON array (no markdown, no code block) where each item has exactly the
 Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-5.1",
+    model: "gpt-4o-mini",
     max_completion_tokens: 4096,
     messages: [{ role: "user", content: prompt }],
   });
@@ -371,7 +375,7 @@ Use the native script of the target language. Be concise and natural.`;
       } catch (err) {
         req.log?.warn({ err, id, lang }, "gemini translate failed, falling back to openai");
         const completion = await openai.chat.completions.create({
-          model: "gpt-5.1",
+          model: "gpt-4o-mini",
           max_completion_tokens: 400,
           messages: [{ role: "user", content: prompt }],
         });
@@ -460,47 +464,16 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
         },
       });
 
-    // bump streak inline
-    const today = new Date().toISOString().slice(0, 10);
-    const [s] = await db
-      .select()
-      .from(userStreaksTable)
-      .where(eq(userStreaksTable.userId, userId))
-      .limit(1);
-
-    if (!s) {
-      await db.insert(userStreaksTable).values({
-        userId,
-        currentStreak: 1,
-        longestStreak: 1,
-        lastActiveDate: today,
-      });
-    } else if (s.lastActiveDate !== today) {
-      const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
-      const isConsecutive = s.lastActiveDate === yesterday;
-      const newCurrent = isConsecutive ? s.currentStreak + 1 : 1;
-      await db
-        .update(userStreaksTable)
-        .set({
-          currentStreak: newCurrent,
-          longestStreak: Math.max(newCurrent, s.longestStreak),
-          lastActiveDate: today,
-          updatedAt: new Date(),
-        })
-        .where(eq(userStreaksTable.userId, userId));
-    }
+    await bumpStreak(userId);
 
     res.json({ ...card, known });
     return;
   }
 
-  // anonymous: update shared known (legacy behavior)
-  const [updated] = await db
-    .update(flashcardsTable)
-    .set({ known })
-    .where(eq(flashcardsTable.id, flashcardId))
-    .returning();
-  res.json(updated);
+  // Anonymous users may not write to shared state — would let any guest mutate
+  // every user's "known" flag. They can still browse and study locally; the
+  // client should store guest progress in localStorage / AsyncStorage.
+  res.status(401).json({ error: "Sign in to save progress across devices." });
 });
 
 export default router;

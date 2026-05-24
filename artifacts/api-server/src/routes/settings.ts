@@ -3,8 +3,24 @@ import { db, userSettingsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { eq } from "drizzle-orm";
 import { isSupportedLang } from "../lib/languages";
+import { z } from "zod/v4";
 
 const router: IRouter = Router();
+
+const SecondaryLang = z
+  .union([z.string(), z.null(), z.literal("none")])
+  .refine(
+    (v) => v === null || v === "none" || (typeof v === "string" && isSupportedLang(v)),
+    { message: "Unsupported secondary language" },
+  );
+
+const PatchSettingsBody = z.object({
+  primaryLang: z
+    .string()
+    .refine(isSupportedLang, { message: "Unsupported primary language" })
+    .optional(),
+  secondaryLang: SecondaryLang.optional(),
+});
 
 router.get("/me/settings", requireAuth, async (req, res) => {
   const userId = req.userId!;
@@ -14,21 +30,12 @@ router.get("/me/settings", requireAuth, async (req, res) => {
 
 router.patch("/me/settings", requireAuth, async (req, res) => {
   const userId = req.userId!;
-  const { primaryLang, secondaryLang } = req.body ?? {};
-
-  if (primaryLang !== undefined) {
-    if (typeof primaryLang !== "string" || !isSupportedLang(primaryLang)) {
-      res.status(400).json({ error: "Unsupported primary language" });
-      return;
-    }
+  const parsed = PatchSettingsBody.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid body" });
+    return;
   }
-  if (secondaryLang !== undefined && secondaryLang !== null) {
-    if (typeof secondaryLang !== "string" || (secondaryLang !== "none" && !isSupportedLang(secondaryLang))) {
-      res.status(400).json({ error: "Unsupported secondary language" });
-      return;
-    }
-  }
-
+  const { primaryLang, secondaryLang } = parsed.data;
   const sec = secondaryLang === "none" ? null : secondaryLang ?? null;
 
   await db

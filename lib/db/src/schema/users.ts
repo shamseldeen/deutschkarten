@@ -1,6 +1,7 @@
-import { pgTable, text, timestamp, integer, date, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, date, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { flashcardsTable } from "./flashcards";
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
@@ -18,7 +19,9 @@ export const userProgressTable = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
-    flashcardId: integer("flashcard_id").notNull(),
+    flashcardId: integer("flashcard_id")
+      .notNull()
+      .references(() => flashcardsTable.id, { onDelete: "cascade" }),
     known: integer("known").notNull().default(0),
     timesReviewed: integer("times_reviewed").notNull().default(0),
     lastReviewedAt: timestamp("last_reviewed_at"),
@@ -26,6 +29,7 @@ export const userProgressTable = pgTable(
   },
   (t) => ({
     userCardUnique: uniqueIndex("user_progress_user_card_uq").on(t.userId, t.flashcardId),
+    byUser: index("user_progress_user_idx").on(t.userId),
   }),
 );
 

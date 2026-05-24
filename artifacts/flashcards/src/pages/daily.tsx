@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@clerk/react";
 import { Layout } from "@/components/layout";
 import { useGetDailyFlashcards, useUpdateFlashcardProgress, getGetDailyFlashcardsQueryKey } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/flashcard";
@@ -9,6 +10,7 @@ import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Daily() {
+  const { isSignedIn } = useAuth();
   const { data: cards, isLoading } = useGetDailyFlashcards();
   const updateProgress = useUpdateFlashcardProgress();
   const queryClient = useQueryClient();
@@ -17,11 +19,11 @@ export default function Daily() {
   const [isDone, setIsDone] = useState(false);
 
   const handleProgress = (id: number, known: boolean) => {
-    updateProgress.mutate({ id, data: { known } }, {
-      onSuccess: () => {
-        // Optimistic UI could be handled here or just invalidate later
-      }
-    });
+    // Guests can study but cannot persist progress server-side (would let
+    // anonymous users mutate shared state). Skip the API call locally.
+    if (isSignedIn) {
+      updateProgress.mutate({ id, data: { known } });
+    }
 
     if (cards && currentIndex < cards.length - 1) {
       setCurrentIndex(prev => prev + 1);

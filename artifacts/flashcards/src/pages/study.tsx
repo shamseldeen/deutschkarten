@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@clerk/react";
 import { Layout } from "@/components/layout";
 import { useListFlashcards, useUpdateFlashcardProgress, FlashcardLevel, getListFlashcardsQueryKey } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/flashcard";
@@ -17,12 +18,15 @@ export default function Study() {
   
   const updateProgress = useUpdateFlashcardProgress();
   const queryClient = useQueryClient();
-  
+  const { isSignedIn } = useAuth();
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);
 
   const handleProgress = (id: number, known: boolean) => {
-    updateProgress.mutate({ id, data: { known } });
+    if (isSignedIn) {
+      updateProgress.mutate({ id, data: { known } });
+    }
 
     if (currentIndex < cards.length - 1) {
       setCurrentIndex(prev => prev + 1);

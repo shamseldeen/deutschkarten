@@ -1,5 +1,7 @@
 import { pgTable, text, serial, timestamp, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { usersTable } from "./users";
+import { flashcardsTable } from "./flashcards";
 
 export const REPORT_REASONS = [
   "incorrect_translation",
@@ -15,8 +17,12 @@ export const flashcardReportsTable = pgTable(
   "flashcard_reports",
   {
     id: serial("id").primaryKey(),
-    flashcardId: integer("flashcard_id").notNull(),
-    userId: text("user_id").notNull(),
+    flashcardId: integer("flashcard_id")
+      .notNull()
+      .references(() => flashcardsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     reason: text("reason").notNull(),
     note: text("note"),
     status: text("status").notNull().default("open"), // open | dismissed | actioned
