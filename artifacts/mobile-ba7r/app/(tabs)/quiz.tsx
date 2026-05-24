@@ -28,7 +28,7 @@ function buildModes(langName: string): { id: Mode; label: string; desc: string; 
   return [
     { id: "de-to-en", label: `German → ${langName}`, desc: `Pick the ${langName} meaning`, icon: "globe", color: "#3b82f6" },
     { id: "en-to-de", label: `${langName} → German`, desc: "Pick the German word", icon: "globe", color: "#a855f7" },
-    { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: "star", color: "#f59e0b" },
+    { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: "star", color: "#06b6d4" },
     { id: "typing", label: "Type the German", desc: "Type the word from memory", icon: "edit-3", color: "#10b981" },
   ];
 }
@@ -200,8 +200,8 @@ export default function QuizScreen() {
         </View>
 
         {error && (
-          <View style={[s.errorCard, { borderColor: "#f59e0b66", backgroundColor: "#f59e0b15" }]}>
-            <Feather name="alert-triangle" size={18} color="#f59e0b" />
+          <View style={[s.errorCard, { borderColor: "#0589c766", backgroundColor: "#0589c715" }]}>
+            <Feather name="alert-triangle" size={18} color="#0589c7" />
             <View style={{ flex: 1 }}>
               <Text style={{ fontWeight: "800", color: colors.foreground, marginBottom: 2 }}>
                 Cannot start this quiz yet
