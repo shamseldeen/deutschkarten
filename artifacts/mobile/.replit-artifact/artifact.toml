@@ -3,7 +3,7 @@ previewPath = "/mobile/"
 title = "Shams DeutschKarten"
 version = "1.0.0"
 id = "artifacts/mobile"
-router = "expo-domain"
+# router = "expo-domain"  # disabled — Ba7r currently owns the dev domain. Re-enable (and disable Ba7r's) to flip.
 
 [[integratedSkills]]
 name = "expo"
