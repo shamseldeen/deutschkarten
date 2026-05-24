@@ -33,7 +33,7 @@ export function ReminderSection({ colors }: { colors: Colors }) {
         Alert.alert(
           "Notifications blocked",
           Platform.OS === "ios"
-            ? "Open Settings → Notifications → Ba7r DeutschKarten and allow notifications."
+            ? "Open Settings → Notifications → Shams DeutschKarten and allow notifications."
             : "Open system settings and allow notifications for this app.",
         );
       } else if (!r.ok) {

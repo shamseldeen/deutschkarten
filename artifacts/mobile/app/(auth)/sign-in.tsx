@@ -49,7 +49,7 @@ export default function SignInScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.foreground }]}>Welcome back</Text>
-      <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Sign in to Ba7r DeutschKarten</Text>
+      <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Sign in to Shams DeutschKarten</Text>
 
       <Pressable
         onPress={onGoogle}

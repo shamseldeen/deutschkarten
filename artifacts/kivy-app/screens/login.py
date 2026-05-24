@@ -34,7 +34,7 @@ class LoginScreen(Screen):
 
         root = BoxLayout(orientation='vertical', padding=dp(24), spacing=dp(12))
 
-        title = Label(text='[b]Ba7r DeutschKarten[/b]', markup=True,
+        title = Label(text='[b]Shams DeutschKarten[/b]', markup=True,
                       font_size=dp(22), color=TEXT_DARK,
                       size_hint_y=None, height=dp(36))
         root.add_widget(title)
