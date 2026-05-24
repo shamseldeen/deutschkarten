@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "seed-ba7r": "tsx ./src/seed-ba7r.ts",
+    "seed": "tsx ./src/seed.ts",
+    "codegen-check": "tsx ./src/codegen-check.ts",
+    "reset-db": "tsx ./src/reset-db.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

@@ -1,22 +1,12 @@
 import app from "./app";
+import { validateEnv } from "./env";
 import { logger } from "./lib/logger";
 import { installProcessHandlers } from "./middlewares/errorHandler";
 
 installProcessHandlers();
 
-const rawPort = process.env["PORT"];
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
+const env = validateEnv();
+const port = Number(env.PORT);
 
 app.listen(port, (err) => {
   if (err) {

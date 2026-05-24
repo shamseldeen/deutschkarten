@@ -2,11 +2,23 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=10 <11"
+  },
+  "packageManager": "pnpm@10.26.1",
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --filter \"./lib/**\" --if-present run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yaml,yml}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yaml,yml}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "test": "pnpm -r --if-present run test",
+    "check": "pnpm run typecheck && pnpm run test",
+    "codegen:check": "pnpm --filter @workspace/scripts run codegen-check",
+    "seed": "pnpm --filter @workspace/scripts run seed",
+    "reset-db": "pnpm --filter @workspace/scripts run reset-db"
   },
   "private": true,
   "devDependencies": {
