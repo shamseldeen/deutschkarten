@@ -18,8 +18,10 @@ import { setApiBaseUrl, setAuthTokenGetter } from "@/lib/api";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { installGlobalErrorHandlers, reportError } from "@/lib/errorReporter";
+import { configureNotificationHandler } from "@/lib/notifications";
 
 installGlobalErrorHandlers();
+configureNotificationHandler();
 
 const PROD_API = process.env.EXPO_PUBLIC_API_BASE_URL;
 const DEV_DOMAIN = process.env.EXPO_PUBLIC_DOMAIN;

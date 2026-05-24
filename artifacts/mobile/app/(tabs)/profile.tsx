@@ -4,6 +4,7 @@ import { useUser, useAuth } from "@clerk/expo";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { DonationCard } from "@/components/DonationCard";
+import { ReminderSection } from "@/components/ReminderSection";
 import { useLangPrefs } from "@/lib/useLangPrefs";
 import { SUPPORTED_LANGS } from "@/lib/languages";
 import { Feather } from "@expo/vector-icons";
@@ -242,6 +243,8 @@ export default function ProfileTab() {
       )}
 
       <LanguagesSection colors={colors} />
+
+      <ReminderSection colors={colors} />
 
       {community && (
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
