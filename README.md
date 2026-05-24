@@ -1,5 +1,7 @@
 # DeutschKarten
 
+[![CI](https://github.com/shamseldeen/deutschkarten/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shamseldeen/deutschkarten/actions/workflows/ci.yml?query=branch%3Amain)
+
 A multi-tenant German vocabulary flashcard app (A1–C1) with article-gender colouring, English + Arabic (RTL) translations, AI-generated cards via OpenAI, flip animations, images, and level-based progress tracking.
 
 Ships as **web + mobile + Python desktop**, in two themed tenants:
