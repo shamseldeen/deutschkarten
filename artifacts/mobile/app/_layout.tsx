@@ -16,7 +16,9 @@ import { setApiBaseUrl } from "@/lib/api";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-setApiBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+const PROD_API = process.env.EXPO_PUBLIC_API_BASE_URL;
+const DEV_DOMAIN = process.env.EXPO_PUBLIC_DOMAIN;
+setApiBaseUrl(PROD_API ?? (DEV_DOMAIN ? `https://${DEV_DOMAIN}` : ""));
 
 SplashScreen.preventAutoHideAsync();
 

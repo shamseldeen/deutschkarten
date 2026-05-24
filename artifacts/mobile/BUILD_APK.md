@@ -27,6 +27,18 @@ downloadable, signed APK or an AAB ready for the Play Store.
 
 ---
 
+## ⚠️ Set your production API URL first
+
+The installed APK can't reach `localhost`. Before building, point it at your
+deployed API server by setting the env var inside `artifacts/mobile/.env`:
+
+```bash
+echo 'EXPO_PUBLIC_API_BASE_URL=https://your-app.replit.app' > .env
+```
+
+Replace `https://your-app.replit.app` with the URL Replit gave you after
+publishing the API server.
+
 ## Build an **APK** (for testing / sideloading)
 
 ```bash
