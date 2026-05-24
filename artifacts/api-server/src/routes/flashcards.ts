@@ -14,6 +14,38 @@ import { eq, and, count, sql } from "drizzle-orm";
 
 const router = Router();
 
+// ── Daily rate limit for AI generation ───────────────────────────────────────
+const DAILY_LIMIT = 3;
+
+interface RateLimitEntry {
+  used: number;
+  resetsAt: Date;
+}
+const generateLimits = new Map<string, RateLimitEntry>();
+
+function getClientIp(req: import("express").Request): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  return (
+    (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0])?.trim() ??
+    req.socket.remoteAddress ??
+    "unknown"
+  );
+}
+
+function getLimitEntry(ip: string): RateLimitEntry {
+  const now = new Date();
+  const existing = generateLimits.get(ip);
+  if (!existing || existing.resetsAt <= now) {
+    const resetsAt = new Date();
+    resetsAt.setUTCHours(24, 0, 0, 0);
+    const entry: RateLimitEntry = { used: 0, resetsAt };
+    generateLimits.set(ip, entry);
+    return entry;
+  }
+  return existing;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // GET /api/flashcards
 router.get("/flashcards", async (req, res) => {
   const parsed = ListFlashcardsQueryParams.safeParse(req.query);
@@ -111,8 +143,34 @@ router.get("/flashcards/:id", async (req, res) => {
   res.json(card);
 });
 
+// GET /api/flashcards/generate/status  — check daily limit without consuming it
+router.get("/flashcards/generate/status", (req, res) => {
+  const ip = getClientIp(req);
+  const entry = getLimitEntry(ip);
+  res.json({
+    limit: DAILY_LIMIT,
+    used: entry.used,
+    remaining: Math.max(0, DAILY_LIMIT - entry.used),
+    resetsAt: entry.resetsAt.toISOString(),
+  });
+});
+
 // POST /api/flashcards/generate
 router.post("/flashcards/generate", async (req, res) => {
+  const ip = getClientIp(req);
+  const entry = getLimitEntry(ip);
+
+  if (entry.used >= DAILY_LIMIT) {
+    res.status(429).json({
+      error: "Daily generation limit reached",
+      limit: DAILY_LIMIT,
+      used: entry.used,
+      remaining: 0,
+      resetsAt: entry.resetsAt.toISOString(),
+    });
+    return;
+  }
+
   const parsed = GenerateFlashcardsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request body" });
@@ -183,6 +241,9 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
       }))
     )
     .returning();
+
+  // Increment the daily counter only after successful generation
+  entry.used += 1;
 
   res.status(201).json(inserted);
 });
