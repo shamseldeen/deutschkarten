@@ -24,12 +24,18 @@ export const flashcardsTable = pgTable(
     imageUrl: text("image_url"),
     known: boolean("known").notNull().default(false),
     hiddenAt: timestamp("hidden_at"),
+    // NULL = global card (baseline + AI generated into default Arabic
+    // workspace). Non-null = AI card private to that user workspace.
+    // Not a hard FK so deleting a workspace cascades via app-level cleanup
+    // rather than tying the global flashcards table to user_workspaces.
+    ownerWorkspaceId: text("owner_workspace_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => ({
     byLevel: index("flashcards_level_idx").on(t.level),
     byCategory: index("flashcards_category_idx").on(t.category),
     byLevelHidden: index("flashcards_level_hidden_idx").on(t.level, t.hiddenAt),
+    byOwnerWorkspace: index("flashcards_owner_workspace_idx").on(t.ownerWorkspaceId),
   }),
 );
 

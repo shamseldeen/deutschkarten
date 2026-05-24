@@ -7,6 +7,7 @@
  */
 
 export * from './apiError';
+export * from './deleteWorkspace200';
 export * from './flashcard';
 export * from './flashcardGenerateInput';
 export * from './flashcardGenerateInputLevel';
@@ -19,3 +20,8 @@ export * from './levelStats';
 export * from './listFlashcardsLevel';
 export * from './listFlashcardsParams';
 export * from './progressUpdate';
+export * from './workspace';
+export * from './workspaceCreateInput';
+export * from './workspaceCreateInputSecondaryLanguage';
+export * from './workspaceList';
+export * from './workspaceSwitchResult';

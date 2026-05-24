@@ -9,6 +9,7 @@ import settingsRouter from "./settings";
 import communityRouter from "./community";
 import logRouter from "./log";
 import reportsRouter from "./reports";
+import workspacesRouter from "./workspaces";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(settingsRouter);
 router.use(communityRouter);
 router.use(logRouter);
 router.use(reportsRouter);
+router.use(workspacesRouter);
 
 export default router;

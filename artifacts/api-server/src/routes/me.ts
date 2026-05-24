@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { db, usersTable, userProgressTable, userStreaksTable, flashcardsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { bumpStreak } from "../lib/streak";
+import { cardVisibleInWorkspace, getCurrentWorkspaceId, upsertProgress, workspaceVisibility } from "../lib/workspace";
 
 const router = Router();
 
@@ -19,6 +20,8 @@ router.get("/me", requireAuth, async (req, res) => {
 
 router.get("/me/stats", requireAuth, async (req, res) => {
   const userId = req.userId!;
+  const wsId = await getCurrentWorkspaceId(userId);
+  const visibility = workspaceVisibility(wsId);
   const rows = await db
     .select({
       level: flashcardsTable.level,
@@ -28,8 +31,15 @@ router.get("/me/stats", requireAuth, async (req, res) => {
     .from(flashcardsTable)
     .leftJoin(
       userProgressTable,
-      and(eq(userProgressTable.flashcardId, flashcardsTable.id), eq(userProgressTable.userId, userId)),
+      and(
+        eq(userProgressTable.flashcardId, flashcardsTable.id),
+        eq(userProgressTable.userId, userId),
+        wsId === null
+          ? isNull(userProgressTable.workspaceId)
+          : eq(userProgressTable.workspaceId, wsId),
+      ),
     )
+    .where(visibility)
     .groupBy(flashcardsTable.level);
 
   const out = rows.map((r) => ({
@@ -50,27 +60,14 @@ router.post("/me/progress/:flashcardId", requireAuth, async (req, res) => {
     return;
   }
   const known = Boolean(req.body?.known);
+  const wsId = await getCurrentWorkspaceId(userId);
 
-  const id = randomUUID();
-  await db
-    .insert(userProgressTable)
-    .values({
-      id,
-      userId,
-      flashcardId,
-      known: known ? 1 : 0,
-      timesReviewed: 1,
-      lastReviewedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: [userProgressTable.userId, userProgressTable.flashcardId],
-      set: {
-        known: known ? 1 : 0,
-        timesReviewed: sql`${userProgressTable.timesReviewed} + 1`,
-        lastReviewedAt: new Date(),
-      },
-    });
+  if (!(await cardVisibleInWorkspace(flashcardId, wsId))) {
+    res.status(404).json({ error: "Flashcard not in this workspace" });
+    return;
+  }
 
+  await upsertProgress({ userId, workspaceId: wsId, flashcardId, known });
   await bumpStreak(userId);
 
   res.json({ ok: true });

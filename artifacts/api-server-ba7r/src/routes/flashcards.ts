@@ -18,6 +18,12 @@ import { isSupportedLang } from "../lib/languages";
 import { requireAuth } from "../middlewares/requireAuth";
 import { invalidateCommunityStats } from "./community";
 import { bumpStreak } from "../lib/streak";
+import {
+  getCurrentWorkspaceId,
+  getWorkspaceSecondaryLang,
+  upsertProgress,
+  workspaceVisibility,
+} from "../lib/workspace";
 
 const router = Router();
 
@@ -62,7 +68,12 @@ router.get("/flashcards", async (req, res) => {
   }
   const { level, category, limit = 20, offset = 0 } = parsed.data;
 
+  const userId = getAuth(req)?.userId ?? null;
+  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  const visibility = workspaceVisibility(wsId);
+
   const conditions = [isNull(flashcardsTable.hiddenAt)];
+  if (visibility) conditions.push(visibility);
   if (level) conditions.push(eq(flashcardsTable.level, level));
   if (category) conditions.push(eq(flashcardsTable.category, category));
 
@@ -88,8 +99,17 @@ router.get("/flashcards", async (req, res) => {
 router.get("/flashcards/stats", async (req, res) => {
   const userId = getAuth(req)?.userId ?? null;
   const levels = ["A1", "A2", "B1", "B2", "C1"];
+  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  const visibility = workspaceVisibility(wsId);
 
   if (userId) {
+    const progressJoinConds = [
+      eq(userProgressTable.flashcardId, flashcardsTable.id),
+      eq(userProgressTable.userId, userId),
+      wsId === null
+        ? isNull(userProgressTable.workspaceId)
+        : eq(userProgressTable.workspaceId, wsId),
+    ];
     const rows = await db
       .select({
         level: flashcardsTable.level,
@@ -97,14 +117,8 @@ router.get("/flashcards/stats", async (req, res) => {
         known: sql<number>`count(case when ${userProgressTable.known} = 1 then 1 end)::int`,
       })
       .from(flashcardsTable)
-      .leftJoin(
-        userProgressTable,
-        and(
-          eq(userProgressTable.flashcardId, flashcardsTable.id),
-          eq(userProgressTable.userId, userId),
-        ),
-      )
-      .where(isNull(flashcardsTable.hiddenAt))
+      .leftJoin(userProgressTable, and(...progressJoinConds))
+      .where(and(isNull(flashcardsTable.hiddenAt), visibility))
       .groupBy(flashcardsTable.level);
 
       const byLevel = new Map(rows.map((r) => [r.level, r]));
@@ -128,7 +142,7 @@ router.get("/flashcards/stats", async (req, res) => {
       total: sql<number>`count(${flashcardsTable.id})::int`,
     })
     .from(flashcardsTable)
-    .where(isNull(flashcardsTable.hiddenAt))
+    .where(and(isNull(flashcardsTable.hiddenAt), visibility))
     .groupBy(flashcardsTable.level);
   const totals = new Map(totalsByLevel.map((r) => [r.level, r.total]));
   const stats = levels.map((level) => {
@@ -147,7 +161,12 @@ router.get("/flashcards/daily", async (req, res) => {
   }
   const { level } = parsed.data;
 
+  const userId = getAuth(req)?.userId ?? null;
+  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  const visibility = workspaceVisibility(wsId);
+
   const conditions = [isNull(flashcardsTable.hiddenAt)];
+  if (visibility) conditions.push(visibility);
   if (level) conditions.push(eq(flashcardsTable.level, level));
   const where = and(...conditions);
 
@@ -168,10 +187,16 @@ router.get("/flashcards/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
+  const userId = getAuth(req)?.userId ?? null;
+  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  const visibility = workspaceVisibility(wsId);
+
   const [card] = await db
     .select()
     .from(flashcardsTable)
-    .where(and(eq(flashcardsTable.id, parsed.data.id), isNull(flashcardsTable.hiddenAt)))
+    .where(
+      and(eq(flashcardsTable.id, parsed.data.id), isNull(flashcardsTable.hiddenAt), visibility),
+    )
     .limit(1);
 
   if (!card) {
@@ -216,6 +241,23 @@ router.post("/flashcards/generate", async (req, res) => {
   }
   const { level, category = "general", count: wordCount = 10 } = parsed.data;
 
+  const userId = getAuth(req)?.userId ?? null;
+  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  const secondaryLang = userId ? await getWorkspaceSecondaryLang(userId, wsId) : "AR";
+  const langNames: Record<string, string> = {
+    AR: "Arabic (in Arabic script)",
+    EN: "English",
+    ES: "Spanish",
+    FR: "French",
+    IT: "Italian",
+    TR: "Turkish",
+  };
+  const secondaryLangLabel = langNames[secondaryLang] ?? secondaryLang;
+  const wantsExtraLang = secondaryLang !== "AR" && secondaryLang !== "EN";
+  const extraTransField = wantsExtraLang
+    ? `\n- extraTranslation: string (translation in ${secondaryLangLabel})\n- extraExample: string (translation of the example sentence in ${secondaryLangLabel})`
+    : "";
+
   const prompt = `Generate ${wordCount} German vocabulary words for level ${level} (CEFR scale). 
 Category: ${category}.
 Return a JSON array (no markdown, no code block) where each item has exactly these fields:
@@ -228,7 +270,7 @@ Return a JSON array (no markdown, no code block) where each item has exactly the
 - arabicTranslation: string (in Arabic script)
 - exampleSentenceDe: string (a simple German sentence using the word, appropriate for ${level})
 - exampleSentenceEn: string (English translation of the example sentence)
-- exampleSentenceAr: string (Arabic translation of the example sentence, in Arabic script)
+- exampleSentenceAr: string (Arabic translation of the example sentence, in Arabic script)${extraTransField}
 
 Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
 
@@ -250,6 +292,8 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
     exampleSentenceDe: string;
     exampleSentenceEn: string;
     exampleSentenceAr: string;
+    extraTranslation?: string;
+    extraExample?: string;
   }> = [];
 
   try {
@@ -260,32 +304,44 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
     return;
   }
 
+  const extraLangKey = secondaryLang.toLowerCase();
   const inserted = await db
     .insert(flashcardsTable)
     .values(
-      cards.map((c) => ({
-        word: c.word,
-        article: c.article ?? null,
-        baseWord: c.baseWord,
-        level: c.level,
-        category: c.category,
-        englishTranslation: c.englishTranslation,
-        arabicTranslation: c.arabicTranslation,
-        exampleSentenceDe: c.exampleSentenceDe,
-        exampleSentenceEn: c.exampleSentenceEn,
-        exampleSentenceAr: c.exampleSentenceAr,
-        translations: {
+      cards.map((c) => {
+        const translations: Record<string, string> = {
           en: c.englishTranslation,
           ar: c.arabicTranslation,
-        },
-        exampleTranslations: {
+        };
+        const exampleTranslations: Record<string, string> = {
           en: c.exampleSentenceEn,
           ar: c.exampleSentenceAr,
-        },
-        createdBy: getAuth(req)?.userId ?? null,
-        imageUrl: null,
-        known: false,
-      }))
+        };
+        if (wantsExtraLang && c.extraTranslation) {
+          translations[extraLangKey] = c.extraTranslation;
+        }
+        if (wantsExtraLang && c.extraExample) {
+          exampleTranslations[extraLangKey] = c.extraExample;
+        }
+        return {
+          word: c.word,
+          article: c.article ?? null,
+          baseWord: c.baseWord,
+          level: c.level,
+          category: c.category,
+          englishTranslation: c.englishTranslation,
+          arabicTranslation: c.arabicTranslation,
+          exampleSentenceDe: c.exampleSentenceDe,
+          exampleSentenceEn: c.exampleSentenceEn,
+          exampleSentenceAr: c.exampleSentenceAr,
+          translations,
+          exampleTranslations,
+          createdBy: userId,
+          ownerWorkspaceId: wsId,
+          imageUrl: null,
+          known: false,
+        };
+      }),
     )
     .returning();
 
@@ -329,7 +385,13 @@ router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
     return;
   }
 
-  const [card] = await db.select().from(flashcardsTable).where(eq(flashcardsTable.id, id)).limit(1);
+  const wsIdForVisibility = await getCurrentWorkspaceId(userId);
+  const visPred = workspaceVisibility(wsIdForVisibility);
+  const [card] = await db
+    .select()
+    .from(flashcardsTable)
+    .where(visPred ? and(eq(flashcardsTable.id, id), visPred) : eq(flashcardsTable.id, id))
+    .limit(1);
   if (!card) {
     res.status(404).json({ error: "Flashcard not found" });
     return;
@@ -433,6 +495,28 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
   const flashcardId = paramsParsed.data.id;
   const known = bodyParsed.data.known;
 
+  if (userId) {
+    const wsId = await getCurrentWorkspaceId(userId);
+    const visPred = workspaceVisibility(wsId);
+    const [card] = await db
+      .select()
+      .from(flashcardsTable)
+      .where(
+        visPred ? and(eq(flashcardsTable.id, flashcardId), visPred) : eq(flashcardsTable.id, flashcardId),
+      )
+      .limit(1);
+    if (!card) {
+      res.status(404).json({ error: "Flashcard not found" });
+      return;
+    }
+
+    await upsertProgress({ userId, workspaceId: wsId, flashcardId, known });
+    await bumpStreak(userId);
+
+    res.json({ ...card, known });
+    return;
+  }
+
   const [card] = await db
     .select()
     .from(flashcardsTable)
@@ -441,32 +525,6 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
 
   if (!card) {
     res.status(404).json({ error: "Flashcard not found" });
-    return;
-  }
-
-  if (userId) {
-    await db
-      .insert(userProgressTable)
-      .values({
-        id: randomUUID(),
-        userId,
-        flashcardId,
-        known: known ? 1 : 0,
-        timesReviewed: 1,
-        lastReviewedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [userProgressTable.userId, userProgressTable.flashcardId],
-        set: {
-          known: known ? 1 : 0,
-          timesReviewed: sql`${userProgressTable.timesReviewed} + 1`,
-          lastReviewedAt: new Date(),
-        },
-      });
-
-    await bumpStreak(userId);
-
-    res.json({ ...card, known });
     return;
   }
 

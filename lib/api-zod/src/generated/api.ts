@@ -157,3 +157,52 @@ export const UpdateFlashcardProgressResponse = zod.object({
 })
 
 
+/**
+ * @summary List the caller's workspaces (default + user-created)
+ */
+export const ListWorkspacesResponse = zod.object({
+  "currentId": zod.string().nullable().describe('Null when the user is in the default workspace'),
+  "max": zod.number().describe('Max number of additional user-created workspaces (3 total dashboards)'),
+  "workspaces": zod.array(zod.object({
+  "id": zod.string().describe('The string \'default\' for the virtual default workspace, otherwise a UUID'),
+  "name": zod.string(),
+  "secondaryLanguage": zod.string().describe('ISO-ish code (AR, EN, ES, FR, IT, TR)'),
+  "isDefault": zod.boolean(),
+  "isCurrent": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Create a new workspace (max 2 per user)
+ */
+export const CreateWorkspaceBody = zod.object({
+  "secondaryLanguage": zod.enum(['EN', 'ES', 'FR', 'IT', 'TR']),
+  "name": zod.string().optional().describe('Optional; defaults to language name')
+})
+
+
+/**
+ * @summary Set the active workspace for the caller
+ */
+export const SwitchWorkspaceParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const SwitchWorkspaceResponse = zod.object({
+  "currentId": zod.string().nullable()
+})
+
+
+/**
+ * @summary Delete a user-created workspace
+ */
+export const DeleteWorkspaceParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteWorkspaceResponse = zod.object({
+  "deleted": zod.string()
+})
+
+

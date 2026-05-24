@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { BookOpen, Layers, PlusCircle, Calendar, User, LogIn, Brain, BarChart3, Trophy, GraduationCap } from "lucide-react";
 import { Show, useUser } from "@clerk/react";
 import { cn } from "@/lib/utils";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 
 function NavLink({ href, icon: Icon, children }: { href: string; icon: any; children: ReactNode }) {
   const [location] = useLocation();
@@ -80,7 +81,10 @@ export function Layout({ children }: { children: ReactNode }) {
             <NavLink href="/generate" icon={PlusCircle}>Generate</NavLink>
           </nav>
 
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-1">
+            <Show when="signed-in">
+              <WorkspaceSwitcher />
+            </Show>
             <AuthSlot />
           </div>
         </div>

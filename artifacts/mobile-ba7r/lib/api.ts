@@ -131,4 +131,33 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ known }),
     }),
+
+  listWorkspaces: () => fetchJson<WorkspaceList>("/ba7r-api/me/workspaces"),
+
+  createWorkspace: (data: { secondaryLanguage: string; name?: string }) =>
+    fetchJson<Workspace>("/ba7r-api/me/workspaces", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  switchWorkspace: (id: string) =>
+    fetchJson<{ currentId: string | null }>(`/ba7r-api/me/workspaces/${id}/switch`, {
+      method: "POST",
+    }),
+
+  deleteWorkspace: (id: string) =>
+    fetchJson<{ deleted: string }>(`/ba7r-api/me/workspaces/${id}`, { method: "DELETE" }),
+};
+
+export type Workspace = {
+  id: string;
+  name: string;
+  secondaryLanguage: string;
+  isDefault: boolean;
+  isCurrent: boolean;
+};
+export type WorkspaceList = {
+  currentId: string | null;
+  max: number;
+  workspaces: Workspace[];
 };

@@ -13,6 +13,8 @@ tags:
     description: German flashcard operations
   - name: progress
     description: User study progress
+  - name: workspaces
+    description: Per-user dashboards (German→X language pairs)
 paths:
   /healthz:
     get:
@@ -178,6 +180,115 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  /me/workspaces:
+    get:
+      operationId: listWorkspaces
+      tags: [workspaces]
+      summary: List the caller's workspaces (default + user-created)
+      responses:
+        "200":
+          description: Workspace list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceList"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    post:
+      operationId: createWorkspace
+      tags: [workspaces]
+      summary: Create a new workspace (max 2 per user)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Workspace limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /me/workspaces/{id}/switch:
+    post:
+      operationId: switchWorkspace
+      tags: [workspaces]
+      summary: Set the active workspace for the caller
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Switched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceSwitchResult"
+        "404":
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /me/workspaces/{id}:
+    delete:
+      operationId: deleteWorkspace
+      tags: [workspaces]
+      summary: Delete a user-created workspace
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: string
+                required:
+                  - deleted
+        "400":
+          description: Cannot delete the default workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     HealthStatus:
@@ -300,6 +411,66 @@ components:
           type: boolean
       required:
         - known
+
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The string 'default' for the virtual default workspace, otherwise a UUID
+        name:
+          type: string
+        secondaryLanguage:
+          type: string
+          description: ISO-ish code (AR, EN, ES, FR, IT, TR)
+        isDefault:
+          type: boolean
+        isCurrent:
+          type: boolean
+      required:
+        - id
+        - name
+        - secondaryLanguage
+        - isDefault
+        - isCurrent
+
+    WorkspaceList:
+      type: object
+      properties:
+        currentId:
+          type: ["string", "null"]
+          description: Null when the user is in the default workspace
+        max:
+          type: integer
+          description: Max number of additional user-created workspaces (3 total dashboards)
+        workspaces:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workspace"
+      required:
+        - currentId
+        - max
+        - workspaces
+
+    WorkspaceCreateInput:
+      type: object
+      properties:
+        secondaryLanguage:
+          type: string
+          enum: [EN, ES, FR, IT, TR]
+        name:
+          type: string
+          description: Optional; defaults to language name
+      required:
+        - secondaryLanguage
+
+    WorkspaceSwitchResult:
+      type: object
+      properties:
+        currentId:
+          type: ["string", "null"]
+      required:
+        - currentId
 
     ApiError:
       type: object

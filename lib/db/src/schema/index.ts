@@ -5,3 +5,4 @@ export * from "./users";
 export * from "./user-settings";
 export * from "./quiz";
 export * from "./reports";
+export * from "./workspaces";

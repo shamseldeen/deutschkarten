@@ -10,6 +10,7 @@ import { eq, and, isNotNull, sql, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { isSupportedLang } from "../lib/languages";
+import { getCurrentWorkspaceId, workspaceVisibility } from "../lib/workspace";
 
 const router = Router();
 
@@ -165,6 +166,8 @@ router.post("/quiz/start", async (req, res) => {
   }
   const { mode, level, count, lang } = parsed.data;
   const userId = getAuth(req)?.userId ?? null;
+  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  const visibility = workspaceVisibility(wsId);
   const isMixed = level === "mixed";
 
   // For mixed (placement) mode, fetch a balanced pool: ~count*2 cards per
@@ -179,9 +182,11 @@ router.post("/quiz/start", async (req, res) => {
           .select()
           .from(flashcardsTable)
           .where(
-            mode === "article"
-              ? and(eq(flashcardsTable.level, lv), isNotNull(flashcardsTable.article))
-              : eq(flashcardsTable.level, lv),
+            and(
+              eq(flashcardsTable.level, lv),
+              mode === "article" ? isNotNull(flashcardsTable.article) : undefined,
+              visibility,
+            ),
           )
           .orderBy(sql`RANDOM()`)
           .limit(perLevel),
@@ -192,6 +197,7 @@ router.post("/quiz/start", async (req, res) => {
     const conds = [];
     if (level) conds.push(eq(flashcardsTable.level, level));
     if (mode === "article") conds.push(isNotNull(flashcardsTable.article));
+    if (visibility) conds.push(visibility);
     const where = conds.length > 0 ? and(...conds) : undefined;
     pool = await db
       .select()

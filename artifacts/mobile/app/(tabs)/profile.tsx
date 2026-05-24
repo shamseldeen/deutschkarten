@@ -5,6 +5,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { DonationCard } from "@/components/DonationCard";
 import { ReminderSection } from "@/components/ReminderSection";
+import { WorkspaceSection } from "@/components/WorkspaceSection";
 import { useLangPrefs } from "@/lib/useLangPrefs";
 import { SUPPORTED_LANGS } from "@/lib/languages";
 import { Feather } from "@expo/vector-icons";
@@ -301,6 +302,8 @@ export default function ProfileTab() {
           </Text>
         </View>
       )}
+
+      <WorkspaceSection />
 
       <LanguagesSection colors={colors} />
 

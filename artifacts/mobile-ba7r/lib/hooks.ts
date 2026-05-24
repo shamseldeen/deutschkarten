@@ -7,7 +7,48 @@ export const KEYS = {
   daily: (level?: Level) => ["daily-flashcards", level] as const,
   list: (params?: { level?: Level; limit?: number }) =>
     ["flashcards", params?.level, params?.limit] as const,
+  workspaces: ["workspaces"] as const,
 };
+
+function invalidateWorkspaceScoped(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: KEYS.workspaces });
+  qc.invalidateQueries({ queryKey: KEYS.stats });
+  qc.invalidateQueries({ queryKey: ["flashcards"] });
+  qc.invalidateQueries({ queryKey: ["daily-flashcards"] });
+}
+
+export function useWorkspaces() {
+  const { isSignedIn } = useAuth();
+  return useQuery({
+    queryKey: KEYS.workspaces,
+    queryFn: () => api.listWorkspaces(),
+    enabled: !!isSignedIn,
+  });
+}
+
+export function useCreateWorkspace() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { secondaryLanguage: string; name?: string }) => api.createWorkspace(data),
+    onSuccess: () => invalidateWorkspaceScoped(qc),
+  });
+}
+
+export function useSwitchWorkspace() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.switchWorkspace(id),
+    onSuccess: () => invalidateWorkspaceScoped(qc),
+  });
+}
+
+export function useDeleteWorkspace() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteWorkspace(id),
+    onSuccess: () => invalidateWorkspaceScoped(qc),
+  });
+}
 
 export function useFlashcardStats() {
   return useQuery({

@@ -80,6 +80,49 @@ export interface ProgressUpdate {
   known: boolean;
 }
 
+export interface Workspace {
+  /** The string 'default' for the virtual default workspace, otherwise a UUID */
+  id: string;
+  name: string;
+  /** ISO-ish code (AR, EN, ES, FR, IT, TR) */
+  secondaryLanguage: string;
+  isDefault: boolean;
+  isCurrent: boolean;
+}
+
+export interface WorkspaceList {
+  /**
+     * Null when the user is in the default workspace
+     * @nullable
+     */
+  currentId: string | null;
+  /** Max number of additional user-created workspaces (3 total dashboards) */
+  max: number;
+  workspaces: Workspace[];
+}
+
+export type WorkspaceCreateInputSecondaryLanguage = typeof WorkspaceCreateInputSecondaryLanguage[keyof typeof WorkspaceCreateInputSecondaryLanguage];
+
+
+export const WorkspaceCreateInputSecondaryLanguage = {
+  EN: 'EN',
+  ES: 'ES',
+  FR: 'FR',
+  IT: 'IT',
+  TR: 'TR',
+} as const;
+
+export interface WorkspaceCreateInput {
+  secondaryLanguage: WorkspaceCreateInputSecondaryLanguage;
+  /** Optional; defaults to language name */
+  name?: string;
+}
+
+export interface WorkspaceSwitchResult {
+  /** @nullable */
+  currentId: string | null;
+}
+
 export interface ApiError {
   error: string;
 }
@@ -116,4 +159,8 @@ export const GetDailyFlashcardsLevel = {
   B2: 'B2',
   C1: 'C1',
 } as const;
+
+export type DeleteWorkspace200 = {
+  deleted: string;
+};
 
