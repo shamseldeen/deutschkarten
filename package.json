@@ -15,7 +15,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yaml,yml}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yaml,yml}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "test": "pnpm -r --if-present run test",
-    "check": "pnpm run typecheck && pnpm run test",
+    "lint": "pnpm --filter @workspace/scripts run lint-no-console",
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test",
     "codegen:check": "pnpm --filter @workspace/scripts run codegen-check",
     "seed": "pnpm --filter @workspace/scripts run seed",
     "reset-db": "pnpm --filter @workspace/scripts run reset-db"

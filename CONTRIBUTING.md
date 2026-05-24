@@ -16,7 +16,7 @@ Required secrets are documented in the [README](./README.md#bootstrap-a-fresh-en
 
 - **Node 24 + pnpm 10** (pinned via `engines` and `.nvmrc`).
 - **Never run `pnpm dev` at the workspace root** — apps run via their per-artifact dev scripts.
-- **Never use `console.log` in server code** — use `req.log` in route handlers and the singleton `logger` elsewhere.
+- **Never use `console.log` in server code** — use `req.log` in route handlers and the singleton `logger` elsewhere. Enforced by `pnpm run lint` (runs as part of `pnpm run check`), which scans `artifacts/api-server*/src` for `console.{log,error,warn,info,debug,trace}`.
 - **Keep Shams (amber) and Ba7r (ocean) in feature parity** — if you change one tenant, mirror it in the other.
 - **Keep web and mobile in feature parity** when changing user-facing behavior.
 
