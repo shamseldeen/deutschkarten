@@ -1,0 +1,1 @@
+{"version":3,"file":"workspaceList.d.ts","sourceRoot":"","sources":["../../../src/generated/types/workspaceList.ts"],"names":[],"mappings":"AAAA;;;;;;GAMG;AACH,OAAO,KAAK,EAAE,SAAS,EAAE,MAAM,aAAa,CAAC;AAE7C,MAAM,WAAW,aAAa;IAC5B;;;SAGK;IACL,SAAS,EAAE,MAAM,GAAG,IAAI,CAAC;IACzB,4EAA4E;IAC5E,GAAG,EAAE,MAAM,CAAC;IACZ,UAAU,EAAE,SAAS,EAAE,CAAC;CACzB"}
