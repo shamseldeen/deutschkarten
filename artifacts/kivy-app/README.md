@@ -2,6 +2,24 @@
 
 A German vocabulary flashcard app built with Kivy, connecting to the DeutschKarten API server.
 
+## ⚡ Quick start (one click)
+
+After extracting the zip:
+
+- **Windows** — double-click `run_windows.bat`
+- **macOS / Linux** — open a terminal in the folder and run:
+  ```bash
+  chmod +x run_unix.sh && ./run_unix.sh
+  ```
+
+These scripts automatically create a virtual environment, install all required Python packages (`kivy`, `pyttsx3`, `arabic-reshaper`, `python-bidi`), and launch the app.
+
+> Requires Python 3.10+ installed and available on `PATH`. Get it from https://www.python.org/downloads/
+
+If you prefer manual setup, follow the detailed steps below.
+
+---
+
 ## Features
 
 - **Dashboard** — CEFR level progress bars (A1–C1), quick navigation
