@@ -11,6 +11,7 @@ import { BrainCircuit, Play, TrendingUp, Flame, Trophy, Users, Languages, Github
 import { useMe } from "@/lib/useMe";
 import { DonationCard } from "@/components/DonationCard";
 import { WelcomeHero } from "@/components/WelcomeHero";
+import { RankLadder } from "@/components/RankLadder";
 import { useQuery } from "@tanstack/react-query";
 import { computeRank, rankImageUrl } from "@/lib/ranks";
 import { Link as WLink } from "wouter";
@@ -39,6 +40,7 @@ export default function Home() {
     <Layout>
       <div className="space-y-8 max-w-5xl mx-auto">
         <WelcomeHero name={me?.user?.displayName ?? null} />
+        <RankLadder knownCards={knownCards} knownAtC1={c1Known} />
 
         <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>

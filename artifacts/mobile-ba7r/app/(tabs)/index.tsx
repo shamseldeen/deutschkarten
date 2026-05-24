@@ -17,6 +17,7 @@ import { useUser } from "@clerk/expo";
 import { Image } from "react-native";
 import { computeRank, rankImageUrl } from "@/lib/ranks";
 import { WelcomeHero } from "@/components/WelcomeHero";
+import { RankLadder } from "@/components/RankLadder";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
 
@@ -51,6 +52,7 @@ export default function HomeScreen() {
       </Text>
 
       <WelcomeHero name={displayName} />
+      <RankLadder knownCards={totalKnown} knownAtC1={c1Known} />
 
       {rank && (
         <TouchableOpacity
