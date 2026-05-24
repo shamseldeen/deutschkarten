@@ -8,7 +8,7 @@ import { useColors } from "@/hooks/useColors";
 import { useGenerateFlashcards } from "@/lib/hooks";
 import type { Level } from "@/lib/api";
 import colors from "@/constants/colors";
-import { api } from "@/lib/api";
+import { api, apiFetch } from "@/lib/api";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
 const CATEGORIES = ["general", "animals", "food", "travel", "work", "family", "nature", "verbs", "adjectives"];
@@ -61,7 +61,7 @@ export default function GenerateScreen() {
   const generate = useGenerateFlashcards();
 
   const fetchStatus = useCallback(() => {
-    fetch(`${(api as any).BASE_URL ?? ""}/api/flashcards/generate/status`)
+    apiFetch(`/ba7r-api/flashcards/generate/status`)
       .then((r) => r.json())
       .then((data: LimitStatus) => {
         setLimitStatus(data);

@@ -31,7 +31,7 @@ export const RANKS: Rank[] = [
 // helper the rest of the mobile fetch layer uses.
 export function rankImageUrl(r: Rank): string {
   const base = resolveBaseUrl().replace(/\/$/, "");
-  return `${base}/flashcards/ranks/${r.image}`;
+  return `${base}/ba7r/ranks/${r.image}`;
 }
 
 export interface RankProgress {
