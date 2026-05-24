@@ -11,6 +11,56 @@ env = { "CI" = "true" }
 [workflows]
 runButton = "Project"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/mobile-ba7r: expo"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/api-server-ba7r: Ba7r API Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/flashcards-ba7r: web"
+
+[[workflows.workflow]]
+name = "artifacts/mobile-ba7r: expo"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=8082 BASE_PATH=/mobile-ba7r/ pnpm --filter @workspace/mobile-ba7r run dev"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "artifacts/api-server-ba7r: Ba7r API Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=8083 pnpm --filter @workspace/api-server-ba7r run dev"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "artifacts/flashcards-ba7r: web"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5175 BASE_PATH=/ba7r/ pnpm --filter @workspace/flashcards-ba7r run dev"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
@@ -24,6 +74,10 @@ localPort = 5174
 externalPort = 3001
 
 [[ports]]
+localPort = 5175
+externalPort = 3003
+
+[[ports]]
 localPort = 8080
 externalPort = 8080
 
@@ -34,6 +88,10 @@ externalPort = 80
 [[ports]]
 localPort = 8082
 externalPort = 3000
+
+[[ports]]
+localPort = 8083
+externalPort = 3002
 
 [nix]
 channel = "stable-25_05"

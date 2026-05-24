@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Ba7r DeutschKarten",
+    "slug": "ba7r-deutschkarten",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "ba7rdeutschkarten",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f0f9ff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ba7r.deutschkarten"
+    },
+    "android": {
+      "package": "com.ba7r.deutschkarten",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#f0f9ff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "color": "#0284c7"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,31 @@
+kind = "api"
+previewPath = "/ba7r-api"
+title = "Ba7r API Server"
+version = "1.0.0"
+id = "artifacts/api-server-ba7r"
+
+[[services]]
+localPort = 8083
+name = "Ba7r API Server"
+paths = ["/ba7r-api"]
+
+[services.development]
+run = "pnpm --filter @workspace/api-server-ba7r run dev"
+
+[services.production]
+
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/api-server-ba7r", "run", "build"]
+
+[services.production.build.env]
+NODE_ENV = "production"
+
+[services.production.run]
+args = ["node", "--enable-source-maps", "artifacts/api-server-ba7r/dist/index.mjs"]
+
+[services.production.run.env]
+PORT = "8083"
+NODE_ENV = "production"
+
+[services.production.health.startup]
+path = "/ba7r-api/healthz"

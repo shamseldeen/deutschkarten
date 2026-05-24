@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/ba7r/"
+title = "Ba7r DeutschKarten"
+version = "1.0.0"
+id = "artifacts/flashcards-ba7r"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/ba7r/" ]
+localPort = 5175
+
+[services.env]
+PORT = "5175"
+BASE_PATH = "/ba7r/"
+
+[services.development]
+run = "pnpm --filter @workspace/flashcards-ba7r run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/flashcards-ba7r", "run", "build" ]
+publicDir = "artifacts/flashcards-ba7r/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

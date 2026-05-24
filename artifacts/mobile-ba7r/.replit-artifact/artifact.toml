@@ -1,0 +1,26 @@
+kind = "mobile"
+previewPath = "/mobile-ba7r/"
+title = "Ba7r DeutschKarten"
+version = "1.0.0"
+id = "artifacts/mobile-ba7r"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+name = "expo"
+paths = [ "/mobile-ba7r/" ]
+localPort = 8082
+
+[services.development]
+run = "pnpm --filter @workspace/mobile-ba7r run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/mobile-ba7r", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/mobile-ba7r", "run", "serve" ]
+
+[services.env]
+PORT = "8082"
+BASE_PATH = "/mobile-ba7r/"
