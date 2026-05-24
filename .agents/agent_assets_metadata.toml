@@ -29,3 +29,9 @@ id = "HhdjMlBornOU-RmXDUGA1"
 uri = "file://deutschkarten-kivy.tar.gz"
 type = "unspecified"
 title = "DeutschKarten — Kivy Python App (with offline words + photos)"
+
+[[outputs]]
+id = "GGIOP8gebMPWhCbjAkaUw"
+uri = "file://dist/DeutschKarten-kivy.zip"
+type = "unspecified"
+title = "DeutschKarten Kivy Desktop App"
