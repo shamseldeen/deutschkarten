@@ -264,7 +264,7 @@ export default function ProfileTab() {
             </View>
           </View>
           <Pressable
-            onPress={() => Linking.openURL("https://github.com/")}
+            onPress={() => Linking.openURL("https://github.com/shamseldeen")}
             style={{ marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}
           >
             <Feather name="github" size={14} color={colors.mutedForeground} />

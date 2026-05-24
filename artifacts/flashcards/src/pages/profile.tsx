@@ -91,7 +91,7 @@ export default function ProfilePage() {
               free for every learner. Translations you request are cached and shared.
             </p>
             <a
-              href="https://github.com/"
+              href="https://github.com/shamseldeen"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-primary hover:underline"

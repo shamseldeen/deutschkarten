@@ -180,7 +180,7 @@ export default function Home() {
               </div>
             </div>
             <a
-              href="https://github.com/"
+              href="https://github.com/shamseldeen"
               target="_blank"
               rel="noreferrer"
               className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
