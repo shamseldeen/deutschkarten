@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Brain, Type, Languages, Sparkles, Check, X, RotateCcw } from "lucide-react";
 import { useLangPrefs } from "@/lib/useLangPrefs";
-import { LANG_BY_CODE, isRtl } from "@/lib/languages";
+import { LANG_BY_CODE, SUPPORTED_LANGS, isRtl } from "@/lib/languages";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -53,7 +53,7 @@ const articleColor: Record<string, string> = {
 
 export default function QuizPage() {
   const { prefs } = useLangPrefs();
-  const lang = prefs.primaryLang || "en";
+  const [lang, setLang] = useState<string>(prefs.primaryLang || "en");
   const langMeta = LANG_BY_CODE[lang];
   const langName = langMeta?.name ?? "English";
   const rtl = isRtl(lang);
@@ -162,6 +162,27 @@ export default function QuizPage() {
                   <m.icon className={cn("w-6 h-6 mb-2", mode === m.id ? "" : "text-muted-foreground")} />
                   <div className="font-bold text-foreground">{m.label}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{m.desc}</div>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Language</CardTitle></CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              {SUPPORTED_LANGS.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => setLang(l.code)}
+                  className={cn(
+                    "px-3 py-2 rounded-lg border-2 font-semibold text-sm transition-colors",
+                    lang === l.code
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:bg-muted",
+                  )}
+                  dir={l.rtl ? "rtl" : "ltr"}
+                >
+                  {l.nativeName} <span className="opacity-60">· {l.name}</span>
                 </button>
               ))}
             </CardContent>

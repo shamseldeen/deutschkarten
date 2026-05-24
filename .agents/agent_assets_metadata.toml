@@ -35,3 +35,9 @@ id = "GGIOP8gebMPWhCbjAkaUw"
 uri = "file://dist/DeutschKarten-kivy.zip"
 type = "unspecified"
 title = "DeutschKarten Kivy Desktop App (TTS fix)"
+
+[[outputs]]
+id = "vJcpvasOd4eTfoUeTLUOX"
+uri = "file://PERSONAL_SETUP.md"
+type = "text"
+title = "Personal Setup Guide — Make DeutschKarten Yours"

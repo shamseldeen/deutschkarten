@@ -7,7 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { useLangPrefs } from "@/lib/useLangPrefs";
-import { LANG_BY_CODE, isRtl } from "@/lib/languages";
+import { LANG_BY_CODE, SUPPORTED_LANGS, isRtl } from "@/lib/languages";
 
 type Mode = "de-to-en" | "en-to-de" | "article" | "typing";
 
@@ -37,7 +37,7 @@ export default function QuizScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { prefs } = useLangPrefs();
-  const lang = prefs.primaryLang || "en";
+  const [lang, setLang] = useState<string>(prefs.primaryLang || "en");
   const langName = LANG_BY_CODE[lang]?.name ?? "English";
   const rtl = isRtl(lang);
   const MODES = useMemo(() => buildModes(langName), [langName]);
@@ -141,6 +141,27 @@ export default function QuizScreen() {
                 <Text style={[s.modeDesc, { color: colors.mutedForeground }]}>{m.desc}</Text>
               </View>
               {mode === m.id && <Feather name="check-circle" size={20} color={m.color} />}
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>LANGUAGE</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+          {SUPPORTED_LANGS.map((l) => (
+            <Pressable
+              key={l.code}
+              onPress={() => setLang(l.code)}
+              style={[
+                s.chip,
+                {
+                  borderColor: lang === l.code ? colors.primary : colors.border,
+                  backgroundColor: lang === l.code ? colors.primary + "15" : "transparent",
+                },
+              ]}
+            >
+              <Text style={{ fontWeight: "700", color: lang === l.code ? colors.primary : colors.mutedForeground, fontSize: 13 }}>
+                {l.nativeName}
+              </Text>
             </Pressable>
           ))}
         </View>
