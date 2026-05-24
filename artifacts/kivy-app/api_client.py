@@ -31,6 +31,13 @@ def _fetch(path, method="GET", body=None, callback=None, error_callback=None):
             req = urllib_request.Request(url, data=data, method=method)
             req.add_header("Content-Type", "application/json")
             req.add_header("Accept", "application/json")
+            try:
+                import auth as _auth
+                tok = _auth.get_token()
+                if tok:
+                    req.add_header("Authorization", f"Bearer {tok}")
+            except Exception:
+                pass
             with urllib_request.urlopen(req, timeout=15) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 if callback:

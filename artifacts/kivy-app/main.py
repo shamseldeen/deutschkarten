@@ -14,12 +14,14 @@ Window.size = (420, 760)
 
 import local_storage
 import connectivity
+import auth
 
 from screens.dashboard import DashboardScreen
 from screens.browse import BrowseScreen
 from screens.study import StudyScreen
 from screens.daily import DailyScreen
 from screens.generate import GenerateScreen
+from screens.login import LoginScreen
 
 
 class DeutschKartenApp(App):
@@ -27,14 +29,17 @@ class DeutschKartenApp(App):
 
     def build(self):
         local_storage.init_db()
+        auth.load()
         connectivity.check_connectivity(self._on_connectivity)
 
         sm = ScreenManager(transition=SlideTransition())
+        sm.add_widget(LoginScreen(name='login'))
         sm.add_widget(DashboardScreen(name='dashboard'))
         sm.add_widget(BrowseScreen(name='browse'))
         sm.add_widget(StudyScreen(name='study'))
         sm.add_widget(DailyScreen(name='daily'))
         sm.add_widget(GenerateScreen(name='generate'))
+        sm.current = 'dashboard' if auth.is_signed_in() else 'login'
         return sm
 
     def _on_connectivity(self, online):

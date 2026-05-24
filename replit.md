@@ -30,6 +30,10 @@ A German vocabulary flashcard app (A1–C1 levels) with article gender coloring,
 - `artifacts/mobile/lib/api.ts` — local fetch-based API client for mobile
 - `artifacts/mobile/lib/hooks.ts` — React Query hooks for mobile
 - `artifacts/mobile/scripts/start-dev.js` — dev wrapper that pre-kills orphan Metro processes
+- `artifacts/kivy-app/` — Python/Kivy desktop app (offline-first + optional cloud sync)
+- `artifacts/kivy-app/auth.py` — Clerk JWT storage (~/.deutschkarten/auth.json, chmod 600)
+- `artifacts/kivy-app/sync.py` — push/pull progress on sign-in
+- `artifacts/api-server/src/routes/auth.ts` — `/api/auth/sign-in` and `/api/auth/sign-up` (Clerk Backend SDK, IP rate-limited 10/min)
 - `lib/api-spec/openapi.yaml` — OpenAPI spec (source of truth for API contracts)
 - `lib/db/` — Drizzle ORM schema
 

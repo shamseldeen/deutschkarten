@@ -9,6 +9,7 @@ from kivy.graphics import Color, RoundedRectangle, Rectangle
 from kivy.metrics import dp
 import local_storage
 import connectivity
+import auth
 from utils import LEVELS, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY, FONT_EMOJI
 
 
@@ -97,6 +98,12 @@ class DashboardScreen(Screen):
         header.add_widget(self._status_dot)
         root.add_widget(header)
 
+        # Auth row: shows email + sign-out, or a sign-in button
+        self._auth_row = BoxLayout(size_hint_y=None, height=dp(28), spacing=dp(8))
+        root.add_widget(self._auth_row)
+        self._refresh_auth_row()
+        auth.add_listener(lambda _s: self._refresh_auth_row())
+
         # Nav buttons
         nav = BoxLayout(size_hint_y=None, height=dp(46), spacing=dp(8))
         nav.add_widget(_action_btn('Daily Review', (0.23, 0.51, 0.96, 1), self.go_daily))
@@ -145,3 +152,31 @@ class DashboardScreen(Screen):
     def go_daily(self):    self.manager.current = 'daily'
     def go_browse(self):   self.manager.current = 'browse'
     def go_generate(self): self.manager.current = 'generate'
+
+    def _refresh_auth_row(self):
+        self._auth_row.clear_widgets()
+        if auth.is_signed_in():
+            who = auth.current().get('email') or 'Signed in'
+            lbl = Label(text=who, color=TEXT_GREY, font_size=dp(11),
+                        halign='left', text_size=(None, None))
+            lbl.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
+            out = Button(text='Sign out', size_hint_x=None, width=dp(80),
+                         background_normal='', background_color=(0, 0, 0, 0),
+                         color=(0.86, 0.15, 0.15, 1), font_size=dp(11))
+            out.bind(on_release=lambda *a: self._sign_out())
+            self._auth_row.add_widget(lbl)
+            self._auth_row.add_widget(out)
+        else:
+            lbl = Label(text='Working offline', color=TEXT_GREY, font_size=dp(11),
+                        halign='left', text_size=(None, None))
+            lbl.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
+            into = Button(text='Sign in', size_hint_x=None, width=dp(80),
+                          background_normal='', background_color=(0, 0, 0, 0),
+                          color=(0.23, 0.51, 0.96, 1), font_size=dp(11))
+            into.bind(on_release=lambda *a: setattr(self.manager, 'current', 'login'))
+            self._auth_row.add_widget(lbl)
+            self._auth_row.add_widget(into)
+
+    def _sign_out(self):
+        auth.sign_out()
+        self._refresh_auth_row()
