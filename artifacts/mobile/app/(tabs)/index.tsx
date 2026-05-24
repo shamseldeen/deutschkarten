@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { LevelCard } from "@/components/LevelCard";
+import { DonationCard } from "@/components/DonationCard";
 import { useFlashcardStats, useDailyFlashcards } from "@/lib/hooks";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
@@ -92,6 +93,9 @@ export default function HomeScreen() {
               />
             );
           })}
+
+      <View style={{ height: 20 }} />
+      <DonationCard />
     </ScrollView>
   );
 }

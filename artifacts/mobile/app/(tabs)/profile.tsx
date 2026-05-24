@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet, Image, ScrollView, ActivityIndicator
 import { useUser, useAuth } from "@clerk/expo";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
+import { DonationCard } from "@/components/DonationCard";
 
 type Me = {
   user: { id: string; email: string | null; displayName: string | null; imageUrl: string | null } | null;
@@ -95,6 +96,8 @@ export default function ProfileTab() {
       </View>
 
       {loading && <ActivityIndicator style={{ marginVertical: 16 }} />}
+
+      <DonationCard />
 
       <Pressable
         onPress={() => signOut()}

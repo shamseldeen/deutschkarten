@@ -9,6 +9,7 @@ import { getLevelColor } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 import { BrainCircuit, Play, TrendingUp, Flame, Trophy } from "lucide-react";
 import { useMe } from "@/lib/useMe";
+import { DonationCard } from "@/components/DonationCard";
 
 export default function Home() {
   const { data: stats, isLoading: statsLoading } = useGetFlashcardStats();
@@ -140,6 +141,8 @@ export default function Home() {
             )}
           </div>
         </section>
+
+        <DonationCard />
       </div>
     </Layout>
   );

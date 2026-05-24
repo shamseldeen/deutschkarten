@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Flame, Trophy } from "lucide-react";
+import { DonationCard } from "@/components/DonationCard";
 
 type Me = {
   user: { id: string; email: string | null; displayName: string | null; imageUrl: string | null };
@@ -73,6 +74,8 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </div>
+
+        <DonationCard />
 
         <Button variant="outline" className="w-full" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
           Sign Out
