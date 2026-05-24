@@ -59,7 +59,15 @@ function main() {
 
   const child = spawn(
     "pnpm",
-    ["exec", "expo", "start", "--localhost"],
+    [
+      "exec",
+      "expo",
+      "start",
+      "--localhost",
+      "--port",
+      String(port),
+      "--non-interactive",
+    ],
     {
       stdio: "inherit",
       env: process.env,
