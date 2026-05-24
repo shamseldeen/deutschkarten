@@ -13,6 +13,9 @@ import { useColors } from "@/hooks/useColors";
 import { LevelCard } from "@/components/LevelCard";
 import { DonationCard } from "@/components/DonationCard";
 import { useFlashcardStats, useDailyFlashcards } from "@/lib/hooks";
+import { useUser } from "@clerk/expo";
+import { Image } from "react-native";
+import { computeRank, rankImageUrl } from "@/lib/ranks";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
 
@@ -27,6 +30,9 @@ export default function HomeScreen() {
   const totalKnown = stats?.reduce((s, l) => s + l.known, 0) ?? 0;
   const totalCards = stats?.reduce((s, l) => s + l.total, 0) ?? 0;
   const overallPct = totalCards > 0 ? Math.round((totalKnown / totalCards) * 100) : 0;
+  const c1Known = stats?.find((s) => s.level === "C1")?.known ?? 0;
+  const { isSignedIn } = useUser();
+  const rank = isSignedIn ? computeRank(totalKnown, c1Known) : null;
 
   const paddingTop = Platform.OS === "web" ? 67 : insets.top + 16;
   const paddingBottom = Platform.OS === "web" ? 34 + 84 : insets.bottom + 84;
@@ -41,6 +47,41 @@ export default function HomeScreen() {
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
         Your German vocabulary companion
       </Text>
+
+      {rank && (
+        <TouchableOpacity
+          onPress={() => router.push("/(tabs)/profile")}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            padding: 12,
+            borderRadius: 14,
+            borderWidth: 2,
+            borderColor: rank.current.accent + "55",
+            backgroundColor: rank.current.accent + "10",
+            marginBottom: 14,
+          }}
+        >
+          <Image
+            source={{ uri: rankImageUrl(rank.current) }}
+            style={{ width: 52, height: 52, borderRadius: 12 }}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 10, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 1 }}>
+              RANK {rank.current.tier}
+            </Text>
+            <Text style={{ fontSize: 16, fontWeight: "900", color: rank.current.accent }}>
+              {rank.current.title}
+            </Text>
+            {rank.next && (
+              <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                {rank.toNext} more words → {rank.next.title}
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
+      )}
 
       <View style={[styles.progressCard, { backgroundColor: colors.primary }]}>
         <Text style={styles.progressTitle}>Overall Progress</Text>

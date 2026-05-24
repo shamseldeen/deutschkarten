@@ -2,11 +2,14 @@ import { Layout } from "@/components/layout";
 import { useUser, useClerk } from "@clerk/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { useEffect, useState } from "react";
 import { Flame, Trophy, Languages, Github } from "lucide-react";
 import { DonationCard } from "@/components/DonationCard";
 import { SUPPORTED_LANGS } from "@/lib/languages";
 import { useLangPrefs } from "@/lib/useLangPrefs";
+import { useGetFlashcardStats } from "@workspace/api-client-react";
+import { computeRank, rankImageUrl, RANKS } from "@/lib/ranks";
 
 type Me = {
   user: { id: string; email: string | null; displayName: string | null; imageUrl: string | null };
@@ -18,6 +21,10 @@ export default function ProfilePage() {
   const { signOut } = useClerk();
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
   const [me, setMe] = useState<Me | null>(null);
+  const { data: stats } = useGetFlashcardStats();
+  const totalKnown = stats?.reduce((s, l) => s + l.known, 0) ?? 0;
+  const c1Known = stats?.find((s) => s.level === "C1")?.known ?? 0;
+  const rank = computeRank(totalKnown, c1Known);
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -58,6 +65,54 @@ export default function ProfilePage() {
               <p className="text-sm text-muted-foreground">{user.emailAddresses?.[0]?.emailAddress}</p>
             </div>
           </CardHeader>
+        </Card>
+
+        <Card
+          className="overflow-hidden border-2"
+          style={{ borderColor: `${rank.current.accent}55` }}
+        >
+          <CardContent className="pt-6 flex items-center gap-5">
+            <img
+              src={rankImageUrl(rank.current)}
+              alt={rank.current.title}
+              className="w-24 h-24 rounded-2xl shadow-md shrink-0"
+              style={{ background: `${rank.current.accent}15` }}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
+                Rank {rank.current.tier} of {RANKS.length}
+              </div>
+              <div className="text-2xl font-black leading-tight" style={{ color: rank.current.accent }}>
+                {rank.current.title}
+              </div>
+              <div className="text-sm text-muted-foreground italic">{rank.current.legend}</div>
+              <div className="text-sm text-foreground/80 mt-1">{rank.current.blurb}</div>
+
+              <div className="mt-3 space-y-1">
+                {rank.next ? (
+                  <>
+                    <div className="flex justify-between text-xs text-muted-foreground font-medium">
+                      <span>{totalKnown} words mastered</span>
+                      <span>
+                        {rank.toNext > 0 ? (
+                          <>{rank.toNext} to <span className="font-bold text-foreground">{rank.next.title}</span></>
+                        ) : rank.nextBlockedBy === "c1" ? (
+                          <span className="font-bold text-foreground">Learn 1 C1 card to unlock {rank.next.title}</span>
+                        ) : (
+                          <span className="font-bold text-foreground">Ready for {rank.next.title}!</span>
+                        )}
+                      </span>
+                    </div>
+                    <Progress value={rank.progressPct} className="h-2" />
+                  </>
+                ) : (
+                  <div className="text-xs font-bold text-primary">
+                    👑 Top rank reached — {totalKnown} words mastered.
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
         <div className="grid grid-cols-2 gap-4">

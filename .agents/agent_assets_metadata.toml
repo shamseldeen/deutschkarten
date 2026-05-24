@@ -18,6 +18,66 @@ uri = "file://artifacts/mobile/assets/images/icon.png"
 type = "image"
 title = "deutschkarten app icon"
 
+[[generated]]
+id = "2ItoAzJGSgKstqMx4ozck"
+uri = "file://artifacts/flashcards/public/ranks/1-tide-pool-crab.png"
+type = "image"
+title = "tide pool crab rank badge"
+
+[[generated]]
+id = "pmcaIJmR_iUV1Qq9nJ4fQ"
+uri = "file://artifacts/flashcards/public/ranks/2-clownfish-cadet.png"
+type = "image"
+title = "clownfish cadet rank badge"
+
+[[generated]]
+id = "XxN_suEsjlh6lx0GL7BXK"
+uri = "file://artifacts/flashcards/public/ranks/3-sea-turtle-voyager.png"
+type = "image"
+title = "sea turtle voyager rank badge"
+
+[[generated]]
+id = "dr_ioWsX_-WI0VIHs-eAu"
+uri = "file://artifacts/flashcards/public/ranks/4-dolphin-navigator.png"
+type = "image"
+title = "dolphin navigator rank badge"
+
+[[generated]]
+id = "ACEZ69KQPaah3C3DyUvE8"
+uri = "file://artifacts/flashcards/public/ranks/5-shark-captain.png"
+type = "image"
+title = "shark captain rank badge"
+
+[[generated]]
+id = "_vZV3Ej0GqktBujGeKbeV"
+uri = "file://artifacts/flashcards/public/ranks/6-whale-sage.png"
+type = "image"
+title = "whale sage rank badge"
+
+[[generated]]
+id = "kGwnQz7Da3fqgdS0YNPSL"
+uri = "file://artifacts/flashcards/public/ranks/7-kraken-master.png"
+type = "image"
+title = "kraken master rank badge"
+
+[[generated]]
+id = "YAQknczWzYvDRn02-NDdD"
+uri = "file://artifacts/flashcards/public/ranks/3b-seahorse-apprentice.png"
+type = "image"
+title = "seahorse apprentice rank badge"
+
+[[generated]]
+id = "Q4emBkY80-QiBd2rnnSuE"
+uri = "file://artifacts/flashcards/public/ranks/5b-octopus-scholar.png"
+type = "image"
+title = "octopus scholar rank badge"
+
+[[generated]]
+id = "V44eCyyh7YaWHrJ20YgU7"
+uri = "file://artifacts/flashcards/public/ranks/6b-manta-ray-admiral.png"
+type = "image"
+title = "manta ray admiral rank badge"
+
 [[outputs]]
 id = "RSyFT-XUW_SiTRWbgp837"
 uri = "file://deutschkarten.tar.gz"

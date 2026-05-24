@@ -51,6 +51,8 @@ const MODE_LABEL: Record<string, string> = {
 };
 
 import { apiFetch } from "@/lib/api";
+import { useFlashcardStats } from "@/lib/hooks";
+import { computeRank, rankImageUrl, RANKS } from "@/lib/ranks";
 
 export default function ProfileTab() {
   const { user, isLoaded } = useUser();
@@ -63,6 +65,10 @@ export default function ProfileTab() {
   const [leaderboard, setLeaderboard] = useState<LbResp | null>(null);
   const [community, setCommunity] = useState<CommunityStats | null>(null);
   const [loading, setLoading] = useState(false);
+  const { data: stats } = useFlashcardStats();
+  const totalKnown = stats?.reduce((s, l) => s + l.known, 0) ?? 0;
+  const c1Known = stats?.find((s) => s.level === "C1")?.known ?? 0;
+  const rank = computeRank(totalKnown, c1Known);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -130,6 +136,62 @@ export default function ProfileTab() {
           <Text style={[styles.email, { color: colors.mutedForeground }]}>
             {user.emailAddresses?.[0]?.emailAddress}
           </Text>
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.sectionCard,
+          {
+            backgroundColor: colors.card,
+            borderColor: rank.current.accent + "55",
+            borderWidth: 2,
+            flexDirection: "row",
+            gap: 14,
+            alignItems: "center",
+          },
+        ]}
+      >
+        <Image
+          source={{ uri: rankImageUrl(rank.current) }}
+          style={{ width: 88, height: 88, borderRadius: 18, backgroundColor: rank.current.accent + "15" }}
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 10, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 1 }}>
+            RANK {rank.current.tier} OF {RANKS.length}
+          </Text>
+          <Text style={{ fontSize: 20, fontWeight: "900", color: rank.current.accent, marginTop: 2 }}>
+            {rank.current.title}
+          </Text>
+          <Text style={{ fontSize: 12, fontStyle: "italic", color: colors.mutedForeground }}>
+            {rank.current.legend}
+          </Text>
+          <Text style={{ fontSize: 12, color: colors.foreground, marginTop: 4 }}>{rank.current.blurb}</Text>
+          {rank.next ? (
+            <View style={{ marginTop: 8 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, fontWeight: "700" }}>
+                  {totalKnown} mastered
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                  {rank.toNext > 0 ? (
+                    <>{rank.toNext} → <Text style={{ color: colors.foreground, fontWeight: "800" }}>{rank.next.title}</Text></>
+                  ) : rank.nextBlockedBy === "c1" ? (
+                    <Text style={{ color: colors.foreground, fontWeight: "800" }}>Learn 1 C1 card → {rank.next.title}</Text>
+                  ) : (
+                    <Text style={{ color: colors.foreground, fontWeight: "800" }}>Ready for {rank.next.title}!</Text>
+                  )}
+                </Text>
+              </View>
+              <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.muted, overflow: "hidden" }}>
+                <View style={{ height: "100%", width: `${rank.progressPct}%`, backgroundColor: rank.current.accent }} />
+              </View>
+            </View>
+          ) : (
+            <Text style={{ fontSize: 12, fontWeight: "800", color: colors.primary, marginTop: 6 }}>
+              👑 Top rank reached — {totalKnown} words mastered.
+            </Text>
+          )}
         </View>
       </View>
 

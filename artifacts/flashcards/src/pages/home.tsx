@@ -11,6 +11,8 @@ import { BrainCircuit, Play, TrendingUp, Flame, Trophy, Users, Languages, Github
 import { useMe } from "@/lib/useMe";
 import { DonationCard } from "@/components/DonationCard";
 import { useQuery } from "@tanstack/react-query";
+import { computeRank, rankImageUrl } from "@/lib/ranks";
+import { Link as WLink } from "wouter";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -29,6 +31,8 @@ export default function Home() {
   const totalCards = stats?.reduce((acc, curr) => acc + curr.total, 0) || 0;
   const knownCards = stats?.reduce((acc, curr) => acc + curr.known, 0) || 0;
   const overallProgress = totalCards > 0 ? (knownCards / totalCards) * 100 : 0;
+  const c1Known = stats?.find((s) => s.level === "C1")?.known ?? 0;
+  const rank = me ? computeRank(knownCards, c1Known) : null;
 
   return (
     <Layout>
@@ -38,8 +42,23 @@ export default function Home() {
             <h1 className="text-3xl font-black tracking-tight text-foreground font-serif">Willkommen zurück!</h1>
             <p className="text-muted-foreground mt-2">Ready to level up your German vocabulary today?</p>
           </div>
-          {me && (
-            <div className="flex gap-3">
+          {me && rank && (
+            <div className="flex gap-3 flex-wrap items-center">
+              <WLink
+                href="/profile"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 hover-elevate"
+                style={{ borderColor: `${rank.current.accent}55`, background: `${rank.current.accent}10` }}
+              >
+                <img src={rankImageUrl(rank.current)} alt="" className="w-10 h-10 rounded-lg" />
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold leading-none">
+                    Rank {rank.current.tier}
+                  </div>
+                  <div className="text-sm font-black leading-tight" style={{ color: rank.current.accent }}>
+                    {rank.current.title}
+                  </div>
+                </div>
+              </WLink>
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/30">
                 <Flame className="w-5 h-5 text-orange-500" />
                 <div>

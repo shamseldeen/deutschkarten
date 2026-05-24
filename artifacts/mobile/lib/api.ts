@@ -12,7 +12,7 @@ export function setApiBaseUrl(url: string) {
 // EXPO_PUBLIC_DOMAIN / EXPO_PUBLIC_API_BASE_URL env vars were not baked in
 // at build time (which is the case for the static production build served
 // at /mobile/ alongside the API).
-function resolveBaseUrl(): string {
+export function resolveBaseUrl(): string {
   if (BASE_URL) return BASE_URL;
   if (typeof window !== "undefined" && window.location && window.location.origin) {
     return window.location.origin;
