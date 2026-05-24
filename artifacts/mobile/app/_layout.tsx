@@ -17,6 +17,9 @@ import { tokenCache } from "@clerk/expo/token-cache";
 import { setApiBaseUrl, setAuthTokenGetter } from "@/lib/api";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { installGlobalErrorHandlers, reportError } from "@/lib/errorReporter";
+
+installGlobalErrorHandlers();
 
 const PROD_API = process.env.EXPO_PUBLIC_API_BASE_URL;
 const DEV_DOMAIN = process.env.EXPO_PUBLIC_DOMAIN;
@@ -73,7 +76,7 @@ export default function RootLayout() {
     console.warn("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY — running without auth");
     return (
       <SafeAreaProvider>
-        <ErrorBoundary>
+        <ErrorBoundary onError={(err, stack) => reportError(err, { componentStack: stack })}>
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView>
               <KeyboardProvider>
@@ -89,7 +92,7 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
       <SafeAreaProvider>
-        <ErrorBoundary>
+        <ErrorBoundary onError={(err, stack) => reportError(err, { componentStack: stack })}>
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView>
               <KeyboardProvider>

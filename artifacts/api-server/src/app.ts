@@ -10,8 +10,11 @@ import {
 } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app: Express = express();
+
+app.set("trust proxy", 1);
 
 app.use(
   pinoHttp({
@@ -49,5 +52,7 @@ app.use("/flashcards", express.static(frontendDist));
 app.get("/flashcards/*splat", (_req, res) => {
   res.sendFile("index.html", { root: frontendDist });
 });
+
+app.use(errorHandler);
 
 export default app;

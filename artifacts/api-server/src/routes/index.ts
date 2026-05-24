@@ -7,6 +7,7 @@ import authRouter from "./auth";
 import leaderboardRouter from "./leaderboard";
 import settingsRouter from "./settings";
 import communityRouter from "./community";
+import logRouter from "./log";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(quizRouter);
 router.use(leaderboardRouter);
 router.use(settingsRouter);
 router.use(communityRouter);
+router.use(logRouter);
 
 export default router;
