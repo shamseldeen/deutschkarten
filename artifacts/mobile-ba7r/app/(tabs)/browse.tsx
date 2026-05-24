@@ -39,7 +39,8 @@ export default function BrowseScreen() {
     ? { level: selectedLevel as Level, limit: 100 }
     : { limit: 100 };
 
-  const { data, isLoading } = useFlashcards(params);
+  const { data, isLoading, error } = useFlashcards(params);
+  const apiError = error as Error | null;
   const updateProgress = useUpdateProgress();
 
   const handleProgress = (id: number, known: boolean) => {
@@ -82,7 +83,12 @@ export default function BrowseScreen() {
         </ScrollView>
       </View>
 
-      {isLoading ? (
+      {apiError ? (
+        <View style={{ marginHorizontal: 20, marginTop: 20, padding: 14, borderRadius: 12, backgroundColor: "#fee2e2", borderWidth: 1, borderColor: "#dc2626" }}>
+          <Text style={{ fontSize: 12, fontWeight: "800", color: "#991b1b", marginBottom: 4 }}>CONNECTION ERROR</Text>
+          <Text style={{ fontSize: 12, color: "#7f1d1d" }}>{apiError.message}</Text>
+        </View>
+      ) : isLoading ? (
         <View style={styles.loadingContainer}>
           {[1, 2, 3].map((i) => (
             <View key={i} style={[styles.skeleton, { backgroundColor: appColors.muted }]} />

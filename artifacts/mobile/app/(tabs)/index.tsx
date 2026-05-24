@@ -26,8 +26,9 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const { data: stats, isLoading: statsLoading } = useFlashcardStats();
-  const { data: daily } = useDailyFlashcards();
+  const { data: stats, isLoading: statsLoading, error: statsError } = useFlashcardStats();
+  const { data: daily, error: dailyError } = useDailyFlashcards();
+  const apiError = (statsError ?? dailyError) as Error | null;
 
   const totalKnown = stats?.reduce((s, l) => s + l.known, 0) ?? 0;
   const totalCards = stats?.reduce((s, l) => s + l.total, 0) ?? 0;
@@ -87,6 +88,24 @@ export default function HomeScreen() {
             )}
           </View>
         </TouchableOpacity>
+      )}
+
+      {apiError && (
+        <View
+          style={{
+            borderRadius: 12,
+            padding: 14,
+            marginBottom: 16,
+            backgroundColor: "#fee2e2",
+            borderWidth: 1,
+            borderColor: "#dc2626",
+          }}
+        >
+          <Text style={{ fontSize: 12, fontWeight: "800", color: "#991b1b", marginBottom: 4 }}>
+            CONNECTION ERROR
+          </Text>
+          <Text style={{ fontSize: 12, color: "#7f1d1d" }}>{apiError.message}</Text>
+        </View>
       )}
 
       <View style={[styles.progressCard, { backgroundColor: colors.primary }]}>

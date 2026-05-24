@@ -3,6 +3,12 @@ let authTokenGetter: (() => Promise<string | null>) | null = null;
 
 export function setApiBaseUrl(url: string) {
   BASE_URL = url;
+  // eslint-disable-next-line no-console
+  console.log(`[api] base URL set to: ${url || "(empty)"}`);
+}
+
+export function getApiBaseUrl(): string {
+  return BASE_URL;
 }
 
 // Resolve the absolute base URL at call time. React Native (iOS/Android) and
@@ -17,7 +23,10 @@ export function resolveBaseUrl(): string {
   if (typeof window !== "undefined" && window.location && window.location.origin) {
     return window.location.origin;
   }
-  return "";
+  throw new Error(
+    "API base URL is not configured. EXPO_PUBLIC_DOMAIN or EXPO_PUBLIC_API_BASE_URL " +
+      "must be set when the bundle is built. Reload the app after the dev server restarts.",
+  );
 }
 
 export function setAuthTokenGetter(fn: () => Promise<string | null>) {

@@ -17,7 +17,8 @@ export default function DailyScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted] = useState(false);
 
-  const { data: cards, isLoading } = useDailyFlashcards();
+  const { data: cards, isLoading, error } = useDailyFlashcards();
+  const apiError = error as Error | null;
   const updateProgress = useUpdateProgress();
 
   const handleResult = (known: boolean) => {
@@ -40,7 +41,12 @@ export default function DailyScreen() {
     <View style={[styles.container, { backgroundColor: appColors.background, paddingTop, paddingBottom }]}>
       <Text style={[styles.title, { color: appColors.foreground }]}>Daily Practice</Text>
 
-      {isLoading ? (
+      {apiError ? (
+        <View style={{ marginTop: 20, padding: 14, borderRadius: 12, backgroundColor: "#fee2e2", borderWidth: 1, borderColor: "#dc2626" }}>
+          <Text style={{ fontSize: 12, fontWeight: "800", color: "#991b1b", marginBottom: 4 }}>CONNECTION ERROR</Text>
+          <Text style={{ fontSize: 12, color: "#7f1d1d" }}>{apiError.message}</Text>
+        </View>
+      ) : isLoading ? (
         <View style={[styles.skeleton, { backgroundColor: appColors.muted }]} />
       ) : completed || total === 0 ? (
         <View style={styles.completedContainer}>

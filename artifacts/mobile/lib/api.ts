@@ -3,6 +3,13 @@ let authTokenGetter: (() => Promise<string | null>) | null = null;
 
 export function setApiBaseUrl(url: string) {
   BASE_URL = url;
+  // Log loudly so the resolved URL is visible in Metro / device logs.
+  // eslint-disable-next-line no-console
+  console.log(`[api] base URL set to: ${url || "(empty)"}`);
+}
+
+export function getApiBaseUrl(): string {
+  return BASE_URL;
 }
 
 // Resolve the absolute base URL at call time. React Native (iOS/Android) and
@@ -17,7 +24,14 @@ export function resolveBaseUrl(): string {
   if (typeof window !== "undefined" && window.location && window.location.origin) {
     return window.location.origin;
   }
-  return "";
+  // On native we cannot fall back to a relative URL — fetch() throws an
+  // opaque "The string did not match the expected pattern." that React Query
+  // then swallows, leaving the UI stuck on loading/empty forever. Surface a
+  // clear, actionable error instead.
+  throw new Error(
+    "API base URL is not configured. EXPO_PUBLIC_DOMAIN or EXPO_PUBLIC_API_BASE_URL " +
+      "must be set when the bundle is built. Reload the app after the dev server restarts.",
+  );
 }
 
 export function setAuthTokenGetter(fn: () => Promise<string | null>) {
