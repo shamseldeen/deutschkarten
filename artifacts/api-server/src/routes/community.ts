@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, flashcardsTable } from "@workspace/db";
-import { sql, isNull } from "drizzle-orm";
+import { sql, isNull, and } from "drizzle-orm";
 import { SUPPORTED_LANGS, RTL_LANGS } from "../lib/languages";
 
 const router: IRouter = Router();
@@ -25,7 +25,10 @@ router.get("/community/stats", async (_req, res) => {
       contributors: sql<number>`count(distinct ${flashcardsTable.createdBy})::int`,
     })
     .from(flashcardsTable)
-    .where(isNull(flashcardsTable.hiddenAt));
+    .where(and(
+      isNull(flashcardsTable.hiddenAt),
+      isNull(flashcardsTable.ownerWorkspaceId),
+    ));
 
   const data = {
     totalCards: row?.totalCards ?? 0,

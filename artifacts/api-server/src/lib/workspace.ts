@@ -42,12 +42,19 @@ export async function getCurrentWorkspaceId(userId: string): Promise<string | nu
     .limit(1);
   const id = settings?.currentWorkspaceId ?? null;
   if (!id) return null;
-  const [exists] = await db
+  // Defense in depth: only honor the stored workspace id when it both
+  // exists AND is owned by the calling user. Prevents cross-user data
+  // bleed if user_settings ever gets a foreign workspace id written into
+  // it (data corruption, future bug, admin script gone wrong).
+  const [owned] = await db
     .select({ id: userWorkspacesTable.id })
     .from(userWorkspacesTable)
-    .where(eq(userWorkspacesTable.id, id))
+    .where(and(
+      eq(userWorkspacesTable.id, id),
+      eq(userWorkspacesTable.userId, userId),
+    ))
     .limit(1);
-  return exists ? id : null;
+  return owned ? id : null;
 }
 
 /**
