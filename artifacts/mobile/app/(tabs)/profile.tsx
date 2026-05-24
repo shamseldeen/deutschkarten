@@ -24,6 +24,18 @@ type QuizHistoryRow = {
   finishedAt: string | null;
 };
 
+type LbRow = {
+  rank: number;
+  userId: string;
+  displayName: string;
+  imageUrl: string | null;
+  knownCards: number;
+  correctAnswers: number;
+  longestStreak: number;
+  xp: number;
+};
+type LbResp = { top: LbRow[]; me: LbRow | null };
+
 const MODE_LABEL: Record<string, string> = {
   "de-to-en": "German → English",
   "en-to-de": "English → German",
@@ -41,6 +53,7 @@ export default function ProfileTab() {
   const [me, setMe] = useState<Me | null>(null);
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
   const [quizHistory, setQuizHistory] = useState<QuizHistoryRow[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LbResp | null>(null);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -49,14 +62,16 @@ export default function ProfileTab() {
     try {
       const token = await getToken();
       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      const [meRes, statsRes, histRes] = await Promise.all([
+      const [meRes, statsRes, histRes, lbRes] = await Promise.all([
         fetch(`${BASE_URL}/api/me`, { headers }),
         fetch(`${BASE_URL}/api/me/quiz-stats`, { headers }),
         fetch(`${BASE_URL}/api/me/quiz-history`, { headers }),
+        fetch(`${BASE_URL}/api/leaderboard`, { headers }),
       ]);
       if (meRes.ok) setMe(await meRes.json());
       if (statsRes.ok) setQuizStats(await statsRes.json());
       if (histRes.ok) setQuizHistory(await histRes.json());
+      if (lbRes.ok) setLeaderboard(await lbRes.json());
     } catch {
       // ignore
     } finally {
@@ -187,6 +202,36 @@ export default function ProfileTab() {
         </View>
       )}
 
+      {leaderboard && (leaderboard.top.length > 0 || leaderboard.me) && (
+        <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>🏆 Leaderboard</Text>
+          {leaderboard.me && (
+            <View style={[styles.lbRow, { backgroundColor: colors.muted, borderRadius: 8, paddingHorizontal: 8 }]}>
+              <Text style={[styles.lbRank, { color: colors.foreground }]}>#{leaderboard.me.rank}</Text>
+              <Text style={[styles.lbName, { color: colors.foreground, flex: 1 }]} numberOfLines={1}>You</Text>
+              <Text style={[styles.lbXp, { color: colors.primary }]}>{leaderboard.me.xp.toLocaleString()} XP</Text>
+            </View>
+          )}
+          {leaderboard.top.slice(0, 10).map((r) => {
+            const isMe = r.userId === user.id;
+            return (
+              <View key={r.userId} style={[styles.lbRow, isMe && { backgroundColor: colors.muted, borderRadius: 8, paddingHorizontal: 8 }]}>
+                <Text style={[styles.lbRank, { color: r.rank <= 3 ? colors.primary : colors.mutedForeground }]}>
+                  {r.rank === 1 ? "🥇" : r.rank === 2 ? "🥈" : r.rank === 3 ? "🥉" : `#${r.rank}`}
+                </Text>
+                <Text style={[styles.lbName, { color: colors.foreground, flex: 1 }]} numberOfLines={1}>
+                  {isMe ? "You" : r.displayName}
+                </Text>
+                <Text style={[styles.lbXp, { color: colors.primary }]}>{r.xp.toLocaleString()} XP</Text>
+              </View>
+            );
+          })}
+          <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 6, textAlign: "center" }}>
+            XP = known × 10 + correct answers × 5 + longest streak × 20
+          </Text>
+        </View>
+      )}
+
       <DonationCard />
 
       <Pressable
@@ -231,4 +276,8 @@ const styles = StyleSheet.create({
   historyRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth },
   historyTitle: { fontSize: 13, fontWeight: "700" },
   historyPct: { fontSize: 16, fontWeight: "800" },
+  lbRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6, gap: 8 },
+  lbRank: { fontSize: 13, fontWeight: "800", width: 38 },
+  lbName: { fontSize: 13, fontWeight: "600" },
+  lbXp: { fontSize: 13, fontWeight: "800" },
 });

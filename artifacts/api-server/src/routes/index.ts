@@ -4,6 +4,7 @@ import flashcardsRouter from "./flashcards";
 import meRouter from "./me";
 import quizRouter from "./quiz";
 import authRouter from "./auth";
+import leaderboardRouter from "./leaderboard";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(authRouter);
 router.use(meRouter);
 router.use(flashcardsRouter);
 router.use(quizRouter);
+router.use(leaderboardRouter);
 
 export default router;
