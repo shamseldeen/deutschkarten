@@ -104,6 +104,7 @@ Both API servers validate their env via `src/env.ts` (Zod) at startup. Missing o
 ## Gotchas
 
 - The `artifacts/flashcards: web` and `artifacts/flashcards-ba7r: web` workflows always show "failed" — that's expected. The web apps are served by their API server workflows, not the Vite dev workflows. The web apps ARE accessible at `/flashcards/` and `/ba7r/`.
+- **Only one Expo app can be reached via Expo Go at a time.** Both `artifacts/mobile: expo` and `artifacts/mobile-ba7r: expo` workflows bind to the same `$REPLIT_EXPO_DEV_DOMAIN`, so the dev URL routes to whichever Metro started first (usually Shams). To preview the *other* tenant in Expo Go: in the Replit workflows panel, **stop the one you don't want and restart the one you do want**, then re-scan the URL. The in-app title on each home screen tells you which tenant you're currently on (`Shams DeutschKarten · Sun edition` vs `Ba7r DeutschKarten · Ocean edition`).
 - Never import `@workspace/api-client-react` in mobile — it's ESM TypeScript that Metro cannot bundle.
 - Metro dev server must run on port 8081 (not the web preview port). The `start-dev.js` wrapper handles orphan cleanup.
 - Express 5 wildcard routes: use `/*splat` not `/*`.
