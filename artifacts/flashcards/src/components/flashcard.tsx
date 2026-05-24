@@ -35,9 +35,6 @@ export function Flashcard({ card: incomingCard, onKnown, onUnknown, isStudyMode 
   const translations = card.translations ?? { en: card.englishTranslation, ar: card.arabicTranslation };
   const exampleTr = card.exampleTranslations ?? { en: card.exampleSentenceEn, ar: card.exampleSentenceAr };
 
-  const langs: string[] = [prefs.primaryLang, prefs.secondaryLang].filter(
-    (l): l is string => !!l && l !== prefs.primaryLang || l === prefs.primaryLang,
-  );
   // dedupe + drop nulls
   const langList = [prefs.primaryLang, prefs.secondaryLang].filter(
     (l, i, arr): l is string => !!l && arr.indexOf(l) === i,
