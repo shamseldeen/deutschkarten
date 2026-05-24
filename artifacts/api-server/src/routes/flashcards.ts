@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { flashcardsTable, userProgressTable, userStreaksTable } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { ai as gemini } from "@workspace/integrations-gemini-ai";
 import { getAuth } from "@clerk/express";
 import { randomUUID } from "crypto";
 import {
@@ -356,12 +357,25 @@ English example: ${card.exampleSentenceEn}
 
 Use the native script of the target language. Be concise and natural.`;
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-5.1",
-        max_completion_tokens: 400,
-        messages: [{ role: "user", content: prompt }],
-      });
-      const text = completion.choices[0]?.message?.content ?? "{}";
+      // Primary: Gemini 2.5 Flash (cheap, fast, great multilingual incl. RTL).
+      // Fallback: GPT-5.1 if Gemini errors so users never see a hard failure.
+      let text = "";
+      try {
+        const r = await gemini.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
+        });
+        text = r.text ?? "";
+      } catch (err) {
+        req.log?.warn({ err, id, lang }, "gemini translate failed, falling back to openai");
+        const completion = await openai.chat.completions.create({
+          model: "gpt-5.1",
+          max_completion_tokens: 400,
+          messages: [{ role: "user", content: prompt }],
+        });
+        text = completion.choices[0]?.message?.content ?? "{}";
+      }
       const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       const parsed = JSON.parse(cleaned);
       const translation = String(parsed.translation ?? "").trim();
