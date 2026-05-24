@@ -80,7 +80,7 @@ export default function QuizPage() {
     setLoading(true); setError(null); setDone(null); setAnswers([]); setIdx(0);
     setPicked(null); setTyped(""); setRevealed(false);
     try {
-      const r = await fetch(`${basePath}/api/quiz/start`, {
+      const r = await fetch(`/api/quiz/start`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -122,7 +122,7 @@ export default function QuizPage() {
       // finish
       setLoading(true);
       try {
-        const r = await fetch(`${basePath}/api/quiz/finish`, {
+        const r = await fetch(`/api/quiz/finish`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId: quiz.sessionId, answers }),
