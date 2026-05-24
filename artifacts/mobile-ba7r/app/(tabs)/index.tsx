@@ -47,9 +47,9 @@ export default function HomeScreen() {
       contentContainerStyle={{ paddingTop, paddingBottom, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.appTitle, { color: colors.primary }]}>DeutschKarten</Text>
+      <Text style={[styles.appTitle, { color: colors.primary }]}>Ba7r DeutschKarten</Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-        Your German vocabulary companion
+        Your German vocabulary companion · Ocean edition
       </Text>
 
       <WelcomeHero name={displayName} />
