@@ -5,6 +5,21 @@ export function setApiBaseUrl(url: string) {
   BASE_URL = url;
 }
 
+// Resolve the absolute base URL at call time. React Native (iOS/Android) and
+// some WebKit-based runtimes throw "The string did not match the expected
+// pattern." when fetch() receives a relative URL with no origin. On web we
+// fall back to window.location.origin so the app still works when the
+// EXPO_PUBLIC_DOMAIN / EXPO_PUBLIC_API_BASE_URL env vars were not baked in
+// at build time (which is the case for the static production build served
+// at /mobile/ alongside the API).
+function resolveBaseUrl(): string {
+  if (BASE_URL) return BASE_URL;
+  if (typeof window !== "undefined" && window.location && window.location.origin) {
+    return window.location.origin;
+  }
+  return "";
+}
+
 export function setAuthTokenGetter(fn: () => Promise<string | null>) {
   authTokenGetter = fn;
 }
@@ -18,7 +33,7 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
     if (token) headers.Authorization = `Bearer ${token}`;
   }
   const { headers: _ignored, ...rest } = init ?? {};
-  return fetch(`${BASE_URL}${path}`, { ...rest, headers });
+  return fetch(`${resolveBaseUrl()}${path}`, { ...rest, headers });
 }
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -31,7 +46,7 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
   const { headers: _ignored, ...rest } = init ?? {};
-  const res = await fetch(`${BASE_URL}${path}`, { ...rest, headers });
+  const res = await fetch(`${resolveBaseUrl()}${path}`, { ...rest, headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw Object.assign(new Error((body as any).error ?? res.statusText), { status: res.status, body });
