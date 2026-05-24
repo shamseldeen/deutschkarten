@@ -9,6 +9,7 @@ import { getAuth } from "@clerk/express";
 import { eq, and, isNotNull, sql, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { z } from "zod";
+import { isSupportedLang } from "../lib/languages";
 
 const router = Router();
 
@@ -61,21 +62,39 @@ function pickDistractors(pool: string[], correct: string, n: number): string[] {
   return shuffle(unique).slice(0, n);
 }
 
-function buildQuestion(mode: QuizMode, card: Card, pool: Card[]): Question | null {
+// Return the translation for a card in the requested language.
+// Order: translations[lang] -> built-in column (en/ar) -> null.
+// Cards lacking a translation in the requested language are skipped at
+// question-build time (no silent fallback to a different language).
+function tr(card: Card, lang: string): string | null {
+  const map = (card.translations ?? null) as Record<string, string> | null;
+  const v = map?.[lang];
+  if (v && v.trim()) return v;
+  if (lang === "en") return card.englishTranslation || null;
+  if (lang === "ar") return card.arabicTranslation || null;
+  return null;
+}
+
+function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): Question | null {
   if (mode === "de-to-en") {
-    const opts = pickDistractors(pool.map((c) => c.englishTranslation), card.englishTranslation, 3);
+    const correct = tr(card, lang);
+    if (!correct) return null;
+    const poolTrs = pool.map((c) => tr(c, lang)).filter((s): s is string => !!s);
+    const opts = pickDistractors(poolTrs, correct, 3);
     if (opts.length < 3) return null;
     return {
       flashcardId: card.id, questionType: mode, prompt: card.word,
-      correctAnswer: card.englishTranslation,
-      options: shuffle([card.englishTranslation, ...opts]),
+      correctAnswer: correct,
+      options: shuffle([correct, ...opts]),
     };
   }
   if (mode === "en-to-de") {
+    const prompt = tr(card, lang);
+    if (!prompt) return null;
     const opts = pickDistractors(pool.map((c) => c.word), card.word, 3);
     if (opts.length < 3) return null;
     return {
-      flashcardId: card.id, questionType: mode, prompt: card.englishTranslation,
+      flashcardId: card.id, questionType: mode, prompt,
       correctAnswer: card.word,
       options: shuffle([card.word, ...opts]),
     };
@@ -84,12 +103,15 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[]): Question | nul
     if (!card.article) return null;
     return {
       flashcardId: card.id, questionType: mode, prompt: card.baseWord,
-      hint: card.englishTranslation, correctAnswer: card.article,
+      hint: tr(card, lang) ?? card.englishTranslation, correctAnswer: card.article,
       options: ["der", "die", "das"],
     };
   }
+  // typing
+  const prompt = tr(card, lang);
+  if (!prompt) return null;
   return {
-    flashcardId: card.id, questionType: mode, prompt: card.englishTranslation,
+    flashcardId: card.id, questionType: mode, prompt,
     hint: card.article ?? null, correctAnswer: card.baseWord,
   };
 }
@@ -106,6 +128,10 @@ const StartBody = z.object({
   mode: z.enum(MODES),
   level: z.enum(["A1", "A2", "B1", "B2", "C1"]).nullish(),
   count: z.coerce.number().int().min(5).max(20).default(10),
+  // Target language for translation-based modes (de-to-en, en-to-de, typing).
+  // Defaults to English; "ar" works out of the box, other langs depend on
+  // whether the card has a stored translation in that language.
+  lang: z.string().refine((v) => isSupportedLang(v), { message: "Unsupported language" }).default("en"),
 });
 
 const FinishBody = z.object({
@@ -124,7 +150,7 @@ router.post("/quiz/start", async (req, res) => {
     res.status(400).json({ error: "Invalid request body" });
     return;
   }
-  const { mode, level, count } = parsed.data;
+  const { mode, level, count, lang } = parsed.data;
   const userId = getAuth(req)?.userId ?? null;
 
   const conds = [];
@@ -151,12 +177,14 @@ router.post("/quiz/start", async (req, res) => {
   const questions: Question[] = [];
   for (const card of pool) {
     if (questions.length >= count) break;
-    const q = buildQuestion(mode, card, pool);
+    const q = buildQuestion(mode, card, pool, lang);
     if (q) questions.push(q);
   }
 
   if (questions.length === 0) {
-    res.status(400).json({ error: "Could not build any questions for this mode." });
+    res.status(400).json({
+      error: `Could not build any ${lang === "en" ? "" : lang.toUpperCase() + " "}questions for this mode. Try another language or generate more cards.`,
+    });
     return;
   }
 
@@ -174,7 +202,7 @@ router.post("/quiz/start", async (req, res) => {
     setCache(sessionId, mode, questions);
   }
 
-  res.json({ sessionId, mode, level: level ?? null, questions });
+  res.json({ sessionId, mode, level: level ?? null, lang, questions });
 });
 
 // POST /api/quiz/finish

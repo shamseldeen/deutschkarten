@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { useLangPrefs } from "@/lib/useLangPrefs";
+import { LANG_BY_CODE, isRtl } from "@/lib/languages";
 
 type Mode = "de-to-en" | "en-to-de" | "article" | "typing";
 
@@ -20,18 +22,25 @@ interface Question {
 interface QuizResp { sessionId: string | null; mode: Mode; level: string | null; questions: Question[]; }
 interface AnswerLog { flashcardId: number; questionType: Mode; userAnswer: string; correct: boolean; prompt: string; }
 
-const MODES: { id: Mode; label: string; desc: string; icon: keyof typeof Feather.glyphMap; color: string }[] = [
-  { id: "de-to-en", label: "German → English", desc: "Pick the English meaning", icon: "globe", color: "#3b82f6" },
-  { id: "en-to-de", label: "English → German", desc: "Pick the German word", icon: "globe", color: "#a855f7" },
-  { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: "star", color: "#f59e0b" },
-  { id: "typing", label: "Type the German", desc: "Type the word from memory", icon: "edit-3", color: "#10b981" },
-];
+function buildModes(langName: string): { id: Mode; label: string; desc: string; icon: keyof typeof Feather.glyphMap; color: string }[] {
+  return [
+    { id: "de-to-en", label: `German → ${langName}`, desc: `Pick the ${langName} meaning`, icon: "globe", color: "#3b82f6" },
+    { id: "en-to-de", label: `${langName} → German`, desc: "Pick the German word", icon: "globe", color: "#a855f7" },
+    { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: "star", color: "#f59e0b" },
+    { id: "typing", label: "Type the German", desc: "Type the word from memory", icon: "edit-3", color: "#10b981" },
+  ];
+}
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 const ARTICLE_COLOR: Record<string, string> = { der: "#3b82f6", die: "#ec4899", das: "#10b981" };
 
 export default function QuizScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { prefs } = useLangPrefs();
+  const lang = prefs.primaryLang || "en";
+  const langName = LANG_BY_CODE[lang]?.name ?? "English";
+  const rtl = isRtl(lang);
+  const MODES = useMemo(() => buildModes(langName), [langName]);
   const [mode, setMode] = useState<Mode | null>(null);
   const [level, setLevel] = useState<string | null>(null);
   const [quiz, setQuiz] = useState<QuizResp | null>(null);
@@ -58,7 +67,7 @@ export default function QuizScreen() {
       const r = await apiFetch("/api/quiz/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, level, count: 10 }),
+        body: JSON.stringify({ mode, level, count: 10, lang }),
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
@@ -229,12 +238,21 @@ export default function QuizScreen() {
 
       <View style={[s.questionCard, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 20 }]}>
         <Text style={[s.questionType, { color: colors.mutedForeground }]}>
-          {current.questionType === "de-to-en" && "What does this mean in English?"}
+          {current.questionType === "de-to-en" && `What does this mean in ${langName}?`}
           {current.questionType === "en-to-de" && "What is this in German?"}
           {current.questionType === "article" && "Der, Die, or Das?"}
           {current.questionType === "typing" && "Type the German word"}
         </Text>
-        <Text style={[s.prompt, { color: colors.foreground }]}>{current.prompt}</Text>
+        <Text
+          style={[
+            s.prompt,
+            { color: colors.foreground },
+            (current.questionType === "en-to-de" || current.questionType === "typing") && rtl
+              ? { writingDirection: "rtl" } : null,
+          ]}
+        >
+          {current.prompt}
+        </Text>
         {current.hint && (
           <Text style={{ color: colors.mutedForeground, fontStyle: "italic", marginTop: 6 }}>
             hint: {current.hint}

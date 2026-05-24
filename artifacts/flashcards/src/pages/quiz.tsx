@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Brain, Type, Languages, Sparkles, Check, X, RotateCcw } from "lucide-react";
+import { useLangPrefs } from "@/lib/useLangPrefs";
+import { LANG_BY_CODE, isRtl } from "@/lib/languages";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -34,12 +36,14 @@ interface AnswerLog {
   prompt: string;
 }
 
-const MODES: { id: Mode; label: string; desc: string; icon: typeof Brain; color: string }[] = [
-  { id: "de-to-en", label: "German → English", desc: "Pick the English meaning", icon: Languages, color: "text-blue-500 border-blue-500/40 bg-blue-500/5" },
-  { id: "en-to-de", label: "English → German", desc: "Pick the German word", icon: Languages, color: "text-purple-500 border-purple-500/40 bg-purple-500/5" },
-  { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: Sparkles, color: "text-amber-500 border-amber-500/40 bg-amber-500/5" },
-  { id: "typing", label: "Type the German", desc: "Type the word from memory", icon: Type, color: "text-emerald-500 border-emerald-500/40 bg-emerald-500/5" },
-];
+function buildModes(langName: string): { id: Mode; label: string; desc: string; icon: typeof Brain; color: string }[] {
+  return [
+    { id: "de-to-en", label: `German → ${langName}`, desc: `Pick the ${langName} meaning`, icon: Languages, color: "text-blue-500 border-blue-500/40 bg-blue-500/5" },
+    { id: "en-to-de", label: `${langName} → German`, desc: "Pick the German word", icon: Languages, color: "text-purple-500 border-purple-500/40 bg-purple-500/5" },
+    { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: Sparkles, color: "text-amber-500 border-amber-500/40 bg-amber-500/5" },
+    { id: "typing", label: "Type the German", desc: "Type the word from memory", icon: Type, color: "text-emerald-500 border-emerald-500/40 bg-emerald-500/5" },
+  ];
+}
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 
@@ -48,6 +52,12 @@ const articleColor: Record<string, string> = {
 };
 
 export default function QuizPage() {
+  const { prefs } = useLangPrefs();
+  const lang = prefs.primaryLang || "en";
+  const langMeta = LANG_BY_CODE[lang];
+  const langName = langMeta?.name ?? "English";
+  const rtl = isRtl(lang);
+  const MODES = useMemo(() => buildModes(langName), [langName]);
   const [mode, setMode] = useState<Mode | null>(null);
   const [level, setLevel] = useState<string | null>(null);
   const [quiz, setQuiz] = useState<QuizResp | null>(null);
@@ -72,7 +82,7 @@ export default function QuizPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, level, count: 10 }),
+        body: JSON.stringify({ mode, level, count: 10, lang }),
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
@@ -270,15 +280,19 @@ export default function QuizPage() {
         <Card>
           <CardContent className="py-10 text-center space-y-3">
             <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
-              {current.questionType === "de-to-en" && "What does this mean in English?"}
+              {current.questionType === "de-to-en" && `What does this mean in ${langName}?`}
               {current.questionType === "en-to-de" && "What is this in German?"}
               {current.questionType === "article" && "Der, Die, or Das?"}
               {current.questionType === "typing" && "Type the German word"}
             </div>
-            <div className={cn(
-              "text-4xl font-black",
-              isArticle ? "text-foreground" : "text-foreground",
-            )} dir={current.questionType === "en-to-de" || current.questionType === "typing" ? "ltr" : "auto"}>
+            <div
+              className={cn("text-4xl font-black text-foreground")}
+              dir={
+                current.questionType === "de-to-en" || current.questionType === "article"
+                  ? "ltr" // German prompt
+                  : rtl ? "rtl" : "ltr" // language prompt (for en-to-de & typing)
+              }
+            >
               {current.prompt}
             </div>
             {current.hint && (
