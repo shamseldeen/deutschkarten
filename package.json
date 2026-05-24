@@ -18,6 +18,7 @@
     "lint": "pnpm --filter @workspace/scripts run lint-no-console",
     "check": "pnpm run lint && pnpm run typecheck && pnpm run test",
     "codegen:check": "pnpm --filter @workspace/scripts run codegen-check",
+    "audit": "pnpm audit --audit-level=high --prod",
     "seed": "pnpm --filter @workspace/scripts run seed",
     "reset-db": "pnpm --filter @workspace/scripts run reset-db"
   },

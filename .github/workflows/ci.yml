@@ -36,3 +36,6 @@ jobs:
 
       - name: Prettier format check
         run: pnpm run format:check
+
+      - name: Dependency vulnerability audit
+        run: pnpm run audit
