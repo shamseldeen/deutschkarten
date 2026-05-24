@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/mobile/"
-title = "Shams DeutschKarten"
+title = "Ba7r DeutschKarten"
 version = "1.0.0"
 id = "artifacts/mobile"
 router = "expo-domain"

@@ -19,7 +19,7 @@ export function DonationCard() {
           <Feather name="heart" size={20} color={colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.title, { color: colors.foreground }]}>Support Shams DeutschKarten</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>Support Ba7r DeutschKarten</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             This app is free. Donations keep it running and make it faster.
           </Text>

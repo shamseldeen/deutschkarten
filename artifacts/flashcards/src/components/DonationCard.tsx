@@ -19,7 +19,7 @@ export function DonationCard({ compact = false }: Props) {
           </div>
           <div>
             <h3 className="font-bold text-lg text-foreground leading-tight">
-              Support Shams DeutschKarten
+              Support Ba7r DeutschKarten
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
               This app is free. Donations keep it running and make it faster.

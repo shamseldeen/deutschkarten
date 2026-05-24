@@ -62,10 +62,10 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-2">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl leading-none">
-              S
+              🌊
             </div>
             <span className="font-bold text-lg hidden md:inline-block text-foreground whitespace-nowrap">
-              Shams DeutschKarten
+              Ba7r DeutschKarten
             </span>
           </Link>
 
