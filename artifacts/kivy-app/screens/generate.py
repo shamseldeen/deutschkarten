@@ -110,7 +110,7 @@ class GenerateScreen(Screen):
         self._root.add_widget(self._banner_box)
 
         # Connectivity status
-        self._conn_lbl = Label(text='', markup=True, font_size=dp(12),
+        self._conn_lbl = Label(text='', font_size=dp(12),
                                size_hint_y=None, height=dp(20),
                                halign='center', text_size=(None, None))
         self._conn_lbl.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
@@ -194,8 +194,9 @@ class GenerateScreen(Screen):
         blocked.bind(pos=lambda w, v: setattr(b_bg, 'pos', v),
                      size=lambda w, v: setattr(b_bg, 'size', v))
 
-        blocked.add_widget(Label(text='⏳', font_name=FONT_EMOJI,
-                                 font_size=dp(36), size_hint_y=None, height=dp(44)))
+        blocked.add_widget(Label(text='[ TIME LIMIT ]', bold=True,
+                                 color=(0.72, 0.11, 0.11, 0.5),
+                                 font_size=dp(14), size_hint_y=None, height=dp(28)))
         blocked.add_widget(Label(text='Daily limit reached',
                                  bold=True, font_size=dp(18),
                                  color=(0.72, 0.11, 0.11, 1),
@@ -274,10 +275,10 @@ class GenerateScreen(Screen):
 
     def _refresh_banner(self):
         if connectivity.is_online():
-            self._conn_lbl.text = '[font=NotoColorEmoji]🟢[/font] Connected — AI generation available'
+            self._conn_lbl.text = '● Connected — AI generation available'
             self._conn_lbl.color = (0.13, 0.77, 0.37, 1)
         else:
-            self._conn_lbl.text = '[font=NotoColorEmoji]⚫[/font] Offline — connect to the API server to generate cards'
+            self._conn_lbl.text = '● Offline — connect to the API server to generate cards'
             self._conn_lbl.color = (0.6, 0.6, 0.6, 1)
 
     def _fetch_status(self):

@@ -171,8 +171,7 @@ class FlashCardWidget(BoxLayout):
             self.add_widget(ex)
 
         # Speak again on back
-        speak = Button(text='[font=NotoColorEmoji]🔊[/font] Pronounce',
-                       markup=True, background_normal='',
+        speak = Button(text='▶  Pronounce', background_normal='',
                        background_color=(0, 0, 0, 0), color=(0.13, 0.59, 0.95, 1),
                        bold=True, font_size=dp(13), size_hint_y=None, height=dp(34))
         speak.bind(on_release=lambda *a: self._speak())

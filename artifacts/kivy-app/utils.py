@@ -4,7 +4,7 @@ from bidi.algorithm import get_display
 LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 FONT_ARABIC = 'NotoSansArabic'
-FONT_EMOJI  = 'NotoColorEmoji'
+FONT_EMOJI  = 'NotoSansArabic'  # kept for back-compat; color emojis disabled (Kivy/SDL2 incompat on Windows)
 
 
 def ar_text(text: str) -> str:

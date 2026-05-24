@@ -9,8 +9,6 @@ from kivy.core.text import LabelBase
 _HERE = os.path.dirname(os.path.abspath(__file__))
 LabelBase.register('NotoSansArabic',
                    os.path.join(_HERE, 'NotoSansArabic-Regular.ttf'))
-LabelBase.register('NotoColorEmoji',
-                   os.path.join(_HERE, 'NotoColorEmoji-Regular.ttf'))
 
 Window.size = (420, 760)
 

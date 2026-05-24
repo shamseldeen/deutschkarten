@@ -89,8 +89,7 @@ class DashboardScreen(Screen):
                       halign='left', text_size=(None, None))
         title.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
         self._status_dot = Label(
-            text='[font=NotoColorEmoji]⚫[/font] offline',
-            markup=True, color=(0.6, 0.6, 0.6, 1),
+            text='● offline', color=(0.6, 0.6, 0.6, 1),
             font_size=dp(11), size_hint_x=None, width=dp(80),
             halign='right', text_size=(None, None))
         self._status_dot.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
@@ -132,11 +131,11 @@ class DashboardScreen(Screen):
 
     def _on_connectivity(self, online):
         if online:
-            self._status_dot.text = '[font=NotoColorEmoji]🟢[/font] online'
+            self._status_dot.text = '● online'
             self._status_dot.color = (0.13, 0.77, 0.37, 1)
             self._reload()
         else:
-            self._status_dot.text = '[font=NotoColorEmoji]⚫[/font] offline'
+            self._status_dot.text = '● offline'
             self._status_dot.color = (0.6, 0.6, 0.6, 1)
 
     def go_study(self, level):
