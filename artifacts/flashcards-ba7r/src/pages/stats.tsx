@@ -26,7 +26,7 @@ type HistoryRow = {
 const MODE_META: Record<string, { label: string; icon: typeof Brain; color: string }> = {
   "de-to-en": { label: "German → English", icon: Languages, color: "text-blue-500" },
   "en-to-de": { label: "English → German", icon: Languages, color: "text-purple-500" },
-  "article": { label: "Articles", icon: Sparkles, color: "text-amber-500" },
+  "article": { label: "Articles", icon: Sparkles, color: "text-cyan-500" },
   "typing": { label: "Typing", icon: Type, color: "text-emerald-500" },
 };
 
@@ -75,7 +75,7 @@ export default function StatsPage() {
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
-          <StatCard icon={Trophy} label="Accuracy" value={`${overall.accuracy}%`} color="text-amber-500" />
+          <StatCard icon={Trophy} label="Accuracy" value={`${overall.accuracy}%`} color="text-cyan-500" />
           <StatCard icon={Brain} label="Quizzes" value={overall.sessions} color="text-purple-500" />
           <StatCard icon={Target} label="Questions" value={overall.questions} color="text-blue-500" />
         </div>

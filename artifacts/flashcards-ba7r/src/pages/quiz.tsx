@@ -42,7 +42,7 @@ function buildModes(langName: string): { id: Mode; label: string; desc: string; 
   return [
     { id: "de-to-en", label: `German → ${langName}`, desc: `Pick the ${langName} meaning`, icon: Languages, color: "text-blue-500 border-blue-500/40 bg-blue-500/5" },
     { id: "en-to-de", label: `${langName} → German`, desc: "Pick the German word", icon: Languages, color: "text-purple-500 border-purple-500/40 bg-purple-500/5" },
-    { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: Sparkles, color: "text-amber-500 border-amber-500/40 bg-amber-500/5" },
+    { id: "article", label: "Der · Die · Das", desc: "Pick the right article", icon: Sparkles, color: "text-cyan-500 border-cyan-500/40 bg-cyan-500/5" },
     { id: "typing", label: "Type the German", desc: "Type the word from memory", icon: Type, color: "text-emerald-500 border-emerald-500/40 bg-emerald-500/5" },
   ];
 }
@@ -235,10 +235,10 @@ export default function QuizPage() {
           </Card>
 
           {error && (
-            <Card className="border-amber-500/40 bg-amber-500/5">
+            <Card className="border-cyan-500/40 bg-cyan-500/5">
               <CardContent className="py-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <Sparkles className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5" />
                   <div className="flex-1 text-sm">
                     <div className="font-bold text-foreground mb-1">Cannot start this quiz yet</div>
                     <div className="text-muted-foreground">{error}</div>

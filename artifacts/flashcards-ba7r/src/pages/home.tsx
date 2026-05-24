@@ -64,8 +64,8 @@ export default function Home() {
                   </div>
                 </div>
               </WLink>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/30">
-                <Flame className="w-5 h-5 text-orange-500" />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/10 border border-sky-500/30">
+                <Flame className="w-5 h-5 text-sky-500" />
                 <div>
                   <div className="text-xl font-black leading-none text-foreground">{me.streak.currentStreak}</div>
                   <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Day Streak</div>
@@ -108,7 +108,7 @@ export default function Home() {
           <Card className="flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-amber-500" />
+                <TrendingUp className="w-5 h-5 text-cyan-500" />
                 Daily Set
               </CardTitle>
               <CardDescription>Your curated review stack</CardDescription>
@@ -176,10 +176,10 @@ export default function Home() {
           </div>
         </section>
 
-        <Card className="bg-gradient-to-br from-amber-50/60 to-orange-50/40 dark:from-amber-950/20 dark:to-orange-950/10 border-amber-500/20">
+        <Card className="bg-gradient-to-br from-sky-50/60 to-cyan-50/40 dark:from-sky-950/20 dark:to-cyan-950/10 border-sky-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="w-5 h-5 text-amber-600" />
+              <Users className="w-5 h-5 text-sky-600" />
               Community Library
             </CardTitle>
             <CardDescription>
@@ -189,15 +189,15 @@ export default function Home() {
           <CardContent>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-2xl font-black text-amber-700 dark:text-amber-400">{community?.totalCards ?? "—"}</div>
+                <div className="text-2xl font-black text-sky-700 dark:text-sky-400">{community?.totalCards ?? "—"}</div>
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Words</div>
               </div>
               <div>
-                <div className="text-2xl font-black text-amber-700 dark:text-amber-400">{community?.contributors ?? "—"}</div>
+                <div className="text-2xl font-black text-sky-700 dark:text-sky-400">{community?.contributors ?? "—"}</div>
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Contributors</div>
               </div>
               <div>
-                <div className="text-2xl font-black text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1">
+                <div className="text-2xl font-black text-sky-700 dark:text-sky-400 flex items-center justify-center gap-1">
                   <Languages className="w-5 h-5" />{community?.languages ?? "—"}
                 </div>
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Languages</div>

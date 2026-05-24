@@ -118,7 +118,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardContent className="pt-6 text-center">
-              <Flame className="w-8 h-8 mx-auto text-orange-500 mb-2" />
+              <Flame className="w-8 h-8 mx-auto text-sky-500 mb-2" />
               <div className="text-3xl font-black">{me?.streak.currentStreak ?? 0}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">Current Streak</div>
             </CardContent>
