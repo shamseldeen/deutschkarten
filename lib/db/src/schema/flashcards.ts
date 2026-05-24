@@ -21,6 +21,7 @@ export const flashcardsTable = pgTable("flashcards", {
   createdBy: text("created_by"),
   imageUrl: text("image_url"),
   known: boolean("known").notNull().default(false),
+  hiddenAt: timestamp("hidden_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

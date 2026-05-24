@@ -15,6 +15,7 @@ import colors from "@/constants/colors";
 import { apiFetch, type Flashcard } from "@/lib/api";
 import { useLangPrefs } from "@/lib/useLangPrefs";
 import { LANG_BY_CODE, isRtl } from "@/lib/languages";
+import { ReportCardModal } from "./ReportCardModal";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = Math.min(width - 40, 400);
@@ -51,6 +52,7 @@ export function FlashCard({ card: incomingCard, onKnown, onUnknown, showActions 
   const [card, setCard] = useState<Flashcard>(incomingCard);
   const [flipped, setFlipped] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const flipAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => { setCard(incomingCard); }, [incomingCard]);
@@ -226,6 +228,23 @@ export function FlashCard({ card: incomingCard, onKnown, onUnknown, showActions 
           </TouchableOpacity>
         </View>
       )}
+
+      <TouchableOpacity
+        onPress={() => setReportOpen(true)}
+        style={styles.reportBtn}
+        hitSlop={8}
+        accessibilityLabel="Report this card"
+      >
+        <Feather name="flag" size={12} color={appColors.mutedForeground} />
+        <Text style={[styles.reportText, { color: appColors.mutedForeground }]}>Report</Text>
+      </TouchableOpacity>
+
+      <ReportCardModal
+        visible={reportOpen}
+        onClose={() => setReportOpen(false)}
+        cardId={card.id}
+        word={card.baseWord}
+      />
     </View>
   );
 }
@@ -284,4 +303,10 @@ const styles = StyleSheet.create({
   unknownBtn: { backgroundColor: "#fca5a5" },
   knownBtn: { backgroundColor: "#86efac" },
   actionBtnText: { fontSize: 16, fontWeight: "700", color: "#1a1207" },
+  reportBtn: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    marginTop: 12, paddingHorizontal: 10, paddingVertical: 6,
+    opacity: 0.7,
+  },
+  reportText: { fontSize: 11, fontWeight: "600" },
 });

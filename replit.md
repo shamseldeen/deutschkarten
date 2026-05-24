@@ -34,6 +34,7 @@ A German vocabulary flashcard app (A1–C1 levels) with article gender coloring,
 - `artifacts/kivy-app/auth.py` — Clerk JWT storage (~/.deutschkarten/auth.json, chmod 600)
 - `artifacts/kivy-app/sync.py` — push/pull progress on sign-in
 - `artifacts/api-server/src/routes/auth.ts` — `/api/auth/sign-in` and `/api/auth/sign-up` (Clerk Backend SDK, IP rate-limited 10/min)
+- `artifacts/api-server/src/routes/reports.ts` — community card moderation: POST `/api/flashcards/:id/report` (user, 20/hr), GET `/api/admin/reports`, POST `/api/admin/reports/:id/dismiss`, POST `/api/admin/flashcards/:id/unhide`, DELETE `/api/admin/flashcards/:id`. Auto-hides cards at 3 distinct reporters. Admins set via `ADMIN_USER_IDS` env var (comma-separated Clerk user IDs).
 - `lib/api-spec/openapi.yaml` — OpenAPI spec (source of truth for API contracts)
 - `lib/db/` — Drizzle ORM schema
 

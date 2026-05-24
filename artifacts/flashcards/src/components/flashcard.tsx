@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X, Volume2, Users } from "lucide-react";
 import { useLangPrefs } from "@/lib/useLangPrefs";
 import { LANG_BY_CODE, isRtl } from "@/lib/languages";
+import { ReportCardButton } from "@/components/ReportCardButton";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -112,6 +113,9 @@ export function Flashcard({ card: incomingCard, onKnown, onUnknown, isStudyMode 
                   <Users className="w-3 h-3" />
                 </Badge>
               )}
+              <div onClick={(e) => e.stopPropagation()}>
+                <ReportCardButton cardId={card.id} word={card.baseWord} />
+              </div>
             </div>
           </div>
 

@@ -13,7 +13,7 @@ import {
   UpdateFlashcardProgressBody,
   GetDailyFlashcardsQueryParams,
 } from "@workspace/api-zod";
-import { eq, and, count, sql } from "drizzle-orm";
+import { eq, and, count, sql, isNull } from "drizzle-orm";
 import { isSupportedLang } from "../lib/languages";
 import { requireAuth } from "../middlewares/requireAuth";
 import { invalidateCommunityStats } from "./community";
@@ -61,11 +61,11 @@ router.get("/flashcards", async (req, res) => {
   }
   const { level, category, limit = 20, offset = 0 } = parsed.data;
 
-  const conditions = [];
+  const conditions = [isNull(flashcardsTable.hiddenAt)];
   if (level) conditions.push(eq(flashcardsTable.level, level));
   if (category) conditions.push(eq(flashcardsTable.category, category));
 
-  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const where = and(...conditions);
 
   const [items, totalResult] = await Promise.all([
     db
@@ -103,6 +103,7 @@ router.get("/flashcards/stats", async (req, res) => {
           eq(userProgressTable.userId, userId),
         ),
       )
+      .where(isNull(flashcardsTable.hiddenAt))
       .groupBy(flashcardsTable.level);
 
       const byLevel = new Map(rows.map((r) => [r.level, r]));
@@ -125,7 +126,7 @@ router.get("/flashcards/stats", async (req, res) => {
       const rows = await db
         .select({ id: flashcardsTable.id })
         .from(flashcardsTable)
-        .where(eq(flashcardsTable.level, level));
+        .where(and(eq(flashcardsTable.level, level), isNull(flashcardsTable.hiddenAt)));
       const total = rows.length;
       return { level, total, known: 0, unknown: total, percentage: 0 };
     })
@@ -142,9 +143,9 @@ router.get("/flashcards/daily", async (req, res) => {
   }
   const { level } = parsed.data;
 
-  const conditions = [];
+  const conditions = [isNull(flashcardsTable.hiddenAt)];
   if (level) conditions.push(eq(flashcardsTable.level, level));
-  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const where = and(...conditions);
 
   const items = await db
     .select()
@@ -166,7 +167,7 @@ router.get("/flashcards/:id", async (req, res) => {
   const [card] = await db
     .select()
     .from(flashcardsTable)
-    .where(eq(flashcardsTable.id, parsed.data.id))
+    .where(and(eq(flashcardsTable.id, parsed.data.id), isNull(flashcardsTable.hiddenAt)))
     .limit(1);
 
   if (!card) {

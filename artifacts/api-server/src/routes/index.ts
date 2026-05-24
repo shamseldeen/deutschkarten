@@ -8,6 +8,7 @@ import leaderboardRouter from "./leaderboard";
 import settingsRouter from "./settings";
 import communityRouter from "./community";
 import logRouter from "./log";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(leaderboardRouter);
 router.use(settingsRouter);
 router.use(communityRouter);
 router.use(logRouter);
+router.use(reportsRouter);
 
 export default router;
