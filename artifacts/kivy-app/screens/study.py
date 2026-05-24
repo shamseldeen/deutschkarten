@@ -8,7 +8,7 @@ from kivy.metrics import dp
 from kivy.animation import Animation
 import local_storage
 import image_cache
-from utils import get_article_color, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY
+from utils import get_article_color, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY, ar_text, FONT_ARABIC, FONT_EMOJI
 
 
 def _rnd_btn(text, color, on_press):
@@ -145,12 +145,20 @@ class FlashCardWidget(BoxLayout):
             ('English', 'englishTranslation', 'left'),
             ('Arabic  (العربية)', 'arabicTranslation', 'right'),
         ]:
-            self.add_widget(Label(text=label, color=TEXT_GREY, font_size=dp(11),
-                                  size_hint_y=None, height=dp(16),
-                                  halign=align, text_size=(None, None)))
-            val = Label(text=card.get(key, ''), bold=True, font_size=dp(20),
+            is_ar = key == 'arabicTranslation'
+            hdr = Label(text=label, color=TEXT_GREY, font_size=dp(11),
+                        size_hint_y=None, height=dp(16),
+                        halign=align, text_size=(None, None))
+            if is_ar:
+                hdr.font_name = FONT_ARABIC
+            self.add_widget(hdr)
+            raw = card.get(key, '')
+            val = Label(text=ar_text(raw) if is_ar else raw,
+                        bold=True, font_size=dp(20),
                         color=TEXT_DARK, size_hint_y=None, height=dp(34),
                         halign=align, text_size=(None, None))
+            if is_ar:
+                val.font_name = FONT_ARABIC
             val.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
             self.add_widget(val)
 
@@ -163,7 +171,8 @@ class FlashCardWidget(BoxLayout):
             self.add_widget(ex)
 
         # Speak again on back
-        speak = Button(text='🔊 Pronounce', background_normal='',
+        speak = Button(text='[font=NotoColorEmoji]🔊[/font] Pronounce',
+                       markup=True, background_normal='',
                        background_color=(0, 0, 0, 0), color=(0.13, 0.59, 0.95, 1),
                        bold=True, font_size=dp(13), size_hint_y=None, height=dp(34))
         speak.bind(on_release=lambda *a: self._speak())

@@ -9,7 +9,7 @@ from kivy.graphics import Color, RoundedRectangle, Rectangle
 from kivy.metrics import dp
 import local_storage
 import connectivity
-from utils import LEVELS, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY
+from utils import LEVELS, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY, FONT_EMOJI
 
 
 def _rnd_bg(widget, color, radius=dp(12)):
@@ -88,9 +88,11 @@ class DashboardScreen(Screen):
                       font_size=dp(22), color=TEXT_DARK,
                       halign='left', text_size=(None, None))
         title.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
-        self._status_dot = Label(text='⚫ offline', color=(0.6, 0.6, 0.6, 1),
-                                 font_size=dp(11), size_hint_x=None, width=dp(80),
-                                 halign='right', text_size=(None, None))
+        self._status_dot = Label(
+            text='[font=NotoColorEmoji]⚫[/font] offline',
+            markup=True, color=(0.6, 0.6, 0.6, 1),
+            font_size=dp(11), size_hint_x=None, width=dp(80),
+            halign='right', text_size=(None, None))
         self._status_dot.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
         header.add_widget(title)
         header.add_widget(self._status_dot)
@@ -130,11 +132,11 @@ class DashboardScreen(Screen):
 
     def _on_connectivity(self, online):
         if online:
-            self._status_dot.text = '🟢 online'
+            self._status_dot.text = '[font=NotoColorEmoji]🟢[/font] online'
             self._status_dot.color = (0.13, 0.77, 0.37, 1)
             self._reload()
         else:
-            self._status_dot.text = '⚫ offline'
+            self._status_dot.text = '[font=NotoColorEmoji]⚫[/font] offline'
             self._status_dot.color = (0.6, 0.6, 0.6, 1)
 
     def go_study(self, level):

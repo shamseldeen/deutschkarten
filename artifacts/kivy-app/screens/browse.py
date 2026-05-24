@@ -7,7 +7,7 @@ from kivy.uix.button import Button
 from kivy.graphics import Color, RoundedRectangle, Rectangle
 from kivy.metrics import dp
 import local_storage
-from utils import LEVELS, get_article_color, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY
+from utils import LEVELS, get_article_color, get_level_color, BG_COLOR, CARD_BG, TEXT_DARK, TEXT_GREY, ar_text, FONT_ARABIC
 
 
 class CardRow(BoxLayout):
@@ -41,7 +41,8 @@ class CardRow(BoxLayout):
                    font_size=dp(12), halign='left', text_size=(None, None))
         en.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
         left.add_widget(en)
-        ar = Label(text=card.get('arabicTranslation', ''), color=TEXT_GREY,
+        ar = Label(text=ar_text(card.get('arabicTranslation', '')),
+                   font_name=FONT_ARABIC, color=TEXT_GREY,
                    font_size=dp(11), halign='right', text_size=(None, None))
         ar.bind(size=lambda w, v: setattr(w, 'text_size', (v[0], None)))
         left.add_widget(ar)

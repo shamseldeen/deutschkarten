@@ -4,6 +4,13 @@ os.environ.setdefault('KIVY_NO_ENV_CONFIG', '1')
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, SlideTransition
 from kivy.core.window import Window
+from kivy.core.text import LabelBase
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+LabelBase.register('NotoSansArabic',
+                   os.path.join(_HERE, 'NotoSansArabic-Regular.ttf'))
+LabelBase.register('NotoColorEmoji',
+                   os.path.join(_HERE, 'NotoColorEmoji-Regular.ttf'))
 
 Window.size = (420, 760)
 

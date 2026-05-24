@@ -1,2 +1,4 @@
 kivy>=2.3.0
 pyttsx3>=2.90
+arabic-reshaper>=3.0.0
+python-bidi>=0.6.0

@@ -1,4 +1,17 @@
+import arabic_reshaper
+from bidi.algorithm import get_display
+
 LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1']
+
+FONT_ARABIC = 'NotoSansArabic'
+FONT_EMOJI  = 'NotoColorEmoji'
+
+
+def ar_text(text: str) -> str:
+    """Reshape + apply bidi algorithm so Kivy renders Arabic correctly."""
+    if not text:
+        return ''
+    return get_display(arabic_reshaper.reshape(text))
 
 LEVEL_COLORS = {
     'A1': (0.13, 0.77, 0.37, 1),
