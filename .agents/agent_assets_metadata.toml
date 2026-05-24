@@ -23,3 +23,9 @@ id = "RSyFT-XUW_SiTRWbgp837"
 uri = "file://deutschkarten.tar.gz"
 type = "unspecified"
 title = "DeutschKarten — Full Source Code"
+
+[[outputs]]
+id = "HhdjMlBornOU-RmXDUGA1"
+uri = "file://deutschkarten-kivy.tar.gz"
+type = "unspecified"
+title = "DeutschKarten — Kivy Python App"
