@@ -48,7 +48,8 @@ def _fetch(path, method="GET", body=None, callback=None, error_callback=None):
         except Exception as exc:
             if error_callback:
                 from kivy.clock import Clock
-                Clock.schedule_once(lambda dt: error_callback(str(exc)), 0)
+                err_msg = str(exc)
+                Clock.schedule_once(lambda dt: error_callback(err_msg), 0)
 
     threading.Thread(target=_run, daemon=True).start()
 
