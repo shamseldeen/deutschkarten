@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "oRYA8vuIgmAEnYaaBVYDO"
@@ -18,3 +17,9 @@ id = "0primnodgQ3vl7068_Uuh"
 uri = "file://artifacts/mobile/assets/images/icon.png"
 type = "image"
 title = "deutschkarten app icon"
+
+[[outputs]]
+id = "RSyFT-XUW_SiTRWbgp837"
+uri = "file://deutschkarten.tar.gz"
+type = "unspecified"
+title = "DeutschKarten — Full Source Code"
