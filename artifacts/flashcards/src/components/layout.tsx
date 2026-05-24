@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Layers, PlusCircle, Calendar, User, LogIn } from "lucide-react";
+import { BookOpen, Layers, PlusCircle, Calendar, User, LogIn, Brain, BarChart3 } from "lucide-react";
 import { Show, useUser } from "@clerk/react";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +73,8 @@ export function Layout({ children }: { children: ReactNode }) {
             <NavLink href="/" icon={BookOpen}>Dashboard</NavLink>
             <NavLink href="/daily" icon={Calendar}>Daily</NavLink>
             <NavLink href="/browse" icon={Layers}>Browse</NavLink>
+            <NavLink href="/quiz" icon={Brain}>Quiz</NavLink>
+            <NavLink href="/stats" icon={BarChart3}>Stats</NavLink>
             <NavLink href="/generate" icon={PlusCircle}>Generate</NavLink>
           </nav>
 

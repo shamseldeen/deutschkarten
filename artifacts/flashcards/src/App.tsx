@@ -16,6 +16,8 @@ import Generate from "@/pages/generate";
 import SignInPage from "@/pages/sign-in";
 import SignUpPage from "@/pages/sign-up";
 import ProfilePage from "@/pages/profile";
+import QuizPage from "@/pages/quiz";
+import StatsPage from "@/pages/stats";
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -58,6 +60,8 @@ function Router() {
       <Route path="/daily" component={Daily} />
       <Route path="/study/:level" component={Study} />
       <Route path="/generate" component={Generate} />
+      <Route path="/quiz" component={QuizPage} />
+      <Route path="/stats" component={StatsPage} />
       <Route component={NotFound} />
     </Switch>
   );

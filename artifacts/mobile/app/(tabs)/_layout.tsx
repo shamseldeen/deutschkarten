@@ -23,6 +23,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "calendar", selected: "calendar" }} />
         <Label>Daily</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="quiz">
+        <Icon sf={{ default: "brain.head.profile", selected: "brain.head.profile.fill" }} />
+        <Label>Quiz</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="generate">
         <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
         <Label>Generate</Label>
@@ -101,6 +105,18 @@ function ClassicTabLayout() {
               <SymbolView name="calendar" tintColor={color} size={24} />
             ) : (
               <Feather name="calendar" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="quiz"
+        options={{
+          title: "Quiz",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="brain.head.profile" tintColor={color} size={24} />
+            ) : (
+              <Feather name="zap" size={22} color={color} />
             ),
         }}
       />
