@@ -53,6 +53,9 @@ export type Flashcard = {
   exampleSentenceDe: string;
   exampleSentenceEn: string;
   exampleSentenceAr: string;
+  translations?: Record<string, string> | null;
+  exampleTranslations?: Record<string, string> | null;
+  createdBy?: string | null;
   imageUrl: string | null;
   known: boolean;
   createdAt: string;

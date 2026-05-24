@@ -1,6 +1,8 @@
-import { pgTable, text, serial, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+export type LangMap = Record<string, string>;
 
 export const flashcardsTable = pgTable("flashcards", {
   id: serial("id").primaryKey(),
@@ -14,6 +16,9 @@ export const flashcardsTable = pgTable("flashcards", {
   exampleSentenceDe: text("example_sentence_de").notNull(),
   exampleSentenceEn: text("example_sentence_en").notNull(),
   exampleSentenceAr: text("example_sentence_ar").notNull(),
+  translations: jsonb("translations").$type<LangMap>().notNull().default({}),
+  exampleTranslations: jsonb("example_translations").$type<LangMap>().notNull().default({}),
+  createdBy: text("created_by"),
   imageUrl: text("image_url"),
   known: boolean("known").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),

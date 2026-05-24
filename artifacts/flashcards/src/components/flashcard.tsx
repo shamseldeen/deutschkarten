@@ -1,19 +1,20 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { Flashcard as TFlashcard } from "@workspace/api-client-react";
 import { getGenderColor, getLevelColor } from "@/lib/colors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X, Volume2 } from "lucide-react";
+import { Check, X, Volume2, Users } from "lucide-react";
+import { useLangPrefs } from "@/lib/useLangPrefs";
+import { LANG_BY_CODE, isRtl } from "@/lib/languages";
 
-function speakGerman(text: string) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "de-DE";
-  utter.rate = 0.85;
-  window.speechSynthesis.speak(utter);
-}
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type CardWithTranslations = TFlashcard & {
+  translations?: Record<string, string> | null;
+  exampleTranslations?: Record<string, string> | null;
+  createdBy?: string | null;
+};
 
 interface FlashcardProps {
   card: TFlashcard;
@@ -22,9 +23,49 @@ interface FlashcardProps {
   isStudyMode?: boolean;
 }
 
-export function Flashcard({ card, onKnown, onUnknown, isStudyMode = false }: FlashcardProps) {
+export function Flashcard({ card: incomingCard, onKnown, onUnknown, isStudyMode = false }: FlashcardProps) {
+  const { prefs } = useLangPrefs();
+  const [card, setCard] = useState<CardWithTranslations>(incomingCard as CardWithTranslations);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => { setCard(incomingCard as CardWithTranslations); }, [incomingCard]);
+
+  const translations = card.translations ?? { en: card.englishTranslation, ar: card.arabicTranslation };
+  const exampleTr = card.exampleTranslations ?? { en: card.exampleSentenceEn, ar: card.exampleSentenceAr };
+
+  const langs: string[] = [prefs.primaryLang, prefs.secondaryLang].filter(
+    (l): l is string => !!l && l !== prefs.primaryLang || l === prefs.primaryLang,
+  );
+  // dedupe + drop nulls
+  const langList = [prefs.primaryLang, prefs.secondaryLang].filter(
+    (l, i, arr): l is string => !!l && arr.indexOf(l) === i,
+  );
+
+  // Translate missing languages on demand
+  useEffect(() => {
+    let cancelled = false;
+    const missing = langList.filter((l) => !translations[l]);
+    if (missing.length === 0) return;
+    (async () => {
+      for (const lang of missing) {
+        try {
+          const r = await fetch(`${basePath}/api/flashcards/${card.id}/translate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ lang }),
+          });
+          if (!r.ok) continue;
+          const updated = await r.json();
+          if (cancelled) return;
+          setCard(updated);
+        } catch { /* ignore */ }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.id, prefs.primaryLang, prefs.secondaryLang]);
 
   const handleFlip = () => setIsFlipped(!isFlipped);
 
@@ -60,13 +101,20 @@ export function Flashcard({ card, onKnown, onUnknown, isStudyMode = false }: Fla
             <Badge variant="outline" className={cn("font-bold text-sm", getLevelColor(card.level))}>
               {card.level}
             </Badge>
-            {card.category && (
-              <Badge variant="secondary" className="text-xs uppercase tracking-wider">
-                {card.category}
-              </Badge>
-            )}
+            <div className="flex gap-1.5">
+              {card.category && (
+                <Badge variant="secondary" className="text-xs uppercase tracking-wider">
+                  {card.category}
+                </Badge>
+              )}
+              {card.createdBy && (
+                <Badge variant="outline" className="text-xs gap-1" title="Contributed by the community">
+                  <Users className="w-3 h-3" />
+                </Badge>
+              )}
+            </div>
           </div>
-          
+
           <div className="flex-1 flex flex-col items-center justify-center text-center gap-6">
             {card.imageUrl && (
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-muted/50">
@@ -109,41 +157,47 @@ export function Flashcard({ card, onKnown, onUnknown, isStudyMode = false }: Fla
               {card.level}
             </Badge>
           </div>
-          
-          <div className="flex flex-col gap-6 flex-1">
-            <div className="space-y-1">
-              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">English</h3>
-              <p className="text-2xl font-medium text-foreground">{card.englishTranslation}</p>
-            </div>
-            
-            <div className="space-y-1 text-right" dir="rtl">
-              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Arabic (العربية)</h3>
-              <p className="text-3xl font-medium text-foreground">{card.arabicTranslation}</p>
-            </div>
 
-            <div className="space-y-3 mt-4 pt-4 border-t border-border/50">
-              <div className="space-y-1">
-                <p className="text-sm font-serif font-medium text-foreground">{card.exampleSentenceDe}</p>
-                <p className="text-xs text-muted-foreground">{card.exampleSentenceEn}</p>
-                <p className="text-xs text-muted-foreground text-right" dir="rtl">{card.exampleSentenceAr}</p>
-              </div>
+          <div className="flex flex-col gap-5 flex-1">
+            {langList.map((lang) => {
+              const meta = LANG_BY_CODE[lang];
+              const rtl = isRtl(lang);
+              const value = translations[lang];
+              const example = exampleTr[lang];
+              return (
+                <div key={lang} className={cn("space-y-1", rtl && "text-right")} dir={rtl ? "rtl" : "ltr"}>
+                  <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                    {meta?.name ?? lang} {meta && meta.nativeName !== meta.name ? `(${meta.nativeName})` : ""}
+                  </h3>
+                  <p className={cn("text-2xl font-medium text-foreground", rtl && "text-3xl")}>
+                    {value ?? <span className="text-muted-foreground italic text-base">Translating…</span>}
+                  </p>
+                  {example && (
+                    <p className="text-xs text-muted-foreground mt-1">{example}</p>
+                  )}
+                </div>
+              );
+            })}
+
+            <div className="space-y-1 mt-2 pt-4 border-t border-border/50">
+              <p className="text-sm font-serif font-medium text-foreground">{card.exampleSentenceDe}</p>
             </div>
           </div>
 
           {isStudyMode && (
             <div className="mt-6 flex justify-between gap-4" onClick={(e) => e.stopPropagation()}>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="flex-1 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive border-destructive/20 h-14"
                 onClick={() => onUnknown?.(card.id)}
               >
                 <X className="w-5 h-5 mr-2" />
                 Again
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="flex-1 bg-green-500/10 text-green-600 hover:bg-green-500/20 hover:text-green-700 border-green-500/20 h-14"
                 onClick={() => onKnown?.(card.id)}
               >

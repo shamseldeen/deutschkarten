@@ -4,6 +4,12 @@ import { useUser, useAuth } from "@clerk/expo";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { DonationCard } from "@/components/DonationCard";
+import { useLangPrefs } from "@/lib/useLangPrefs";
+import { SUPPORTED_LANGS } from "@/lib/languages";
+import { Feather } from "@expo/vector-icons";
+import { Linking } from "react-native";
+
+type CommunityStats = { totalCards: number; contributors: number; languages: number };
 
 type Me = {
   user: { id: string; email: string | null; displayName: string | null; imageUrl: string | null } | null;
@@ -54,6 +60,7 @@ export default function ProfileTab() {
   const [quizStats, setQuizStats] = useState<QuizStats | null>(null);
   const [quizHistory, setQuizHistory] = useState<QuizHistoryRow[]>([]);
   const [leaderboard, setLeaderboard] = useState<LbResp | null>(null);
+  const [community, setCommunity] = useState<CommunityStats | null>(null);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -62,16 +69,18 @@ export default function ProfileTab() {
     try {
       const token = await getToken();
       const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-      const [meRes, statsRes, histRes, lbRes] = await Promise.all([
+      const [meRes, statsRes, histRes, lbRes, comRes] = await Promise.all([
         fetch(`${BASE_URL}/api/me`, { headers }),
         fetch(`${BASE_URL}/api/me/quiz-stats`, { headers }),
         fetch(`${BASE_URL}/api/me/quiz-history`, { headers }),
         fetch(`${BASE_URL}/api/leaderboard`, { headers }),
+        fetch(`${BASE_URL}/api/community/stats`),
       ]);
       if (meRes.ok) setMe(await meRes.json());
       if (statsRes.ok) setQuizStats(await statsRes.json());
       if (histRes.ok) setQuizHistory(await histRes.json());
       if (lbRes.ok) setLeaderboard(await lbRes.json());
+      if (comRes.ok) setCommunity(await comRes.json());
     } catch {
       // ignore
     } finally {
@@ -232,6 +241,38 @@ export default function ProfileTab() {
         </View>
       )}
 
+      <LanguagesSection colors={colors} />
+
+      {community && (
+        <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>👥 Community Library</Text>
+          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 8 }}>
+            Free for everyone. Every word added or translated is shared with all learners.
+          </Text>
+          <View style={styles.statsRow}>
+            <View style={styles.miniStat}>
+              <Text style={[styles.miniNum, { color: colors.primary }]}>{community.totalCards}</Text>
+              <Text style={[styles.miniLabel, { color: colors.mutedForeground }]}>Words</Text>
+            </View>
+            <View style={styles.miniStat}>
+              <Text style={[styles.miniNum, { color: colors.primary }]}>{community.contributors}</Text>
+              <Text style={[styles.miniLabel, { color: colors.mutedForeground }]}>Contributors</Text>
+            </View>
+            <View style={styles.miniStat}>
+              <Text style={[styles.miniNum, { color: colors.primary }]}>{community.languages}</Text>
+              <Text style={[styles.miniLabel, { color: colors.mutedForeground }]}>Languages</Text>
+            </View>
+          </View>
+          <Pressable
+            onPress={() => Linking.openURL("https://github.com/")}
+            style={{ marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}
+          >
+            <Feather name="github" size={14} color={colors.mutedForeground} />
+            <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Open source on GitHub</Text>
+          </Pressable>
+        </View>
+      )}
+
       <DonationCard />
 
       <Pressable
@@ -280,4 +321,82 @@ const styles = StyleSheet.create({
   lbRank: { fontSize: 13, fontWeight: "800", width: 38 },
   lbName: { fontSize: 13, fontWeight: "600" },
   lbXp: { fontSize: 13, fontWeight: "800" },
+  langRow: { flexDirection: "row", gap: 10, marginTop: 8 },
+  langPickerWrap: { flex: 1 },
+  langPickerLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 },
+  langOptions: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
+  langChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
+  langChipText: { fontSize: 11, fontWeight: "700" },
 });
+
+function LanguagesSection({ colors }: { colors: ReturnType<typeof useColors> }) {
+  const { prefs, save } = useLangPrefs();
+  const [editing, setEditing] = React.useState<"primary" | "secondary" | null>(null);
+
+  return (
+    <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>🌍 Translation Languages</Text>
+      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 4 }}>
+        Pick which languages appear on each card. Translations are generated on demand and shared with everyone.
+      </Text>
+
+      <View style={styles.langRow}>
+        <Pressable
+          style={[styles.langPickerWrap, { borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10 }]}
+          onPress={() => setEditing(editing === "primary" ? null : "primary")}
+        >
+          <Text style={[styles.langPickerLabel, { color: colors.mutedForeground }]}>Primary</Text>
+          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
+            {SUPPORTED_LANGS.find((l) => l.code === prefs.primaryLang)?.name ?? prefs.primaryLang}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.langPickerWrap, { borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10 }]}
+          onPress={() => setEditing(editing === "secondary" ? null : "secondary")}
+        >
+          <Text style={[styles.langPickerLabel, { color: colors.mutedForeground }]}>Secondary</Text>
+          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
+            {prefs.secondaryLang ? (SUPPORTED_LANGS.find((l) => l.code === prefs.secondaryLang)?.name ?? prefs.secondaryLang) : "None"}
+          </Text>
+        </Pressable>
+      </View>
+
+      {editing && (
+        <View style={styles.langOptions}>
+          {editing === "secondary" && (
+            <Pressable
+              onPress={() => { save({ ...prefs, secondaryLang: null }); setEditing(null); }}
+              style={[styles.langChip, { borderColor: colors.border, backgroundColor: colors.muted }]}
+            >
+              <Text style={[styles.langChipText, { color: colors.foreground }]}>None</Text>
+            </Pressable>
+          )}
+          {SUPPORTED_LANGS.filter((l) => editing === "primary" || l.code !== prefs.primaryLang).map((l) => {
+            const isActive = editing === "primary" ? l.code === prefs.primaryLang : l.code === prefs.secondaryLang;
+            return (
+              <Pressable
+                key={l.code}
+                onPress={() => {
+                  if (editing === "primary") save({ ...prefs, primaryLang: l.code });
+                  else save({ ...prefs, secondaryLang: l.code });
+                  setEditing(null);
+                }}
+                style={[
+                  styles.langChip,
+                  {
+                    borderColor: isActive ? colors.primary : colors.border,
+                    backgroundColor: isActive ? colors.primary : "transparent",
+                  },
+                ]}
+              >
+                <Text style={[styles.langChipText, { color: isActive ? "#fff" : colors.foreground }]}>
+                  {l.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+}

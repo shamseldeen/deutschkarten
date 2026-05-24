@@ -7,14 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getLevelColor } from "@/lib/colors";
 import { cn } from "@/lib/utils";
-import { BrainCircuit, Play, TrendingUp, Flame, Trophy } from "lucide-react";
+import { BrainCircuit, Play, TrendingUp, Flame, Trophy, Users, Languages, Github } from "lucide-react";
 import { useMe } from "@/lib/useMe";
 import { DonationCard } from "@/components/DonationCard";
+import { useQuery } from "@tanstack/react-query";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type CommunityStats = { totalCards: number; contributors: number; languages: number };
 
 export default function Home() {
   const { data: stats, isLoading: statsLoading } = useGetFlashcardStats();
   const { data: dailyCards, isLoading: dailyLoading } = useGetDailyFlashcards();
   const { data: me } = useMe();
+  const { data: community } = useQuery<CommunityStats>({
+    queryKey: ["community-stats"],
+    queryFn: () => fetch(`${basePath}/api/community/stats`).then((r) => r.json()),
+    staleTime: 60_000,
+  });
 
   const totalCards = stats?.reduce((acc, curr) => acc + curr.total, 0) || 0;
   const knownCards = stats?.reduce((acc, curr) => acc + curr.known, 0) || 0;
@@ -141,6 +151,44 @@ export default function Home() {
             )}
           </div>
         </section>
+
+        <Card className="bg-gradient-to-br from-amber-50/60 to-orange-50/40 dark:from-amber-950/20 dark:to-orange-950/10 border-amber-500/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="w-5 h-5 text-amber-600" />
+              Community Library
+            </CardTitle>
+            <CardDescription>
+              Free for everyone. Every word added or translated is shared with all learners.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <div className="text-2xl font-black text-amber-700 dark:text-amber-400">{community?.totalCards ?? "—"}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Words</div>
+              </div>
+              <div>
+                <div className="text-2xl font-black text-amber-700 dark:text-amber-400">{community?.contributors ?? "—"}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Contributors</div>
+              </div>
+              <div>
+                <div className="text-2xl font-black text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1">
+                  <Languages className="w-5 h-5" />{community?.languages ?? "—"}
+                </div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Languages</div>
+              </div>
+            </div>
+            <a
+              href="https://github.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Github className="w-3.5 h-3.5" /> Open source on GitHub
+            </a>
+          </CardContent>
+        </Card>
 
         <DonationCard />
       </div>

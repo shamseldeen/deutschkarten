@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,11 +12,13 @@ import * as Speech from "expo-speech";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import colors from "@/constants/colors";
-import type { Flashcard } from "@/lib/api";
+import { apiFetch, type Flashcard } from "@/lib/api";
+import { useLangPrefs } from "@/lib/useLangPrefs";
+import { LANG_BY_CODE, isRtl } from "@/lib/languages";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = Math.min(width - 40, 400);
-const CARD_HEIGHT = 420;
+const CARD_HEIGHT = 460;
 
 type Props = {
   card: Flashcard;
@@ -43,27 +45,57 @@ function getLevelColor(level: string): string {
   }
 }
 
-export function FlashCard({ card, onKnown, onUnknown, showActions = true }: Props) {
+export function FlashCard({ card: incomingCard, onKnown, onUnknown, showActions = true }: Props) {
   const appColors = useColors();
+  const { prefs } = useLangPrefs();
+  const [card, setCard] = useState<Flashcard>(incomingCard);
   const [flipped, setFlipped] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const flipAnim = useRef(new Animated.Value(0)).current;
 
-  const frontInterpolate = flipAnim.interpolate({
-    inputRange: [0, 180],
-    outputRange: ["0deg", "180deg"],
-  });
-  const backInterpolate = flipAnim.interpolate({
-    inputRange: [0, 180],
-    outputRange: ["180deg", "360deg"],
-  });
+  useEffect(() => { setCard(incomingCard); }, [incomingCard]);
+
+  const translations: Record<string, string> = (card.translations ?? {
+    en: card.englishTranslation,
+    ar: card.arabicTranslation,
+  }) as Record<string, string>;
+  const exampleTr: Record<string, string> = (card.exampleTranslations ?? {
+    en: card.exampleSentenceEn,
+    ar: card.exampleSentenceAr,
+  }) as Record<string, string>;
+
+  const langList = [prefs.primaryLang, prefs.secondaryLang].filter(
+    (l, i, arr): l is string => !!l && arr.indexOf(l) === i,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const missing = langList.filter((l) => !translations[l]);
+    if (missing.length === 0) return;
+    (async () => {
+      for (const lang of missing) {
+        try {
+          const r = await apiFetch(`/api/flashcards/${card.id}/translate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lang }),
+          });
+          if (!r.ok) continue;
+          const updated = await r.json();
+          if (cancelled) return;
+          setCard(updated);
+        } catch { /* ignore */ }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.id, prefs.primaryLang, prefs.secondaryLang]);
+
+  const frontInterpolate = flipAnim.interpolate({ inputRange: [0, 180], outputRange: ["0deg", "180deg"] });
+  const backInterpolate = flipAnim.interpolate({ inputRange: [0, 180], outputRange: ["180deg", "360deg"] });
 
   const flip = () => {
-    if (flipped) {
-      Animated.spring(flipAnim, { toValue: 0, useNativeDriver: true }).start();
-    } else {
-      Animated.spring(flipAnim, { toValue: 180, useNativeDriver: true }).start();
-    }
+    Animated.spring(flipAnim, { toValue: flipped ? 0 : 180, useNativeDriver: true }).start();
     setFlipped(!flipped);
   };
 
@@ -96,13 +128,15 @@ export function FlashCard({ card, onKnown, onUnknown, showActions = true }: Prop
           <View style={[styles.levelBadge, { backgroundColor: levelColor }]}>
             <Text style={styles.levelText}>{card.level}</Text>
           </View>
+          {card.createdBy && (
+            <View style={[styles.communityBadge, { backgroundColor: appColors.muted }]}>
+              <Feather name="users" size={10} color={appColors.mutedForeground} />
+              <Text style={[styles.communityText, { color: appColors.mutedForeground }]}>community</Text>
+            </View>
+          )}
 
           {card.imageUrl ? (
-            <Image
-              source={{ uri: card.imageUrl }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
+            <Image source={{ uri: card.imageUrl }} style={styles.cardImage} resizeMode="cover" />
           ) : (
             <View style={[styles.imagePlaceholder, { backgroundColor: appColors.secondary }]}>
               <Text style={[styles.categoryText, { color: appColors.mutedForeground }]}>
@@ -112,27 +146,16 @@ export function FlashCard({ card, onKnown, onUnknown, showActions = true }: Prop
           )}
 
           <View style={styles.wordContainer}>
-            {card.article && (
-              <Text style={[styles.article, { color: articleColor }]}>
-                {card.article}
-              </Text>
-            )}
+            {card.article && <Text style={[styles.article, { color: articleColor }]}>{card.article}</Text>}
             <Text style={[styles.word, { color: appColors.foreground }]}>{card.baseWord}</Text>
           </View>
 
           <TouchableOpacity
             onPress={(e) => { e.stopPropagation?.(); handleSpeak(); }}
-            style={[
-              styles.speakBtn,
-              { backgroundColor: isSpeaking ? appColors.primary : appColors.muted },
-            ]}
+            style={[styles.speakBtn, { backgroundColor: isSpeaking ? appColors.primary : appColors.muted }]}
             activeOpacity={0.7}
           >
-            <Feather
-              name="volume-2"
-              size={14}
-              color={isSpeaking ? "#fff" : appColors.mutedForeground}
-            />
+            <Feather name="volume-2" size={14} color={isSpeaking ? "#fff" : appColors.mutedForeground} />
             <Text style={[styles.speakBtnText, { color: isSpeaking ? "#fff" : appColors.mutedForeground }]}>
               {isSpeaking ? "Playing…" : "Pronunciation"}
             </Text>
@@ -156,42 +179,49 @@ export function FlashCard({ card, onKnown, onUnknown, showActions = true }: Prop
             <Text style={styles.levelText}>{card.level}</Text>
           </View>
 
-          <Text style={[styles.translationEn, { color: appColors.foreground }]}>
-            {card.englishTranslation}
-          </Text>
-
-          <Text style={[styles.translationAr, { color: appColors.primary }]}>
-            {card.arabicTranslation}
-          </Text>
+          {langList.map((lang) => {
+            const meta = LANG_BY_CODE[lang];
+            const rtl = isRtl(lang);
+            const value = translations[lang];
+            const ex = exampleTr[lang];
+            return (
+              <View key={lang} style={styles.langBlock}>
+                <Text style={[styles.langLabel, { color: appColors.mutedForeground }]}>
+                  {(meta?.name ?? lang).toUpperCase()}
+                </Text>
+                <Text
+                  style={[
+                    styles.translationText,
+                    { color: appColors.foreground, writingDirection: rtl ? "rtl" : "ltr", textAlign: rtl ? "right" : "left" },
+                  ]}
+                >
+                  {value ?? "Translating…"}
+                </Text>
+                {ex && (
+                  <Text
+                    style={[
+                      styles.exampleText,
+                      { color: appColors.mutedForeground, writingDirection: rtl ? "rtl" : "ltr", textAlign: rtl ? "right" : "left" },
+                    ]}
+                  >
+                    {ex}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
 
           <View style={[styles.divider, { backgroundColor: appColors.border }]} />
-
-          <Text style={[styles.exampleDe, { color: appColors.foreground }]}>
-            {card.exampleSentenceDe}
-          </Text>
-          <Text style={[styles.exampleEn, { color: appColors.mutedForeground }]}>
-            {card.exampleSentenceEn}
-          </Text>
-          <Text style={[styles.exampleAr, { color: appColors.mutedForeground }]}>
-            {card.exampleSentenceAr}
-          </Text>
+          <Text style={[styles.exampleDe, { color: appColors.foreground }]}>{card.exampleSentenceDe}</Text>
         </Animated.View>
       </TouchableOpacity>
 
       {showActions && flipped && (
         <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.unknownBtn]}
-            onPress={onUnknown}
-            testID="button-unknown"
-          >
+          <TouchableOpacity style={[styles.actionBtn, styles.unknownBtn]} onPress={onUnknown} testID="button-unknown">
             <Text style={styles.actionBtnText}>Again</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.knownBtn]}
-            onPress={onKnown}
-            testID="button-known"
-          >
+          <TouchableOpacity style={[styles.actionBtn, styles.knownBtn]} onPress={onKnown} testID="button-known">
             <Text style={styles.actionBtnText}>Got it!</Text>
           </TouchableOpacity>
         </View>
@@ -207,7 +237,7 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     borderRadius: 20,
     borderWidth: 1.5,
-    padding: 24,
+    padding: 20,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#d97706",
@@ -216,46 +246,39 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  cardBack: { position: "absolute", top: 0 },
+  cardBack: { position: "absolute", top: 0, justifyContent: "flex-start", paddingTop: 50 },
   levelBadge: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+    position: "absolute", top: 16, right: 16,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
   },
   levelText: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  communityBadge: {
+    position: "absolute", top: 16, left: 16,
+    flexDirection: "row", alignItems: "center", gap: 4,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12,
+  },
+  communityText: { fontSize: 10, fontWeight: "600" },
   cardImage: { width: CARD_WIDTH - 48, height: 140, borderRadius: 12, marginBottom: 16 },
   imagePlaceholder: {
-    width: CARD_WIDTH - 48,
-    height: 100,
-    borderRadius: 12,
-    marginBottom: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    width: CARD_WIDTH - 48, height: 100, borderRadius: 12, marginBottom: 16,
+    alignItems: "center", justifyContent: "center",
   },
   categoryText: { fontSize: 14, fontWeight: "500", textTransform: "capitalize" },
   wordContainer: { flexDirection: "row", alignItems: "baseline", gap: 6, marginBottom: 8 },
   article: { fontSize: 24, fontWeight: "600", fontStyle: "italic" },
   word: { fontSize: 36, fontWeight: "800", textAlign: "center" },
   speakBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    marginTop: 10,
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, marginTop: 10,
   },
   speakBtnText: { fontSize: 12, fontWeight: "600" },
   tapHint: { fontSize: 13, marginTop: 10 },
-  translationEn: { fontSize: 30, fontWeight: "700", textAlign: "center", marginBottom: 8 },
-  translationAr: { fontSize: 24, fontWeight: "600", textAlign: "center", marginBottom: 16, writingDirection: "rtl" },
-  divider: { width: "100%", height: 1, marginVertical: 12 },
-  exampleDe: { fontSize: 14, fontWeight: "500", textAlign: "center", marginBottom: 4 },
-  exampleEn: { fontSize: 12, textAlign: "center", marginBottom: 4 },
-  exampleAr: { fontSize: 12, textAlign: "center", writingDirection: "rtl" },
+  langBlock: { width: "100%", marginBottom: 12 },
+  langLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 1, marginBottom: 4 },
+  translationText: { fontSize: 22, fontWeight: "700" },
+  exampleText: { fontSize: 12, marginTop: 2 },
+  divider: { width: "100%", height: 1, marginVertical: 10 },
+  exampleDe: { fontSize: 14, fontWeight: "500", textAlign: "center" },
   actions: { flexDirection: "row", gap: 12, marginTop: 20 },
   actionBtn: { flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: "center" },
   unknownBtn: { backgroundColor: "#fca5a5" },

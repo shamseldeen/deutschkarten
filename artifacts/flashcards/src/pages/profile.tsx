@@ -3,8 +3,10 @@ import { useUser, useClerk } from "@clerk/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { Flame, Trophy } from "lucide-react";
+import { Flame, Trophy, Languages, Github } from "lucide-react";
 import { DonationCard } from "@/components/DonationCard";
+import { SUPPORTED_LANGS } from "@/lib/languages";
+import { useLangPrefs } from "@/lib/useLangPrefs";
 
 type Me = {
   user: { id: string; email: string | null; displayName: string | null; imageUrl: string | null };
@@ -75,6 +77,30 @@ export default function ProfilePage() {
           </Card>
         </div>
 
+        <LanguageSettingsCard />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Github className="w-4 h-4" /> Open Source & Community
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              DeutschKarten is a community library — every flashcard you generate becomes
+              free for every learner. Translations you request are cached and shared.
+            </p>
+            <a
+              href="https://github.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-primary hover:underline"
+            >
+              <Github className="w-4 h-4" /> View source on GitHub
+            </a>
+          </CardContent>
+        </Card>
+
         <DonationCard />
 
         <Button variant="outline" className="w-full" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
@@ -82,5 +108,53 @@ export default function ProfilePage() {
         </Button>
       </div>
     </Layout>
+  );
+}
+
+function LanguageSettingsCard() {
+  const { prefs, save, loading } = useLangPrefs();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Languages className="w-4 h-4" /> Translation Languages
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Pick the languages you want to see alongside each German word. Translations
+          are generated on-demand and shared with the whole community.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold block mb-1">Primary</label>
+            <select
+              className="w-full border border-border rounded-md bg-background px-2 py-2 text-sm"
+              disabled={loading}
+              value={prefs.primaryLang}
+              onChange={(e) => save({ ...prefs, primaryLang: e.target.value })}
+            >
+              {SUPPORTED_LANGS.map((l) => (
+                <option key={l.code} value={l.code}>{l.name} — {l.nativeName}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold block mb-1">Secondary</label>
+            <select
+              className="w-full border border-border rounded-md bg-background px-2 py-2 text-sm"
+              disabled={loading}
+              value={prefs.secondaryLang ?? "none"}
+              onChange={(e) => save({ ...prefs, secondaryLang: e.target.value === "none" ? null : e.target.value })}
+            >
+              <option value="none">— None —</option>
+              {SUPPORTED_LANGS.filter((l) => l.code !== prefs.primaryLang).map((l) => (
+                <option key={l.code} value={l.code}>{l.name} — {l.nativeName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

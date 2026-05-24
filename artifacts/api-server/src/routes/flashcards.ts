@@ -13,6 +13,9 @@ import {
   GetDailyFlashcardsQueryParams,
 } from "@workspace/api-zod";
 import { eq, and, count, sql } from "drizzle-orm";
+import { isSupportedLang } from "../lib/languages";
+import { requireAuth } from "../middlewares/requireAuth";
+import { invalidateCommunityStats } from "./community";
 
 const router = Router();
 
@@ -265,6 +268,15 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
         exampleSentenceDe: c.exampleSentenceDe,
         exampleSentenceEn: c.exampleSentenceEn,
         exampleSentenceAr: c.exampleSentenceAr,
+        translations: {
+          en: c.englishTranslation,
+          ar: c.arabicTranslation,
+        },
+        exampleTranslations: {
+          en: c.exampleSentenceEn,
+          ar: c.exampleSentenceAr,
+        },
+        createdBy: getAuth(req)?.userId ?? null,
         imageUrl: null,
         known: false,
       }))
@@ -273,8 +285,117 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
 
   // Increment the daily counter only after successful generation
   entry.used += 1;
+  invalidateCommunityStats();
 
   res.status(201).json(inserted);
+});
+
+// POST /api/flashcards/:id/translate  — translate a card to a target language on-demand
+// Result is cached on the card so every learner benefits ("community library").
+// Requires auth (prevents anonymous OpenAI billing-DoS).
+// Per-user rate-limited and in-flight deduped so concurrent callers share one OpenAI call.
+const translateLimits = new Map<string, { count: number; resetAt: number }>();
+const TRANSLATE_LIMIT_PER_MIN = 30;
+const inFlightTranslations = new Map<string, Promise<typeof flashcardsTable.$inferSelect>>();
+
+router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
+  const userId = req.userId!;
+  const now = Date.now();
+  const slot = translateLimits.get(userId);
+  if (!slot || now > slot.resetAt) {
+    translateLimits.set(userId, { count: 1, resetAt: now + 60_000 });
+  } else {
+    if (slot.count >= TRANSLATE_LIMIT_PER_MIN) {
+      res.status(429).json({ error: "Too many translation requests, slow down" });
+      return;
+    }
+    slot.count += 1;
+  }
+
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+  const lang = String(req.body?.lang ?? "");
+  if (!isSupportedLang(lang)) {
+    res.status(400).json({ error: "Unsupported language" });
+    return;
+  }
+
+  const [card] = await db.select().from(flashcardsTable).where(eq(flashcardsTable.id, id)).limit(1);
+  if (!card) {
+    res.status(404).json({ error: "Flashcard not found" });
+    return;
+  }
+
+  const existingTrans = (card.translations ?? {}) as Record<string, string>;
+  const existingExamples = (card.exampleTranslations ?? {}) as Record<string, string>;
+
+  if (existingTrans[lang] && existingExamples[lang]) {
+    res.json(card);
+    return;
+  }
+
+  // Dedupe concurrent translations for the same (cardId, lang) — share one OpenAI call.
+  const dedupeKey = `${id}:${lang}`;
+  let job = inFlightTranslations.get(dedupeKey);
+  if (!job) {
+    job = (async () => {
+      const prompt = `Translate the following German vocabulary card to language code "${lang}".
+Return ONLY a JSON object with these exact keys (no markdown, no extra text):
+{
+  "translation": "<translation of the word>",
+  "example": "<translation of the example sentence>"
+}
+
+German word: ${card.article ? `${card.article} ` : ""}${card.baseWord}
+English meaning: ${card.englishTranslation}
+German example sentence: ${card.exampleSentenceDe}
+English example: ${card.exampleSentenceEn}
+
+Use the native script of the target language. Be concise and natural.`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-5.1",
+        max_completion_tokens: 400,
+        messages: [{ role: "user", content: prompt }],
+      });
+      const text = completion.choices[0]?.message?.content ?? "{}";
+      const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      const translation = String(parsed.translation ?? "").trim();
+      const example = String(parsed.example ?? "").trim();
+      if (!translation) throw new Error("Empty translation");
+
+      // Atomic JSONB merge — concurrent translations for OTHER langs on the same card
+      // won't clobber each other (right-hand side wins in `||`).
+      const transPatch: Record<string, string> = { [lang]: translation };
+      const examplesPatch: Record<string, string> = {};
+      if (example) examplesPatch[lang] = example;
+
+      const [updated] = await db
+        .update(flashcardsTable)
+        .set({
+          translations: sql`coalesce(${flashcardsTable.translations}, '{}'::jsonb) || ${JSON.stringify(transPatch)}::jsonb`,
+          exampleTranslations: sql`coalesce(${flashcardsTable.exampleTranslations}, '{}'::jsonb) || ${JSON.stringify(examplesPatch)}::jsonb`,
+        })
+        .where(eq(flashcardsTable.id, id))
+        .returning();
+      return updated;
+    })().finally(() => {
+      inFlightTranslations.delete(dedupeKey);
+    });
+    inFlightTranslations.set(dedupeKey, job);
+  }
+
+  try {
+    const updated = await job;
+    res.json(updated);
+  } catch (err) {
+    req.log?.error({ err, id, lang }, "translation failed");
+    res.status(502).json({ error: "Translation failed" });
+  }
 });
 
 // PATCH /api/flashcards/:id/progress
