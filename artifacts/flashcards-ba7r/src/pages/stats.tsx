@@ -36,7 +36,7 @@ export default function StatsPage() {
   const { data: stats } = useQuery<Stats>({
     queryKey: ["quiz-stats"], enabled: Boolean(isSignedIn),
     queryFn: async () => {
-      const r = await fetch(`${basePath}/api/me/quiz-stats`, { credentials: "include" });
+      const r = await fetch(`/ba7r-api/me/quiz-stats`, { credentials: "include" });
       if (!r.ok) throw new Error("failed");
       return r.json();
     },
@@ -45,7 +45,7 @@ export default function StatsPage() {
   const { data: history } = useQuery<HistoryRow[]>({
     queryKey: ["quiz-history"], enabled: Boolean(isSignedIn),
     queryFn: async () => {
-      const r = await fetch(`${basePath}/api/me/quiz-history`, { credentials: "include" });
+      const r = await fetch(`/ba7r-api/me/quiz-history`, { credentials: "include" });
       if (!r.ok) throw new Error("failed");
       return r.json();
     },

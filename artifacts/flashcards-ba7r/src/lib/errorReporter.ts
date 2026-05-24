@@ -43,7 +43,7 @@ export function reportError(err: unknown, extra?: Record<string, unknown>): void
       payload.componentStack = extra.componentStack;
     }
 
-    fetch(`${basePath}/api/log/client-error`, {
+    fetch(`/ba7r-api/log/client-error`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

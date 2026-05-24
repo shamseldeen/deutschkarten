@@ -51,7 +51,7 @@ export function Flashcard({ card: incomingCard, onKnown, onUnknown, isStudyMode 
     (async () => {
       for (const lang of missing) {
         try {
-          const r = await fetch(`${basePath}/api/flashcards/${card.id}/translate`, {
+          const r = await fetch(`/ba7r-api/flashcards/${card.id}/translate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",

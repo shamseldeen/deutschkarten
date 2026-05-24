@@ -80,7 +80,7 @@ export default function QuizPage() {
     setLoading(true); setError(null); setDone(null); setAnswers([]); setIdx(0);
     setPicked(null); setTyped(""); setRevealed(false);
     try {
-      const r = await fetch(`${basePath}/api/quiz/start`, {
+      const r = await fetch(`/ba7r-api/quiz/start`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -122,7 +122,7 @@ export default function QuizPage() {
       // finish
       setLoading(true);
       try {
-        const r = await fetch(`${basePath}/api/quiz/finish`, {
+        const r = await fetch(`/ba7r-api/quiz/finish`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId: quiz.sessionId, answers }),
@@ -234,7 +234,27 @@ export default function QuizPage() {
             </CardContent>
           </Card>
 
-          {error && <div className="text-sm text-red-500 px-2">{error}</div>}
+          {error && (
+            <Card className="border-amber-500/40 bg-amber-500/5">
+              <CardContent className="py-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="flex-1 text-sm">
+                    <div className="font-bold text-foreground mb-1">Cannot start this quiz yet</div>
+                    <div className="text-muted-foreground">{error}</div>
+                    {(error.toLowerCase().includes("no cards") || error.toLowerCase().includes("not enough")) && (
+                      <a
+                        href={`${basePath}/generate`}
+                        className="inline-flex items-center gap-1 mt-3 text-sm font-bold text-primary hover:underline"
+                      >
+                        Generate cards now →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Button
             size="lg" className="w-full font-bold text-base"

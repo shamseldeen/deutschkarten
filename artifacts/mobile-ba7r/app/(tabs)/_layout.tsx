@@ -27,6 +27,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "brain.head.profile", selected: "brain.head.profile.fill" }} />
         <Label>Quiz</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="roadmap">
+        <Icon sf={{ default: "map", selected: "map.fill" }} />
+        <Label>Roadmap</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="generate">
         <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
         <Label>Generate</Label>
@@ -117,6 +121,18 @@ function ClassicTabLayout() {
               <SymbolView name="brain.head.profile" tintColor={color} size={24} />
             ) : (
               <Feather name="zap" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="roadmap"
+        options={{
+          title: "Roadmap",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="map" tintColor={color} size={24} />
+            ) : (
+              <Feather name="map" size={22} color={color} />
             ),
         }}
       />

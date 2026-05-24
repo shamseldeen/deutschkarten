@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { BrainCircuit, Play, TrendingUp, Flame, Trophy, Users, Languages, Github } from "lucide-react";
 import { useMe } from "@/lib/useMe";
 import { DonationCard } from "@/components/DonationCard";
+import { WelcomeHero } from "@/components/WelcomeHero";
 import { useQuery } from "@tanstack/react-query";
 import { computeRank, rankImageUrl } from "@/lib/ranks";
 import { Link as WLink } from "wouter";
@@ -24,7 +25,7 @@ export default function Home() {
   const { data: me } = useMe();
   const { data: community } = useQuery<CommunityStats>({
     queryKey: ["community-stats"],
-    queryFn: () => fetch(`${basePath}/api/community/stats`).then((r) => r.json()),
+    queryFn: () => fetch(`/ba7r-api/community/stats`).then((r) => r.json()),
     staleTime: 60_000,
   });
 
@@ -37,6 +38,8 @@ export default function Home() {
   return (
     <Layout>
       <div className="space-y-8 max-w-5xl mx-auto">
+        <WelcomeHero name={me?.user?.displayName ?? null} />
+
         <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground font-serif">Willkommen zurück!</h1>

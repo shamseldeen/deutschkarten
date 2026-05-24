@@ -5,7 +5,7 @@ import "./index.css";
 import { installGlobalErrorHandlers } from "./lib/errorReporter";
 import { ErrorBoundary } from "./components/error-boundary";
 
-setBaseUrl("");
+setBaseUrl("/ba7r-api");
 installGlobalErrorHandlers();
 
 createRoot(document.getElementById("root")!).render(

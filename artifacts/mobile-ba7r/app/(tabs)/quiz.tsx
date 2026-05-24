@@ -4,6 +4,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { useLangPrefs } from "@/lib/useLangPrefs";
@@ -37,6 +38,7 @@ const ARTICLE_COLOR: Record<string, string> = { der: "#3b82f6", die: "#ec4899", 
 export default function QuizScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { prefs } = useLangPrefs();
   const [lang, setLang] = useState<string>(prefs.primaryLang || "en");
   const langName = LANG_BY_CODE[lang]?.name ?? "English";
@@ -197,7 +199,27 @@ export default function QuizScreen() {
           ))}
         </View>
 
-        {error && <Text style={{ color: "#ef4444", marginBottom: 12 }}>{error}</Text>}
+        {error && (
+          <View style={[s.errorCard, { borderColor: "#f59e0b66", backgroundColor: "#f59e0b15" }]}>
+            <Feather name="alert-triangle" size={18} color="#f59e0b" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: "800", color: colors.foreground, marginBottom: 2 }}>
+                Cannot start this quiz yet
+              </Text>
+              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{error}</Text>
+              {(error.toLowerCase().includes("no cards") || error.toLowerCase().includes("not enough")) && (
+                <Pressable
+                  onPress={() => router.push("/(tabs)/generate")}
+                  style={{ marginTop: 8 }}
+                >
+                  <Text style={{ color: colors.primary, fontWeight: "800" }}>
+                    Generate cards now →
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+        )}
 
         <Pressable
           onPress={startQuiz}
@@ -484,4 +506,5 @@ const s = StyleSheet.create({
   grade: { fontSize: 22, fontWeight: "800", marginVertical: 8 },
   answerRow: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 6 },
   answerPrompt: { fontSize: 13, fontWeight: "700" },
+  errorCard: { flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 14, borderRadius: 12, borderWidth: 1, marginBottom: 14 },
 });

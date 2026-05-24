@@ -19,6 +19,7 @@ import ProfilePage from "@/pages/profile";
 import QuizPage from "@/pages/quiz";
 import StatsPage from "@/pages/stats";
 import LeaderboardPage from "@/pages/leaderboard";
+import RoadmapPage from "@/pages/roadmap";
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/quiz" component={QuizPage} />
       <Route path="/stats" component={StatsPage} />
       <Route path="/leaderboard" component={LeaderboardPage} />
+      <Route path="/roadmap" component={RoadmapPage} />
       <Route component={NotFound} />
     </Switch>
   );

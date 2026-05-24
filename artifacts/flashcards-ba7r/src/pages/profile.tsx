@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!isLoaded || !user) return;
-    fetch(`${basePath}/api/me`, { credentials: "include" })
+    fetch(`/ba7r-api/me`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then(setMe)
       .catch(() => {});

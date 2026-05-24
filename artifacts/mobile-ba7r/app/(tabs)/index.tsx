@@ -16,6 +16,7 @@ import { useFlashcardStats, useDailyFlashcards } from "@/lib/hooks";
 import { useUser } from "@clerk/expo";
 import { Image } from "react-native";
 import { computeRank, rankImageUrl } from "@/lib/ranks";
+import { WelcomeHero } from "@/components/WelcomeHero";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
 
@@ -31,8 +32,9 @@ export default function HomeScreen() {
   const totalCards = stats?.reduce((s, l) => s + l.total, 0) ?? 0;
   const overallPct = totalCards > 0 ? Math.round((totalKnown / totalCards) * 100) : 0;
   const c1Known = stats?.find((s) => s.level === "C1")?.known ?? 0;
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const rank = isSignedIn ? computeRank(totalKnown, c1Known) : null;
+  const displayName = user?.firstName ?? user?.username ?? null;
 
   const paddingTop = Platform.OS === "web" ? 67 : insets.top + 16;
   const paddingBottom = Platform.OS === "web" ? 34 + 84 : insets.bottom + 84;
@@ -47,6 +49,8 @@ export default function HomeScreen() {
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
         Your German vocabulary companion
       </Text>
+
+      <WelcomeHero name={displayName} />
 
       {rank && (
         <TouchableOpacity
