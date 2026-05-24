@@ -324,6 +324,9 @@ importers:
       '@clerk/themes':
         specifier: ^2.4.57
         version: 2.4.57(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@workspace/content':
+        specifier: workspace:*
+        version: link:../../lib/content
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0
@@ -523,6 +526,9 @@ importers:
       '@clerk/themes':
         specifier: ^2.4.57
         version: 2.4.57(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@workspace/content':
+        specifier: workspace:*
+        version: link:../../lib/content
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0
@@ -908,6 +914,9 @@ importers:
 
   artifacts/mobile:
     dependencies:
+      '@workspace/content':
+        specifier: workspace:*
+        version: link:../../lib/content
       expo-notifications:
         specifier: ^0.32.17
         version: 0.32.17(expo@54.0.34)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
@@ -1059,6 +1068,9 @@ importers:
 
   artifacts/mobile-ba7r:
     dependencies:
+      '@workspace/content':
+        specifier: workspace:*
+        version: link:../../lib/content
       expo-notifications:
         specifier: ^0.32.17
         version: 0.32.17(expo@54.0.34)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
@@ -1408,6 +1420,12 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+
+  lib/content:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.2
 
   lib/db:
     dependencies:

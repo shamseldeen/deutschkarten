@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "expo-notifications": "^0.32.17",
-    "expo-speech": "~14.0.8"
+    "expo-speech": "~14.0.8",
+    "@workspace/content": "workspace:*"
   }
 }
