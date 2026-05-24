@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Dimensions,
   Image,
 } from "react-native";
+import * as Speech from "expo-speech";
+import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import colors from "@/constants/colors";
 import type { Flashcard } from "@/lib/api";
@@ -44,6 +46,7 @@ function getLevelColor(level: string): string {
 export function FlashCard({ card, onKnown, onUnknown, showActions = true }: Props) {
   const appColors = useColors();
   const [flipped, setFlipped] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const flipAnim = useRef(new Animated.Value(0)).current;
 
   const frontInterpolate = flipAnim.interpolate({
@@ -63,6 +66,18 @@ export function FlashCard({ card, onKnown, onUnknown, showActions = true }: Prop
     }
     setFlipped(!flipped);
   };
+
+  const handleSpeak = useCallback(() => {
+    const fullText = card.article ? `${card.article} ${card.baseWord}` : card.baseWord;
+    Speech.stop();
+    setIsSpeaking(true);
+    Speech.speak(fullText, {
+      language: "de-DE",
+      rate: 0.85,
+      onDone: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+  }, [card.article, card.baseWord]);
 
   const articleColor = getArticleColor(card.article);
   const levelColor = getLevelColor(card.level);
@@ -105,8 +120,26 @@ export function FlashCard({ card, onKnown, onUnknown, showActions = true }: Prop
             <Text style={[styles.word, { color: appColors.foreground }]}>{card.baseWord}</Text>
           </View>
 
+          <TouchableOpacity
+            onPress={(e) => { e.stopPropagation?.(); handleSpeak(); }}
+            style={[
+              styles.speakBtn,
+              { backgroundColor: isSpeaking ? appColors.primary : appColors.muted },
+            ]}
+            activeOpacity={0.7}
+          >
+            <Feather
+              name="volume-2"
+              size={14}
+              color={isSpeaking ? "#fff" : appColors.mutedForeground}
+            />
+            <Text style={[styles.speakBtnText, { color: isSpeaking ? "#fff" : appColors.mutedForeground }]}>
+              {isSpeaking ? "Playing…" : "Pronunciation"}
+            </Text>
+          </TouchableOpacity>
+
           <Text style={[styles.tapHint, { color: appColors.mutedForeground }]}>
-            Tap to reveal translation
+            Tap card to reveal translation
           </Text>
         </Animated.View>
 
@@ -206,7 +239,17 @@ const styles = StyleSheet.create({
   wordContainer: { flexDirection: "row", alignItems: "baseline", gap: 6, marginBottom: 8 },
   article: { fontSize: 24, fontWeight: "600", fontStyle: "italic" },
   word: { fontSize: 36, fontWeight: "800", textAlign: "center" },
-  tapHint: { fontSize: 13, marginTop: 12 },
+  speakBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    marginTop: 10,
+  },
+  speakBtnText: { fontSize: 12, fontWeight: "600" },
+  tapHint: { fontSize: 13, marginTop: 10 },
   translationEn: { fontSize: 30, fontWeight: "700", textAlign: "center", marginBottom: 8 },
   translationAr: { fontSize: 24, fontWeight: "600", textAlign: "center", marginBottom: 16, writingDirection: "rtl" },
   divider: { width: "100%", height: 1, marginVertical: 12 },

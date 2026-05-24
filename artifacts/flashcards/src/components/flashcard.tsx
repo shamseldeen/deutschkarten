@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { Flashcard as TFlashcard } from "@workspace/api-client-react";
 import { getGenderColor, getLevelColor } from "@/lib/colors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X, RefreshCw } from "lucide-react";
+import { Check, X, Volume2 } from "lucide-react";
+
+function speakGerman(text: string) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "de-DE";
+  utter.rate = 0.85;
+  window.speechSynthesis.speak(utter);
+}
 
 interface FlashcardProps {
   card: TFlashcard;
@@ -15,8 +24,26 @@ interface FlashcardProps {
 
 export function Flashcard({ card, onKnown, onUnknown, isStudyMode = false }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleFlip = () => setIsFlipped(!isFlipped);
+
+  const handleSpeak = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const fullText = card.article ? `${card.article} ${card.baseWord}` : card.baseWord;
+    setIsSpeaking(true);
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(fullText);
+      utter.lang = "de-DE";
+      utter.rate = 0.85;
+      utter.onend = () => setIsSpeaking(false);
+      utter.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utter);
+    } else {
+      setIsSpeaking(false);
+    }
+  }, [card.article, card.baseWord]);
 
   return (
     <div className="w-full max-w-md mx-auto aspect-[3/4] perspective-1000">
@@ -46,7 +73,7 @@ export function Flashcard({ card, onKnown, onUnknown, isStudyMode = false }: Fla
                 <img src={card.imageUrl} alt={card.baseWord} className="w-full h-full object-cover" />
               </div>
             )}
-            <div>
+            <div className="flex flex-col items-center gap-3">
               <h2 className="text-4xl md:text-5xl font-black text-foreground font-serif tracking-tight">
                 {card.article && (
                   <span className={cn("mr-2 font-normal opacity-80 text-3xl md:text-4xl", getGenderColor(card.article))}>
@@ -55,8 +82,21 @@ export function Flashcard({ card, onKnown, onUnknown, isStudyMode = false }: Fla
                 )}
                 {card.baseWord}
               </h2>
+              <button
+                onClick={handleSpeak}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
+                  isSpeaking
+                    ? "bg-primary text-primary-foreground scale-95"
+                    : "bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                )}
+                title="Listen to pronunciation"
+              >
+                <Volume2 className={cn("w-3.5 h-3.5", isSpeaking && "animate-pulse")} />
+                {isSpeaking ? "Playing…" : "Pronunciation"}
+              </button>
             </div>
-            <p className="text-sm text-muted-foreground animate-pulse mt-4">
+            <p className="text-sm text-muted-foreground animate-pulse mt-2">
               Tap to flip
             </p>
           </div>
