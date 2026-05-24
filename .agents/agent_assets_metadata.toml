@@ -101,3 +101,45 @@ id = "vJcpvasOd4eTfoUeTLUOX"
 uri = "file://PERSONAL_SETUP.md"
 type = "text"
 title = "Personal Setup Guide — Make DeutschKarten Yours"
+
+[[outputs]]
+id = "5Y7jasi5dcIT953qbB7VE"
+uri = "file://exports/api-server.tar.gz"
+type = "unspecified"
+title = "Shams API Server (Express)"
+
+[[outputs]]
+id = "CmoORoC54fZW2aNvhvybu"
+uri = "file://exports/api-server-ba7r.tar.gz"
+type = "unspecified"
+title = "Ba7r API Server (Express)"
+
+[[outputs]]
+id = "Yx6ucOlNEEmqbBts14Fru"
+uri = "file://exports/flashcards.tar.gz"
+type = "unspecified"
+title = "Shams Web (React + Vite)"
+
+[[outputs]]
+id = "BiM_VM37QNiy58ne7X4Ly"
+uri = "file://exports/flashcards-ba7r.tar.gz"
+type = "unspecified"
+title = "Ba7r Web (React + Vite)"
+
+[[outputs]]
+id = "adyu2sg4h0o94OiQCGB5z"
+uri = "file://exports/mobile.tar.gz"
+type = "unspecified"
+title = "Shams Mobile (Expo)"
+
+[[outputs]]
+id = "haXrsDgQ0oWLzjsCZvPd7"
+uri = "file://exports/mobile-ba7r.tar.gz"
+type = "unspecified"
+title = "Ba7r Mobile (Expo)"
+
+[[outputs]]
+id = "9p4_F0VuUWg_UqTGAnm72"
+uri = "file://exports/kivy-app.tar.gz"
+type = "unspecified"
+title = "Kivy Desktop App (Python)"
