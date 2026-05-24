@@ -18,9 +18,10 @@ interface Question {
   hint?: string | null;
   options?: string[];
   correctAnswer: string;
+  level: string;
 }
 interface QuizResp { sessionId: string | null; mode: Mode; level: string | null; questions: Question[]; }
-interface AnswerLog { flashcardId: number; questionType: Mode; userAnswer: string; correct: boolean; prompt: string; }
+interface AnswerLog { flashcardId: number; questionType: Mode; userAnswer: string; correct: boolean; prompt: string; level: string; }
 
 function buildModes(langName: string): { id: Mode; label: string; desc: string; icon: keyof typeof Feather.glyphMap; color: string }[] {
   return [
@@ -67,7 +68,10 @@ export default function QuizScreen() {
       const r = await apiFetch("/api/quiz/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, level, count: 10, lang }),
+        body: JSON.stringify({
+          mode, level, lang,
+          count: level === "mixed" ? 20 : 10,
+        }),
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
@@ -86,7 +90,7 @@ export default function QuizScreen() {
     const correct = current.questionType === "typing"
       ? userAnswer.toLowerCase() === current.correctAnswer.toLowerCase()
       : userAnswer === current.correctAnswer;
-    setAnswers((p) => [...p, { flashcardId: current.flashcardId, questionType: current.questionType, userAnswer, correct, prompt: current.prompt }]);
+    setAnswers((p) => [...p, { flashcardId: current.flashcardId, questionType: current.questionType, userAnswer, correct, prompt: current.prompt, level: current.level }]);
     setRevealed(true);
   }
 
@@ -166,8 +170,27 @@ export default function QuizScreen() {
           ))}
         </View>
 
-        <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>LEVEL (OPTIONAL)</Text>
+        <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>LEVEL</Text>
+        <Text style={{ color: colors.mutedForeground, fontSize: 12, marginBottom: 10, marginTop: -4 }}>
+          Already know some German? Tap{" "}
+          <Text style={{ color: colors.primary, fontWeight: "700" }}>🎯 Test my level</Text>
+          {" "}for a placement quiz across A1–C1.
+        </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+          <Pressable
+            onPress={() => setLevel("mixed")}
+            style={[
+              s.chip,
+              {
+                borderColor: colors.primary,
+                backgroundColor: level === "mixed" ? colors.primary + "20" : colors.primary + "08",
+              },
+            ]}
+          >
+            <Text style={{ fontWeight: "800", color: colors.primary, fontSize: 13 }}>
+              🎯 Test my level
+            </Text>
+          </Pressable>
           <LevelChip label="All" active={level === null} onPress={() => setLevel(null)} colors={colors} />
           {LEVELS.map((lv) => (
             <LevelChip key={lv} label={lv} active={level === lv} onPress={() => setLevel(lv)} colors={colors} />
@@ -191,6 +214,29 @@ export default function QuizScreen() {
   if (done) {
     const pct = done.total > 0 ? Math.round((done.correct / done.total) * 100) : 0;
     const grade = pct >= 90 ? "Outstanding! 🏆" : pct >= 70 ? "Great work! 🎉" : pct >= 50 ? "Keep going! 💪" : "Practice makes perfect 📚";
+
+    // Per-level breakdown (computed locally from answers — works for both
+    // signed-in and guest users). Shown after a placement quiz or whenever
+    // the questions happened to span more than one CEFR level.
+    const perLevel: Record<string, { correct: number; total: number }> = {};
+    for (const a of answers) {
+      const b = (perLevel[a.level] ??= { correct: 0, total: 0 });
+      b.total += 1;
+      if (a.correct) b.correct += 1;
+    }
+    const levelsHit = LEVELS.filter((lv) => perLevel[lv]);
+    const showBreakdown = quiz?.level === "mixed" || levelsHit.length > 1;
+    const estimatedLevel = (() => {
+      if (!showBreakdown) return null;
+      let best: string | null = null;
+      for (const lv of LEVELS) {
+        const b = perLevel[lv];
+        if (!b || b.total < 2) continue;
+        if (b.correct / b.total >= 0.6) best = lv;
+      }
+      return best;
+    })();
+
     return (
       <ScrollView
         style={{ flex: 1, backgroundColor: colors.background }}
@@ -203,12 +249,44 @@ export default function QuizScreen() {
           <Text style={[s.subtitle, { color: colors.mutedForeground, textAlign: "center" }]}>
             {done.correct} of {done.total} correct
           </Text>
+          {estimatedLevel && (
+            <Text style={{ marginTop: 10, textAlign: "center", color: colors.mutedForeground, fontSize: 14 }}>
+              Estimated level:{" "}
+              <Text style={{ color: colors.primary, fontWeight: "900", fontSize: 18 }}>{estimatedLevel}</Text>
+            </Text>
+          )}
           {!done.saved && (
             <Text style={{ color: colors.mutedForeground, fontSize: 11, marginTop: 8, textAlign: "center" }}>
               Sign in to save quiz history and track your stats.
             </Text>
           )}
         </View>
+
+        {showBreakdown && (
+          <View style={[s.resultCard, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 12 }]}>
+            <Text style={{ fontWeight: "800", fontSize: 14, color: colors.foreground, marginBottom: 10 }}>
+              Per-level breakdown
+            </Text>
+            {LEVELS.map((lv) => {
+              const b = perLevel[lv];
+              if (!b) return null;
+              const lvPct = Math.round((b.correct / b.total) * 100);
+              return (
+                <View key={lv} style={{ marginBottom: 10 }}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                    <Text style={{ fontWeight: "800", color: colors.foreground }}>{lv}</Text>
+                    <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+                      {b.correct}/{b.total} · {lvPct}%
+                    </Text>
+                  </View>
+                  <View style={[s.progressBg, { backgroundColor: colors.muted }]}>
+                    <View style={[s.progressFill, { width: `${lvPct}%`, backgroundColor: colors.primary }]} />
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {answers.map((a, i) => (
           <View key={i} style={[s.answerRow, {

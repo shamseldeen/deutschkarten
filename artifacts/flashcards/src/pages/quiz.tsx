@@ -19,6 +19,7 @@ interface Question {
   hint?: string | null;
   options?: string[];
   correctAnswer: string;
+  level: string;
 }
 
 interface QuizResp {
@@ -34,6 +35,7 @@ interface AnswerLog {
   userAnswer: string;
   correct: boolean;
   prompt: string;
+  level: string;
 }
 
 function buildModes(langName: string): { id: Mode; label: string; desc: string; icon: typeof Brain; color: string }[] {
@@ -82,7 +84,10 @@ export default function QuizPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, level, count: 10, lang }),
+        body: JSON.stringify({
+          mode, level, lang,
+          count: level === "mixed" ? 20 : 10,
+        }),
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
@@ -106,7 +111,7 @@ export default function QuizPage() {
         : userAnswer === current.correctAnswer;
     setAnswers((prev) => [...prev, {
       flashcardId: current.flashcardId, questionType: current.questionType,
-      userAnswer, correct, prompt: current.prompt,
+      userAnswer, correct, prompt: current.prompt, level: current.level,
     }]);
     setRevealed(true);
   }
@@ -189,8 +194,22 @@ export default function QuizPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Level (optional)</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Level</CardTitle>
+              <p className="text-xs text-muted-foreground font-normal">
+                Already know some German? Pick <span className="font-semibold text-primary">🎯 Test my level</span> for a placement quiz across A1–C1.
+              </p>
+            </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setLevel("mixed")}
+                className={cn(
+                  "px-4 py-2 rounded-lg border-2 font-semibold transition-colors",
+                  level === "mixed" ? "border-primary bg-primary/10 text-primary" : "border-primary/40 text-primary hover:bg-primary/5",
+                )}
+              >
+                🎯 Test my level
+              </button>
               <button
                 onClick={() => setLevel(null)}
                 className={cn(
@@ -232,6 +251,30 @@ export default function QuizPage() {
   if (done) {
     const pct = done.total > 0 ? Math.round((done.correct / done.total) * 100) : 0;
     const grade = pct >= 90 ? "Outstanding! 🏆" : pct >= 70 ? "Great work! 🎉" : pct >= 50 ? "Keep going! 💪" : "Practice makes perfect 📚";
+
+    // Per-level breakdown — always computed from local answers. Only shown
+    // when the user took a placement quiz OR the answers happened to span
+    // multiple levels.
+    const perLevel: Record<string, { correct: number; total: number }> = {};
+    for (const a of answers) {
+      const b = (perLevel[a.level] ??= { correct: 0, total: 0 });
+      b.total += 1;
+      if (a.correct) b.correct += 1;
+    }
+    const levelsHit = LEVELS.filter((lv) => perLevel[lv]);
+    const showBreakdown = quiz?.level === "mixed" || levelsHit.length > 1;
+    // Estimate placement: highest level where they got ≥60% (and answered ≥2).
+    const estimatedLevel = (() => {
+      if (!showBreakdown) return null;
+      let best: string | null = null;
+      for (const lv of LEVELS) {
+        const b = perLevel[lv];
+        if (!b || b.total < 2) continue;
+        if (b.correct / b.total >= 0.6) best = lv;
+      }
+      return best;
+    })();
+
     return (
       <Layout>
         <div className="max-w-2xl mx-auto space-y-6">
@@ -242,6 +285,12 @@ export default function QuizPage() {
               <div className="text-lg text-muted-foreground">
                 {done.correct} of {done.total} correct
               </div>
+              {estimatedLevel && (
+                <div className="pt-2 text-base">
+                  <span className="text-muted-foreground">Estimated level: </span>
+                  <span className="font-black text-primary text-xl">{estimatedLevel}</span>
+                </div>
+              )}
               {!done.saved && (
                 <div className="text-xs text-muted-foreground/70">
                   Sign in to save quiz history and track your stats.
@@ -249,6 +298,30 @@ export default function QuizPage() {
               )}
             </CardContent>
           </Card>
+
+          {showBreakdown && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Per-level breakdown</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                {LEVELS.map((lv) => {
+                  const b = perLevel[lv];
+                  if (!b) return null;
+                  const lvPct = Math.round((b.correct / b.total) * 100);
+                  return (
+                    <div key={lv} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-bold">{lv}</span>
+                        <span className="text-muted-foreground">
+                          {b.correct}/{b.total} · {lvPct}%
+                        </span>
+                      </div>
+                      <Progress value={lvPct} className="h-2" />
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
 
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {answers.map((a, i) => (

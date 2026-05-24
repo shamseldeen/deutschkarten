@@ -25,6 +25,10 @@ interface Question {
   hint?: string | null;
   options?: string[];
   correctAnswer: string;
+  // CEFR level of the source flashcard. Always included so the client can
+  // render a per-level breakdown after the quiz (used by the "Test my level"
+  // placement mode that mixes A1–C1).
+  level: string;
 }
 
 // ── In-memory issued-question cache for server-authoritative scoring ─────────
@@ -86,6 +90,7 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): 
       flashcardId: card.id, questionType: mode, prompt: card.word,
       correctAnswer: correct,
       options: shuffle([correct, ...opts]),
+      level: card.level,
     };
   }
   if (mode === "en-to-de") {
@@ -97,6 +102,7 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): 
       flashcardId: card.id, questionType: mode, prompt,
       correctAnswer: card.word,
       options: shuffle([card.word, ...opts]),
+      level: card.level,
     };
   }
   if (mode === "article") {
@@ -105,6 +111,7 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): 
       flashcardId: card.id, questionType: mode, prompt: card.baseWord,
       hint: tr(card, lang) ?? card.englishTranslation, correctAnswer: card.article,
       options: ["der", "die", "das"],
+      level: card.level,
     };
   }
   // typing
@@ -113,6 +120,7 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): 
   return {
     flashcardId: card.id, questionType: mode, prompt,
     hint: card.article ?? null, correctAnswer: card.baseWord,
+    level: card.level,
   };
 }
 
@@ -124,10 +132,15 @@ function isAnswerCorrect(mode: QuizMode, userAnswer: string, correctAnswer: stri
 }
 
 // ── Zod schemas ──────────────────────────────────────────────────────────────
+const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
+
 const StartBody = z.object({
   mode: z.enum(MODES),
-  level: z.enum(["A1", "A2", "B1", "B2", "C1"]).nullish(),
-  count: z.coerce.number().int().min(5).max(20).default(10),
+  // "mixed" → placement quiz: draw evenly from all 5 CEFR levels so students
+  // who already know German can self-assess where they stand without studying
+  // in the app first. null/omitted = no level filter (any card, any level).
+  level: z.enum(["A1", "A2", "B1", "B2", "C1", "mixed"]).nullish(),
+  count: z.coerce.number().int().min(5).max(25).default(10),
   // Target language for translation-based modes (de-to-en, en-to-de, typing).
   // Defaults to English; "ar" works out of the box, other langs depend on
   // whether the card has a stored translation in that language.
@@ -152,18 +165,41 @@ router.post("/quiz/start", async (req, res) => {
   }
   const { mode, level, count, lang } = parsed.data;
   const userId = getAuth(req)?.userId ?? null;
+  const isMixed = level === "mixed";
 
-  const conds = [];
-  if (level) conds.push(eq(flashcardsTable.level, level));
-  if (mode === "article") conds.push(isNotNull(flashcardsTable.article));
-  const where = conds.length > 0 ? and(...conds) : undefined;
-
-  const pool = await db
-    .select()
-    .from(flashcardsTable)
-    .where(where)
-    .orderBy(sql`RANDOM()`)
-    .limit(Math.max(count * 3, 30));
+  // For mixed (placement) mode, fetch a balanced pool: ~count*2 cards per
+  // level so every CEFR band is represented in the final 10–25 question set.
+  // For single-level or unfiltered mode, fall back to a single random draw.
+  let pool: Card[];
+  if (isMixed) {
+    const perLevel = Math.max(count, 6); // small buffer over what we'll use
+    const buckets = await Promise.all(
+      LEVELS.map((lv) =>
+        db
+          .select()
+          .from(flashcardsTable)
+          .where(
+            mode === "article"
+              ? and(eq(flashcardsTable.level, lv), isNotNull(flashcardsTable.article))
+              : eq(flashcardsTable.level, lv),
+          )
+          .orderBy(sql`RANDOM()`)
+          .limit(perLevel),
+      ),
+    );
+    pool = buckets.flat();
+  } else {
+    const conds = [];
+    if (level) conds.push(eq(flashcardsTable.level, level));
+    if (mode === "article") conds.push(isNotNull(flashcardsTable.article));
+    const where = conds.length > 0 ? and(...conds) : undefined;
+    pool = await db
+      .select()
+      .from(flashcardsTable)
+      .where(where)
+      .orderBy(sql`RANDOM()`)
+      .limit(Math.max(count * 3, 30));
+  }
 
   if (pool.length === 0) {
     res.status(400).json({ error: "No cards available for this mode/level." });
@@ -175,10 +211,45 @@ router.post("/quiz/start", async (req, res) => {
   }
 
   const questions: Question[] = [];
-  for (const card of pool) {
-    if (questions.length >= count) break;
-    const q = buildQuestion(mode, card, pool, lang);
-    if (q) questions.push(q);
+  if (isMixed) {
+    // Round-robin: take one question per level at a time so the final list
+    // is evenly distributed across A1–C1 even if buildQuestion drops some
+    // cards (e.g. missing translation in the chosen language).
+    const byLevel: Record<string, Card[]> = {};
+    for (const c of pool) (byLevel[c.level] ??= []).push(c);
+    const target = Math.min(count, 25);
+    const perLevelTarget = Math.max(1, Math.floor(target / LEVELS.length));
+    for (const lv of LEVELS) {
+      const cards = byLevel[lv] ?? [];
+      let taken = 0;
+      for (const card of cards) {
+        if (taken >= perLevelTarget) break;
+        const q = buildQuestion(mode, card, pool, lang);
+        if (q) { questions.push(q); taken += 1; }
+      }
+    }
+    // Fill any remaining slots from leftover cards (in case some levels
+    // were short on usable questions for the chosen language/mode).
+    // Shuffle the pool first so top-up questions don't bias toward the
+    // levels that were fetched first (the per-level buckets are flattened
+    // in CEFR order, so without this the fallback would over-sample A1/A2).
+    if (questions.length < target) {
+      const used = new Set(questions.map((q) => q.flashcardId));
+      for (const card of shuffle(pool)) {
+        if (questions.length >= target) break;
+        if (used.has(card.id)) continue;
+        const q = buildQuestion(mode, card, pool, lang);
+        if (q) questions.push(q);
+      }
+    }
+    // Shuffle so the user doesn't see all A1 first, then all A2, etc.
+    questions.splice(0, questions.length, ...shuffle(questions));
+  } else {
+    for (const card of pool) {
+      if (questions.length >= count) break;
+      const q = buildQuestion(mode, card, pool, lang);
+      if (q) questions.push(q);
+    }
   }
 
   if (questions.length === 0) {
