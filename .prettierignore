@@ -21,6 +21,9 @@ artifacts/kivy-app
 
 artifacts/mobile/.expo
 artifacts/mobile-ba7r/.expo
+artifacts/mobile/expo-env.d.ts
+artifacts/mobile-ba7r/expo-env.d.ts
+artifacts/mockup-sandbox/src/.generated
 
 lib/api-client-react/src/generated
 lib/api-zod/src/generated

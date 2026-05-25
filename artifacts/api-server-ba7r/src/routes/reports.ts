@@ -15,6 +15,10 @@ import {
 } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { isAdmin } from "../lib/admin";
+import {
+  getCurrentWorkspaceId,
+  cardVisibleInWorkspace,
+} from "../lib/workspace";
 
 const router: IRouter = Router();
 
@@ -63,12 +67,13 @@ router.post("/flashcards/:id/report", requireAuth, async (req, res) => {
     }
   }
 
-  const card = await db
-    .select({ id: flashcardsTable.id })
-    .from(flashcardsTable)
-    .where(eq(flashcardsTable.id, id))
-    .limit(1);
-  if (card.length === 0) {
+  // Only let a user report a card that is visible in their current workspace.
+  // Without this, a signed-in user could guess flashcard IDs and report cards
+  // in other users' private workspaces, eventually auto-hiding them at the
+  // threshold. Return 404 (not 403) so existence isn't leaked.
+  const currentWsId = await getCurrentWorkspaceId(userId);
+  const visible = await cardVisibleInWorkspace(id, currentWsId);
+  if (!visible) {
     res.status(404).json({ error: "Card not found" });
     return;
   }

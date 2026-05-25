@@ -70639,8 +70639,9 @@ router10.post("/flashcards/:id/report", requireAuth, async (req, res) => {
       return;
     }
   }
-  const card = await db.select({ id: flashcardsTable.id }).from(flashcardsTable).where(eq(flashcardsTable.id, id)).limit(1);
-  if (card.length === 0) {
+  const currentWsId = await getCurrentWorkspaceId(userId);
+  const visible = await cardVisibleInWorkspace(id, currentWsId);
+  if (!visible) {
     res.status(404).json({ error: "Card not found" });
     return;
   }
