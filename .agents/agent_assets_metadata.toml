@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "jnlW85dJ7AeZzDySOj9th"
+uri = "file://FULL_OWNERSHIP_GUIDE.md"
+type = "text"
+title = "دليل الملكية الكاملة — DeutschKarten"
