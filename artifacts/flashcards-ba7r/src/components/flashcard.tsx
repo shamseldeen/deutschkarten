@@ -41,13 +41,15 @@ export function Flashcard({
     setCard(incomingCard as CardWithTranslations);
   }, [incomingCard]);
 
-  const translations = card.translations ?? {
+  const translations: Record<string, string> = {
     en: card.englishTranslation,
     ar: card.arabicTranslation,
+    ...((card as CardWithTranslations).translations ?? {}),
   };
-  const exampleTr = card.exampleTranslations ?? {
-    en: card.exampleSentenceEn,
-    ar: card.exampleSentenceAr,
+  const exampleTr: Record<string, string> = {
+    en: card.exampleSentenceEn ?? "",
+    ar: card.exampleSentenceAr ?? "",
+    ...((card as CardWithTranslations).exampleTranslations ?? {}),
   };
 
   // dedupe + drop nulls

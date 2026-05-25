@@ -70,14 +70,16 @@ export function FlashCard({
     setCard(incomingCard);
   }, [incomingCard]);
 
-  const translations: Record<string, string> = (card.translations ?? {
+  const translations: Record<string, string> = {
     en: card.englishTranslation,
     ar: card.arabicTranslation,
-  }) as Record<string, string>;
-  const exampleTr: Record<string, string> = (card.exampleTranslations ?? {
-    en: card.exampleSentenceEn,
-    ar: card.exampleSentenceAr,
-  }) as Record<string, string>;
+    ...((card.translations ?? {}) as Record<string, string>),
+  };
+  const exampleTr: Record<string, string> = {
+    en: card.exampleSentenceEn ?? "",
+    ar: card.exampleSentenceAr ?? "",
+    ...((card.exampleTranslations ?? {}) as Record<string, string>),
+  };
 
   const langList = [prefs.primaryLang, prefs.secondaryLang].filter(
     (l, i, arr): l is string => !!l && arr.indexOf(l) === i,
@@ -121,6 +123,16 @@ export function FlashCard({
     inputRange: [0, 180],
     outputRange: ["180deg", "360deg"],
   });
+  const frontOpacity = flipAnim.interpolate({
+    inputRange: [89, 90],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+  const backOpacity = flipAnim.interpolate({
+    inputRange: [89, 90],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
 
   const flip = () => {
     Animated.spring(flipAnim, {
@@ -155,7 +167,7 @@ export function FlashCard({
             styles.card,
             { backgroundColor: appColors.card, borderColor: appColors.border },
             { transform: [{ rotateY: frontInterpolate }] },
-            { backfaceVisibility: "hidden" },
+            { backfaceVisibility: "hidden", opacity: frontOpacity },
           ]}
         >
           <View style={[styles.levelBadge, { backgroundColor: levelColor }]}>
@@ -260,7 +272,7 @@ export function FlashCard({
             styles.cardBack,
             { backgroundColor: appColors.card, borderColor: appColors.border },
             { transform: [{ rotateY: backInterpolate }] },
-            { backfaceVisibility: "hidden" },
+            { backfaceVisibility: "hidden", opacity: backOpacity },
           ]}
         >
           <View style={[styles.levelBadge, { backgroundColor: levelColor }]}>
