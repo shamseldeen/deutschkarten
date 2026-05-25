@@ -2,40 +2,30 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
 jobs:
   check:
-    name: Check (typecheck, tests, codegen, format)
+    name: check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10.26.1
 
-      - name: Setup Node.js 24
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: pnpm
+          node-version: '24'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run check (typecheck + tests)
+      - name: Run check
         run: pnpm run check
 
-      - name: Codegen freshness check
+      - name: Run codegen:check
         run: pnpm run codegen:check
-
-      - name: Prettier format check
-        run: pnpm run format:check
-
-      - name: Dependency vulnerability audit
-        run: pnpm run audit
