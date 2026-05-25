@@ -16,8 +16,13 @@ Assumes Node 24 and pnpm 10 (enforced by `engines` and `.nvmrc`).
 ```bash
 pnpm install --frozen-lockfile
 pnpm run reset-db    # creates public + ba7r schemas, pushes Drizzle, seeds both tenants
-pnpm run check       # typecheck + tests
+pnpm run check       # format + lint + typecheck + tests (local CI gate)
 ```
+
+When you start an API server with `pnpm --filter @workspace/api-server run dev`
+(or the Ba7r equivalent), it automatically builds the matching web tenant
+first so `/flashcards/` and `/ba7r/` work out of the box — no separate web
+build step needed.
 
 Required secrets (set as env vars; never commit):
 
