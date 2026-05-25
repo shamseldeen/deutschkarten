@@ -15,7 +15,12 @@ function readLocal(): LangPrefs {
     const p = JSON.parse(raw);
     return {
       primaryLang: typeof p.primaryLang === "string" ? p.primaryLang : "en",
-      secondaryLang: p.secondaryLang === null ? null : (typeof p.secondaryLang === "string" ? p.secondaryLang : "ar"),
+      secondaryLang:
+        p.secondaryLang === null
+          ? null
+          : typeof p.secondaryLang === "string"
+            ? p.secondaryLang
+            : "ar",
     };
   } catch {
     return DEFAULT;
@@ -23,7 +28,11 @@ function readLocal(): LangPrefs {
 }
 
 function writeLocal(p: LangPrefs) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(p));
+  } catch {
+    /* ignore */
+  }
 }
 
 // ── Module-level singleton store ─────────────────────────────────────────────
@@ -40,10 +49,14 @@ function setState(next: LangPrefs) {
 
 function subscribe(cb: () => void) {
   subscribers.add(cb);
-  return () => { subscribers.delete(cb); };
+  return () => {
+    subscribers.delete(cb);
+  };
 }
 
-function getSnapshot() { return state; }
+function getSnapshot() {
+  return state;
+}
 
 async function loadFromServer(getToken: () => Promise<string | null>) {
   if (inFlightFetch) return inFlightFetch;
@@ -83,23 +96,26 @@ export function useLangPrefs() {
     }
   }, [isSignedIn, getToken]);
 
-  const save = useCallback(async (next: LangPrefs) => {
-    writeLocal(next);
-    setState(next);
-    if (!isSignedIn) return;
-    const token = await getToken();
-    await fetch(`/ba7r-api/me/settings`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({
-        primaryLang: next.primaryLang,
-        secondaryLang: next.secondaryLang ?? "none",
-      }),
-    });
-  }, [isSignedIn, getToken]);
+  const save = useCallback(
+    async (next: LangPrefs) => {
+      writeLocal(next);
+      setState(next);
+      if (!isSignedIn) return;
+      const token = await getToken();
+      await fetch(`/ba7r-api/me/settings`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          primaryLang: next.primaryLang,
+          secondaryLang: next.secondaryLang ?? "none",
+        }),
+      });
+    },
+    [isSignedIn, getToken],
+  );
 
   return { prefs, save, loading: false };
 }

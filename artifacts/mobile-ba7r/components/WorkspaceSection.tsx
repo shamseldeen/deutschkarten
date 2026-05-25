@@ -1,7 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, TextInput, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { useWorkspaces, useCreateWorkspace, useSwitchWorkspace, useDeleteWorkspace } from "@/lib/hooks";
+import {
+  useWorkspaces,
+  useCreateWorkspace,
+  useSwitchWorkspace,
+  useDeleteWorkspace,
+} from "@/lib/hooks";
 import type { Workspace } from "@/lib/api";
 import { Feather } from "@expo/vector-icons";
 
@@ -13,7 +27,14 @@ const LANGUAGES = [
   { code: "TR", label: "Turkish", flag: "🇹🇷" },
 ];
 
-const FLAG: Record<string, string> = { AR: "🇸🇦", EN: "🇬🇧", ES: "🇪🇸", FR: "🇫🇷", IT: "🇮🇹", TR: "🇹🇷" };
+const FLAG: Record<string, string> = {
+  AR: "🇸🇦",
+  EN: "🇬🇧",
+  ES: "🇪🇸",
+  FR: "🇫🇷",
+  IT: "🇮🇹",
+  TR: "🇹🇷",
+};
 
 export function WorkspaceSection() {
   const colors = useColors();
@@ -27,8 +48,15 @@ export function WorkspaceSection() {
 
   if (isLoading || !data) {
     return (
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>🗂️ Workspaces</Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.foreground }]}>
+          🗂️ Workspaces
+        </Text>
         <ActivityIndicator style={{ marginTop: 8 }} />
       </View>
     );
@@ -48,7 +76,11 @@ export function WorkspaceSection() {
       `"${ws.name}" and its progress will be lost.`,
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => deleteMut.mutate(ws.id) },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteMut.mutate(ws.id),
+        },
       ],
     );
   };
@@ -62,16 +94,27 @@ export function WorkspaceSection() {
           setNewName("");
           setNewLang("EN");
         },
-        onError: (e: any) => Alert.alert("Couldn't create workspace", e?.message ?? "Try again"),
+        onError: (e: any) =>
+          Alert.alert("Couldn't create workspace", e?.message ?? "Try again"),
       },
     );
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.title, { color: colors.foreground }]}>🗂️ Workspaces</Text>
-      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 8 }}>
-        Each workspace pairs German with a target language. Cards and progress are kept separate.
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
+      <Text style={[styles.title, { color: colors.foreground }]}>
+        🗂️ Workspaces
+      </Text>
+      <Text
+        style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 8 }}
+      >
+        Each workspace pairs German with a target language. Cards and progress
+        are kept separate.
       </Text>
 
       {data.workspaces.map((ws) => (
@@ -81,24 +124,46 @@ export function WorkspaceSection() {
             styles.row,
             {
               borderColor: ws.isCurrent ? colors.primary : colors.border,
-              backgroundColor: ws.isCurrent ? colors.primary + "12" : "transparent",
+              backgroundColor: ws.isCurrent
+                ? colors.primary + "12"
+                : "transparent",
             },
           ]}
         >
           <Pressable onPress={() => onSwitch(ws)} style={styles.rowMain}>
-            <Text style={{ fontSize: 22 }}>{FLAG[ws.secondaryLanguage] ?? "🏳️"}</Text>
+            <Text style={{ fontSize: 22 }}>
+              {FLAG[ws.secondaryLanguage] ?? "🏳️"}
+            </Text>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{ws.name}</Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: colors.foreground,
+                }}
+              >
+                {ws.name}
+              </Text>
               <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
                 German → {ws.secondaryLanguage}
                 {ws.isDefault ? " · Default" : ""}
               </Text>
             </View>
-            {ws.isCurrent && <Feather name="check" size={18} color={colors.primary} />}
+            {ws.isCurrent && (
+              <Feather name="check" size={18} color={colors.primary} />
+            )}
           </Pressable>
           {!ws.isDefault && (
-            <Pressable onPress={() => onDelete(ws)} hitSlop={8} style={{ paddingHorizontal: 8 }}>
-              <Feather name="trash-2" size={16} color={colors.mutedForeground} />
+            <Pressable
+              onPress={() => onDelete(ws)}
+              hitSlop={8}
+              style={{ paddingHorizontal: 8 }}
+            >
+              <Feather
+                name="trash-2"
+                size={16}
+                color={colors.mutedForeground}
+              />
             </Pressable>
           )}
         </View>
@@ -113,20 +178,45 @@ export function WorkspaceSection() {
         ]}
       >
         <Feather name="plus" size={16} color={colors.foreground} />
-        <Text style={{ color: colors.foreground, fontWeight: "700", fontSize: 13 }}>
-          {canCreate ? "New workspace" : `Max ${(data.max ?? 2) + 1} workspaces`}
+        <Text
+          style={{ color: colors.foreground, fontWeight: "700", fontSize: 13 }}
+        >
+          {canCreate
+            ? "New workspace"
+            : `Max ${(data.max ?? 2) + 1} workspaces`}
         </Text>
       </Pressable>
 
-      <Modal visible={showCreate} animationType="slide" transparent onRequestClose={() => setShowCreate(false)}>
+      <Modal
+        visible={showCreate}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowCreate(false)}
+      >
         <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.foreground }]}>New workspace</Text>
-            <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 12 }}>
-              Cards, progress and stats stay separate from your other workspaces.
+          <View
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.title, { color: colors.foreground }]}>
+              New workspace
+            </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                color: colors.mutedForeground,
+                marginBottom: 12,
+              }}
+            >
+              Cards, progress and stats stay separate from your other
+              workspaces.
             </Text>
 
-            <Text style={[styles.label, { color: colors.mutedForeground }]}>TARGET LANGUAGE</Text>
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              TARGET LANGUAGE
+            </Text>
             <View style={styles.langGrid}>
               {LANGUAGES.map((l) => {
                 const active = l.code === newLang;
@@ -138,11 +228,19 @@ export function WorkspaceSection() {
                       styles.langChip,
                       {
                         borderColor: active ? colors.primary : colors.border,
-                        backgroundColor: active ? colors.primary : "transparent",
+                        backgroundColor: active
+                          ? colors.primary
+                          : "transparent",
                       },
                     ]}
                   >
-                    <Text style={{ fontSize: 13, fontWeight: "700", color: active ? "#fff" : colors.foreground }}>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "700",
+                        color: active ? "#fff" : colors.foreground,
+                      }}
+                    >
                       {l.flag} {l.label}
                     </Text>
                   </Pressable>
@@ -150,26 +248,46 @@ export function WorkspaceSection() {
               })}
             </View>
 
-            <Text style={[styles.label, { color: colors.mutedForeground, marginTop: 12 }]}>NAME (OPTIONAL)</Text>
+            <Text
+              style={[
+                styles.label,
+                { color: colors.mutedForeground, marginTop: 12 },
+              ]}
+            >
+              NAME (OPTIONAL)
+            </Text>
             <TextInput
               value={newName}
               onChangeText={setNewName}
-              placeholder={LANGUAGES.find((l) => l.code === newLang)?.label ?? ""}
+              placeholder={
+                LANGUAGES.find((l) => l.code === newLang)?.label ?? ""
+              }
               placeholderTextColor={colors.mutedForeground}
-              style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
+              style={[
+                styles.input,
+                { borderColor: colors.border, color: colors.foreground },
+              ]}
             />
 
             <View style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
               <Pressable
                 onPress={() => setShowCreate(false)}
-                style={[styles.modalBtn, { borderColor: colors.border, borderWidth: 1 }]}
+                style={[
+                  styles.modalBtn,
+                  { borderColor: colors.border, borderWidth: 1 },
+                ]}
               >
-                <Text style={{ color: colors.foreground, fontWeight: "700" }}>Cancel</Text>
+                <Text style={{ color: colors.foreground, fontWeight: "700" }}>
+                  Cancel
+                </Text>
               </Pressable>
               <Pressable
                 onPress={onCreate}
                 disabled={createMut.isPending}
-                style={[styles.modalBtn, { backgroundColor: colors.primary, flex: 1 }]}
+                style={[
+                  styles.modalBtn,
+                  { backgroundColor: colors.primary, flex: 1 },
+                ]}
               >
                 <Text style={{ color: "#fff", fontWeight: "800" }}>
                   {createMut.isPending ? "Creating…" : "Create"}
@@ -195,7 +313,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginTop: 6,
   },
-  rowMain: { flexDirection: "row", alignItems: "center", flex: 1, gap: 10, paddingVertical: 4 },
+  rowMain: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 10,
+    paddingVertical: 4,
+  },
   addBtn: {
     marginTop: 10,
     flexDirection: "row",
@@ -207,11 +331,37 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderStyle: "dashed",
   },
-  modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 20,
+  },
   modalCard: { borderRadius: 20, borderWidth: 1, padding: 20 },
-  label: { fontSize: 10, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8 },
+  label: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    marginBottom: 8,
+  },
   langGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  langChip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
-  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
-  modalBtn: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: "center" },
+  langChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
 });

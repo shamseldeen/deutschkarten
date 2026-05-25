@@ -36,7 +36,9 @@ export function DonationCard({ compact = false }: Props) {
           >
             <div className="flex items-center gap-2">
               <Heart className="w-4 h-4 text-pink-500" fill="currentColor" />
-              <span className="font-bold text-foreground">Support the Creator</span>
+              <span className="font-bold text-foreground">
+                Support the Creator
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">
               Thank the developer for building and maintaining this app.
@@ -54,7 +56,9 @@ export function DonationCard({ compact = false }: Props) {
           >
             <div className="flex items-center gap-2">
               <Server className="w-4 h-4 text-blue-500" />
-              <span className="font-bold text-foreground">Upgrade the AI & Servers</span>
+              <span className="font-bold text-foreground">
+                Upgrade the AI & Servers
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">
               Help us add faster AI, more storage, and quicker responses.

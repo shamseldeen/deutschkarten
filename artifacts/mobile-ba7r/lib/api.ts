@@ -20,7 +20,11 @@ export function getApiBaseUrl(): string {
 // at /mobile/ alongside the API).
 export function resolveBaseUrl(): string {
   if (BASE_URL) return BASE_URL;
-  if (typeof window !== "undefined" && window.location && window.location.origin) {
+  if (
+    typeof window !== "undefined" &&
+    window.location &&
+    window.location.origin
+  ) {
     return window.location.origin;
   }
   throw new Error(
@@ -33,7 +37,10 @@ export function setAuthTokenGetter(fn: () => Promise<string | null>) {
   authTokenGetter = fn;
 }
 
-export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+export async function apiFetch(
+  path: string,
+  init?: RequestInit,
+): Promise<Response> {
   const headers: Record<string, string> = {
     ...(init?.headers as Record<string, string> | undefined),
   };
@@ -58,7 +65,10 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${resolveBaseUrl()}${path}`, { ...rest, headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw Object.assign(new Error((body as any).error ?? res.statusText), { status: res.status, body });
+    throw Object.assign(new Error((body as any).error ?? res.statusText), {
+      status: res.status,
+      body,
+    });
   }
   return res.json() as Promise<T>;
 }
@@ -101,7 +111,12 @@ export type LevelStats = {
 };
 
 export const api = {
-  listFlashcards: (params?: { level?: Level; category?: string; limit?: number; offset?: number }) => {
+  listFlashcards: (params?: {
+    level?: Level;
+    category?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
     const q = new URLSearchParams();
     if (params?.level) q.set("level", params.level);
     if (params?.category) q.set("category", params.category);
@@ -110,7 +125,8 @@ export const api = {
     return fetchJson<FlashcardList>(`/ba7r-api/flashcards?${q}`);
   },
 
-  getFlashcard: (id: number) => fetchJson<Flashcard>(`/ba7r-api/flashcards/${id}`),
+  getFlashcard: (id: number) =>
+    fetchJson<Flashcard>(`/ba7r-api/flashcards/${id}`),
 
   getDailyFlashcards: (params?: { level?: Level }) => {
     const q = new URLSearchParams();
@@ -118,9 +134,14 @@ export const api = {
     return fetchJson<Flashcard[]>(`/ba7r-api/flashcards/daily?${q}`);
   },
 
-  getFlashcardStats: () => fetchJson<LevelStats[]>("/ba7r-api/flashcards/stats"),
+  getFlashcardStats: () =>
+    fetchJson<LevelStats[]>("/ba7r-api/flashcards/stats"),
 
-  generateFlashcards: (data: { level: Level; category?: string; count?: number }) =>
+  generateFlashcards: (data: {
+    level: Level;
+    category?: string;
+    count?: number;
+  }) =>
     fetchJson<Flashcard[]>("/ba7r-api/flashcards/generate", {
       method: "POST",
       body: JSON.stringify(data),
@@ -141,12 +162,17 @@ export const api = {
     }),
 
   switchWorkspace: (id: string) =>
-    fetchJson<{ currentId: string | null }>(`/ba7r-api/me/workspaces/${id}/switch`, {
-      method: "POST",
-    }),
+    fetchJson<{ currentId: string | null }>(
+      `/ba7r-api/me/workspaces/${id}/switch`,
+      {
+        method: "POST",
+      },
+    ),
 
   deleteWorkspace: (id: string) =>
-    fetchJson<{ deleted: string }>(`/ba7r-api/me/workspaces/${id}`, { method: "DELETE" }),
+    fetchJson<{ deleted: string }>(`/ba7r-api/me/workspaces/${id}`, {
+      method: "DELETE",
+    }),
 };
 
 export type Workspace = {

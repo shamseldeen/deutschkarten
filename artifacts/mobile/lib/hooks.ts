@@ -29,7 +29,8 @@ export function useWorkspaces() {
 export function useCreateWorkspace() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { secondaryLanguage: string; name?: string }) => api.createWorkspace(data),
+    mutationFn: (data: { secondaryLanguage: string; name?: string }) =>
+      api.createWorkspace(data),
     onSuccess: () => invalidateWorkspaceScoped(qc),
   });
 }

@@ -18,12 +18,18 @@ type Props = {
 
 function getLevelColor(level: string): string {
   switch (level) {
-    case "A1": return colors.light.levelA1;
-    case "A2": return colors.light.levelA2;
-    case "B1": return colors.light.levelB1;
-    case "B2": return colors.light.levelB2;
-    case "C1": return colors.light.levelC1;
-    default: return colors.light.primary;
+    case "A1":
+      return colors.light.levelA1;
+    case "A2":
+      return colors.light.levelA2;
+    case "B1":
+      return colors.light.levelB1;
+    case "B2":
+      return colors.light.levelB2;
+    case "C1":
+      return colors.light.levelC1;
+    default:
+      return colors.light.primary;
   }
 }
 
@@ -41,7 +47,10 @@ export function LevelCard({ stats, onPress }: Props) {
 
   return (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: appColors.card, borderColor: appColors.border }]}
+      style={[
+        styles.card,
+        { backgroundColor: appColors.card, borderColor: appColors.border },
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
       testID={`card-level-${stats.level}`}
@@ -51,7 +60,9 @@ export function LevelCard({ stats, onPress }: Props) {
       </View>
 
       <View style={styles.info}>
-        <Text style={[styles.description, { color: appColors.mutedForeground }]}>
+        <Text
+          style={[styles.description, { color: appColors.mutedForeground }]}
+        >
           {LEVEL_DESCRIPTIONS[stats.level] ?? stats.level}
         </Text>
         <Text style={[styles.count, { color: appColors.foreground }]}>
@@ -60,15 +71,22 @@ export function LevelCard({ stats, onPress }: Props) {
       </View>
 
       <View style={styles.progressContainer}>
-        <View style={[styles.progressBg, { backgroundColor: appColors.border }]}>
+        <View
+          style={[styles.progressBg, { backgroundColor: appColors.border }]}
+        >
           <View
             style={[
               styles.progressFill,
-              { backgroundColor: levelColor, width: `${stats.percentage}%` as any },
+              {
+                backgroundColor: levelColor,
+                width: `${stats.percentage}%` as any,
+              },
             ]}
           />
         </View>
-        <Text style={[styles.percentage, { color: levelColor }]}>{stats.percentage}%</Text>
+        <Text style={[styles.percentage, { color: levelColor }]}>
+          {stats.percentage}%
+        </Text>
       </View>
     </TouchableOpacity>
   );

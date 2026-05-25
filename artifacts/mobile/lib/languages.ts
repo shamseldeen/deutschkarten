@@ -1,4 +1,9 @@
-export const SUPPORTED_LANGS: { code: string; name: string; nativeName: string; rtl?: boolean }[] = [
+export const SUPPORTED_LANGS: {
+  code: string;
+  name: string;
+  nativeName: string;
+  rtl?: boolean;
+}[] = [
   { code: "en", name: "English", nativeName: "English" },
   { code: "ar", name: "Arabic", nativeName: "العربية", rtl: true },
   { code: "fr", name: "French", nativeName: "Français" },
@@ -18,8 +23,12 @@ export const SUPPORTED_LANGS: { code: string; name: string; nativeName: string; 
   { code: "nl", name: "Dutch", nativeName: "Nederlands" },
 ];
 
-export const LANG_BY_CODE: Record<string, typeof SUPPORTED_LANGS[number]> =
+export const LANG_BY_CODE: Record<string, (typeof SUPPORTED_LANGS)[number]> =
   Object.fromEntries(SUPPORTED_LANGS.map((l) => [l.code, l]));
 
-export const RTL_LANGS = new Set(SUPPORTED_LANGS.filter((l) => l.rtl).map((l) => l.code));
-export function isRtl(code: string | null | undefined): boolean { return !!code && RTL_LANGS.has(code); }
+export const RTL_LANGS = new Set(
+  SUPPORTED_LANGS.filter((l) => l.rtl).map((l) => l.code),
+);
+export function isRtl(code: string | null | undefined): boolean {
+  return !!code && RTL_LANGS.has(code);
+}

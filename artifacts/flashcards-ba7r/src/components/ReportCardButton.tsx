@@ -43,10 +43,18 @@ export function ReportCardButton({ cardId, word }: Props) {
         credentials: "include",
         body: JSON.stringify({ reason, note: note.trim() || undefined }),
       });
-      if (r.status === 401) { setDone("auth"); return; }
-      if (!r.ok) { setDone("err"); return; }
+      if (r.status === 401) {
+        setDone("auth");
+        return;
+      }
+      if (!r.ok) {
+        setDone("err");
+        return;
+      }
       setDone("ok");
-      setTimeout(() => { setOpen(false); }, 1200);
+      setTimeout(() => {
+        setOpen(false);
+      }, 1200);
     } catch {
       setDone("err");
     } finally {
@@ -55,10 +63,17 @@ export function ReportCardButton({ cardId, word }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => {
-      setOpen(o);
-      if (!o) { setReason(""); setNote(""); setDone(null); }
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) {
+          setReason("");
+          setNote("");
+          setDone(null);
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <button
           onClick={(e) => e.stopPropagation()}
@@ -79,13 +94,19 @@ export function ReportCardButton({ cardId, word }: Props) {
         </DialogHeader>
 
         {done === "ok" ? (
-          <p className="py-6 text-center text-sm text-green-600">Thanks — we&apos;ll review it.</p>
+          <p className="py-6 text-center text-sm text-green-600">
+            Thanks — we&apos;ll review it.
+          </p>
         ) : done === "auth" ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">Please sign in to report cards.</p>
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Please sign in to report cards.
+          </p>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Reason</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                Reason
+              </Label>
               <div className="grid grid-cols-2 gap-2">
                 {REASONS.map((r) => (
                   <button
@@ -105,7 +126,10 @@ export function ReportCardButton({ cardId, word }: Props) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="report-note" className="text-xs uppercase tracking-wider text-muted-foreground">
+              <Label
+                htmlFor="report-note"
+                className="text-xs uppercase tracking-wider text-muted-foreground"
+              >
                 Note (optional)
               </Label>
               <Textarea
@@ -117,16 +141,27 @@ export function ReportCardButton({ cardId, word }: Props) {
               />
             </div>
             {done === "err" && (
-              <p className="text-sm text-destructive">Couldn&apos;t submit. Please try again.</p>
+              <p className="text-sm text-destructive">
+                Couldn&apos;t submit. Please try again.
+              </p>
             )}
           </div>
         )}
 
         {!done && (
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={submit} disabled={!reason || busy}>
-              {busy ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Submitting…</> : "Submit report"}
+              {busy ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting…
+                </>
+              ) : (
+                "Submit report"
+              )}
             </Button>
           </DialogFooter>
         )}

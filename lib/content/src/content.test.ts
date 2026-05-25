@@ -95,7 +95,14 @@ describe("ROADMAP", () => {
   });
 
   it("study habits all use known icon names", () => {
-    const valid = new Set(["calendar", "mic", "tag", "headphones", "repeat", "edit-3"]);
+    const valid = new Set([
+      "calendar",
+      "mic",
+      "tag",
+      "headphones",
+      "repeat",
+      "edit-3",
+    ]);
     for (const h of STUDY_HABITS) {
       assert.ok(valid.has(h.icon), `unknown icon: ${h.icon}`);
     }

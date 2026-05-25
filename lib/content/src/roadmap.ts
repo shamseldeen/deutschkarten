@@ -13,7 +13,8 @@ export const ROADMAP: LevelRoadmap[] = [
   {
     level: "A1",
     title: "Breakthrough — first words",
-    description: "Greet people, introduce yourself, talk about family and daily life.",
+    description:
+      "Greet people, introduce yourself, talk about family and daily life.",
     vocabGoal: 500,
     hoursEstimate: "60–80 hours",
     canDo: [
@@ -41,7 +42,8 @@ export const ROADMAP: LevelRoadmap[] = [
   {
     level: "A2",
     title: "Waystage — everyday life",
-    description: "Handle routine errands, describe past events, express what you like.",
+    description:
+      "Handle routine errands, describe past events, express what you like.",
     vocabGoal: 1200,
     hoursEstimate: "120–160 hours",
     canDo: [
@@ -69,7 +71,8 @@ export const ROADMAP: LevelRoadmap[] = [
   {
     level: "B1",
     title: "Threshold — independent user",
-    description: "Manage most situations while travelling. Explain opinions and plans.",
+    description:
+      "Manage most situations while travelling. Explain opinions and plans.",
     vocabGoal: 2500,
     hoursEstimate: "240–320 hours",
     canDo: [
@@ -97,7 +100,8 @@ export const ROADMAP: LevelRoadmap[] = [
   {
     level: "B2",
     title: "Vantage — confident communicator",
-    description: "Speak fluently with native speakers and discuss complex topics.",
+    description:
+      "Speak fluently with native speakers and discuss complex topics.",
     vocabGoal: 4000,
     hoursEstimate: "400–500 hours",
     canDo: [
@@ -125,7 +129,8 @@ export const ROADMAP: LevelRoadmap[] = [
   {
     level: "C1",
     title: "Effective Operational Proficiency",
-    description: "Use German flexibly for academic, professional and social purposes.",
+    description:
+      "Use German flexibly for academic, professional and social purposes.",
     vocabGoal: 6000,
     hoursEstimate: "600–800 hours",
     canDo: [

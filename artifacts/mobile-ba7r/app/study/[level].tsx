@@ -24,7 +24,10 @@ export default function StudyScreen() {
   const [sessionDone, setSessionDone] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
 
-  const { data, isLoading } = useFlashcards({ level: level as Level, limit: 20 });
+  const { data, isLoading } = useFlashcards({
+    level: level as Level,
+    limit: 20,
+  });
   const updateProgress = useUpdateProgress();
   const cards = data?.items ?? [];
 
@@ -45,36 +48,68 @@ export default function StudyScreen() {
   const total = cards.length;
 
   return (
-    <View style={[styles.container, { backgroundColor: appColors.background, paddingTop }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: appColors.background, paddingTop },
+      ]}
+    >
       <View style={styles.navHeader}>
-        <TouchableOpacity onPress={() => router.back()} testID="button-back" style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          testID="button-back"
+          style={styles.backBtn}
+        >
           <Feather name="arrow-left" size={22} color={appColors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.levelTitle, { color: appColors.foreground }]}>Level {level}</Text>
+        <Text style={[styles.levelTitle, { color: appColors.foreground }]}>
+          Level {level}
+        </Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={[styles.content, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 20 }]}>
+      <View
+        style={[
+          styles.content,
+          { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 20 },
+        ]}
+      >
         {isLoading ? (
-          <View style={[styles.skeleton, { backgroundColor: appColors.muted }]} />
+          <View
+            style={[styles.skeleton, { backgroundColor: appColors.muted }]}
+          />
         ) : sessionDone || total === 0 ? (
           <View style={styles.completedContainer}>
             <Text style={[styles.completedTitle, { color: appColors.primary }]}>
               {total === 0 ? "No cards at this level" : "Session Complete!"}
             </Text>
             {total > 0 && (
-              <Text style={[styles.completedStat, { color: appColors.foreground }]}>
+              <Text
+                style={[styles.completedStat, { color: appColors.foreground }]}
+              >
                 {knownCount} / {total} correct
               </Text>
             )}
-            <Text style={[styles.completedHint, { color: appColors.mutedForeground }]}>
+            <Text
+              style={[
+                styles.completedHint,
+                { color: appColors.mutedForeground },
+              ]}
+            >
               {total === 0
                 ? "Generate some words for this level first."
                 : "Keep studying to improve your score."}
             </Text>
             <TouchableOpacity
-              style={[styles.restartBtn, { backgroundColor: appColors.primary }]}
-              onPress={() => { setCurrentIndex(0); setSessionDone(false); setKnownCount(0); }}
+              style={[
+                styles.restartBtn,
+                { backgroundColor: appColors.primary },
+              ]}
+              onPress={() => {
+                setCurrentIndex(0);
+                setSessionDone(false);
+                setKnownCount(0);
+              }}
               testID="button-restart"
             >
               <Text style={styles.restartBtnText}>Study Again</Text>
@@ -84,19 +119,33 @@ export default function StudyScreen() {
               onPress={() => router.back()}
               testID="button-back-home"
             >
-              <Text style={[styles.backHomeBtnText, { color: appColors.foreground }]}>Back to Home</Text>
+              <Text
+                style={[
+                  styles.backHomeBtnText,
+                  { color: appColors.foreground },
+                ]}
+              >
+                Back to Home
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.studyContainer}>
-            <Text style={[styles.progress, { color: appColors.mutedForeground }]}>
+            <Text
+              style={[styles.progress, { color: appColors.mutedForeground }]}
+            >
               {currentIndex + 1} / {total}
             </Text>
-            <View style={[styles.progressBg, { backgroundColor: appColors.border }]}>
+            <View
+              style={[styles.progressBg, { backgroundColor: appColors.border }]}
+            >
               <View
                 style={[
                   styles.progressFill,
-                  { backgroundColor: appColors.primary, width: `${(currentIndex / total) * 100}%` as any },
+                  {
+                    backgroundColor: appColors.primary,
+                    width: `${(currentIndex / total) * 100}%` as any,
+                  },
                 ]}
               />
             </View>
@@ -116,21 +165,53 @@ export default function StudyScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  navHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 16 },
-  backBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  navHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   levelTitle: { fontSize: 20, fontWeight: "800" },
   content: { flex: 1, paddingHorizontal: 20 },
   skeleton: { height: 420, borderRadius: 20 },
-  completedContainer: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
+  completedContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
   completedTitle: { fontSize: 28, fontWeight: "800" },
   completedStat: { fontSize: 22, fontWeight: "700" },
   completedHint: { fontSize: 15, textAlign: "center", lineHeight: 22 },
-  restartBtn: { paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14, marginTop: 8 },
+  restartBtn: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 8,
+  },
   restartBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  backHomeBtn: { paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5 },
+  backHomeBtn: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
   backHomeBtnText: { fontSize: 16, fontWeight: "600" },
   studyContainer: { flex: 1, alignItems: "center" },
   progress: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
-  progressBg: { width: "100%", height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 24 },
+  progressBg: {
+    width: "100%",
+    height: 6,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginBottom: 24,
+  },
   progressFill: { height: "100%", borderRadius: 3 },
 });

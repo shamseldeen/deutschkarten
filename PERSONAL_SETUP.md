@@ -8,15 +8,15 @@ You don't need to do all of this. Do the steps for the services you want to own.
 
 ## Quick map: what's currently shared vs. yours
 
-| Service | Currently | To make it personal |
-|---|---|---|
-| Auth (sign-in / sign-up) | Replit-managed Clerk tenant | Your own Clerk tenant |
-| Database (Postgres) | Replit-managed Postgres | Your own Neon / Supabase / RDS |
-| AI card generation | Replit AI Integrations proxy (OpenAI / Gemini) | Your own OpenAI / Google AI key |
-| Image generation | Replit AI Integrations (gpt-image / Gemini Imagen) | Your own OpenAI / Google AI key |
-| Error tracking | None / optional Sentry | Your own Sentry project |
-| Hosting | Replit Autoscale Deployment | Replit Deployment under your account, optional custom domain |
-| Push reminders (mobile) | Expo push tokens via Expo's free service | Same — already yours |
+| Service                  | Currently                                          | To make it personal                                          |
+| ------------------------ | -------------------------------------------------- | ------------------------------------------------------------ |
+| Auth (sign-in / sign-up) | Replit-managed Clerk tenant                        | Your own Clerk tenant                                        |
+| Database (Postgres)      | Replit-managed Postgres                            | Your own Neon / Supabase / RDS                               |
+| AI card generation       | Replit AI Integrations proxy (OpenAI / Gemini)     | Your own OpenAI / Google AI key                              |
+| Image generation         | Replit AI Integrations (gpt-image / Gemini Imagen) | Your own OpenAI / Google AI key                              |
+| Error tracking           | None / optional Sentry                             | Your own Sentry project                                      |
+| Hosting                  | Replit Autoscale Deployment                        | Replit Deployment under your account, optional custom domain |
+| Push reminders (mobile)  | Expo push tokens via Expo's free service           | Same — already yours                                         |
 
 ---
 
@@ -65,12 +65,14 @@ Recommended: **Neon** (free tier, serverless Postgres, perfect fit).
 The "AI generate cards" feature currently uses Replit's AI Integrations proxy (no key needed but billed against your Replit account). To use your own keys directly:
 
 ### Option A — OpenAI (recommended, covers both text and images)
+
 1. Go to https://platform.openai.com → **API keys** → create one.
 2. In Replit Secrets:
    - `OPENAI_API_KEY` = `sk-...`
 3. The server auto-detects this and uses your key instead of the proxy.
 
 ### Option B — Google Gemini (cheaper for text, separate image flow)
+
 1. https://aistudio.google.com → **Get API key**.
 2. In Replit Secrets:
    - `GEMINI_API_KEY` = your key
@@ -109,12 +111,14 @@ Once your secrets are in place:
 You have **two paths**:
 
 ### Quick (no app store) — Expo Go
+
 1. Friend installs **Expo Go** from App Store / Play Store.
 2. You run the mobile workflow → a QR code appears in the logs.
 3. Friend scans it. App opens instantly. Updates push live as you change code.
 4. Limitation: requires Expo Go installed; won't work for distribution at scale.
 
 ### Production — TestFlight / Play Store internal testing
+
 1. Install EAS CLI: `npm install -g eas-cli` (locally on your Mac/PC, not in Replit).
 2. Run `eas login`, then `eas build --profile preview --platform ios` (and `android`).
 3. Upload the `.ipa` to TestFlight via Transporter; upload the `.aab` to Play Console internal testing track.

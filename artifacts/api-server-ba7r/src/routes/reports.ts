@@ -1,4 +1,10 @@
-import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import {
+  Router,
+  type IRouter,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import { z } from "zod/v4";
 import { eq, desc, sql, and, isNull } from "drizzle-orm";
 import {
@@ -99,7 +105,9 @@ router.post("/flashcards/:id/report", requireAuth, async (req, res) => {
     // unique index guarantees this == count(*), but using distinct keeps the
     // intent clear and defends against future index changes.
     const rows = await tx
-      .select({ c: sql<number>`count(distinct ${flashcardReportsTable.userId})::int` })
+      .select({
+        c: sql<number>`count(distinct ${flashcardReportsTable.userId})::int`,
+      })
       .from(flashcardReportsTable)
       .where(
         and(
@@ -113,17 +121,28 @@ router.post("/flashcards/:id/report", requireAuth, async (req, res) => {
       const updated = await tx
         .update(flashcardsTable)
         .set({ hiddenAt: new Date() })
-        .where(and(eq(flashcardsTable.id, id), isNull(flashcardsTable.hiddenAt)))
+        .where(
+          and(eq(flashcardsTable.id, id), isNull(flashcardsTable.hiddenAt)),
+        )
         .returning({ id: flashcardsTable.id });
       autoHidden = updated.length > 0;
     }
   });
 
   req.log.info(
-    { flashcardId: id, userId, reason: parsed.data.reason, distinctReporters, autoHidden, alreadyReported },
+    {
+      flashcardId: id,
+      userId,
+      reason: parsed.data.reason,
+      distinctReporters,
+      autoHidden,
+      alreadyReported,
+    },
     "card reported",
   );
-  res.status(alreadyReported ? 200 : 201).json({ ok: true, autoHidden, alreadyReported });
+  res
+    .status(alreadyReported ? 200 : 201)
+    .json({ ok: true, autoHidden, alreadyReported });
 });
 
 // GET /api/admin/reports — list open reports, newest first
@@ -142,7 +161,10 @@ router.get("/admin/reports", requireAuth, requireAdmin, async (_req, res) => {
       hiddenAt: flashcardsTable.hiddenAt,
     })
     .from(flashcardReportsTable)
-    .leftJoin(flashcardsTable, eq(flashcardReportsTable.flashcardId, flashcardsTable.id))
+    .leftJoin(
+      flashcardsTable,
+      eq(flashcardReportsTable.flashcardId, flashcardsTable.id),
+    )
     .where(eq(flashcardReportsTable.status, "open"))
     .orderBy(desc(flashcardReportsTable.createdAt))
     .limit(200);
@@ -150,43 +172,70 @@ router.get("/admin/reports", requireAuth, requireAdmin, async (_req, res) => {
 });
 
 // POST /api/admin/reports/:id/dismiss — keep card, mark report closed (good content)
-router.post("/admin/reports/:id/dismiss", requireAuth, requireAdmin, async (req, res) => {
-  const id = Number(req.params["id"]);
-  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  await db
-    .update(flashcardReportsTable)
-    .set({ status: "dismissed", resolvedAt: new Date() })
-    .where(eq(flashcardReportsTable.id, id));
-  res.json({ ok: true });
-});
+router.post(
+  "/admin/reports/:id/dismiss",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const id = Number(req.params["id"]);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db
+      .update(flashcardReportsTable)
+      .set({ status: "dismissed", resolvedAt: new Date() })
+      .where(eq(flashcardReportsTable.id, id));
+    res.json({ ok: true });
+  },
+);
 
 // POST /api/admin/flashcards/:id/unhide — restore an auto-hidden card + dismiss all open reports
-router.post("/admin/flashcards/:id/unhide", requireAuth, requireAdmin, async (req, res) => {
-  const id = Number(req.params["id"]);
-  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  await db.update(flashcardsTable).set({ hiddenAt: null }).where(eq(flashcardsTable.id, id));
-  await db
-    .update(flashcardReportsTable)
-    .set({ status: "dismissed", resolvedAt: new Date() })
-    .where(
-      and(
-        eq(flashcardReportsTable.flashcardId, id),
-        eq(flashcardReportsTable.status, "open"),
-      ),
-    );
-  res.json({ ok: true });
-});
+router.post(
+  "/admin/flashcards/:id/unhide",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const id = Number(req.params["id"]);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db
+      .update(flashcardsTable)
+      .set({ hiddenAt: null })
+      .where(eq(flashcardsTable.id, id));
+    await db
+      .update(flashcardReportsTable)
+      .set({ status: "dismissed", resolvedAt: new Date() })
+      .where(
+        and(
+          eq(flashcardReportsTable.flashcardId, id),
+          eq(flashcardReportsTable.status, "open"),
+        ),
+      );
+    res.json({ ok: true });
+  },
+);
 
 // DELETE /api/admin/flashcards/:id — hard-delete a bad card + mark reports actioned
-router.delete("/admin/flashcards/:id", requireAuth, requireAdmin, async (req, res) => {
-  const id = Number(req.params["id"]);
-  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  await db
-    .update(flashcardReportsTable)
-    .set({ status: "actioned", resolvedAt: new Date() })
-    .where(eq(flashcardReportsTable.flashcardId, id));
-  await db.delete(flashcardsTable).where(eq(flashcardsTable.id, id));
-  res.json({ ok: true });
-});
+router.delete(
+  "/admin/flashcards/:id",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const id = Number(req.params["id"]);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db
+      .update(flashcardReportsTable)
+      .set({ status: "actioned", resolvedAt: new Date() })
+      .where(eq(flashcardReportsTable.flashcardId, id));
+    await db.delete(flashcardsTable).where(eq(flashcardsTable.id, id));
+    res.json({ ok: true });
+  },
+);
 
 export default router;

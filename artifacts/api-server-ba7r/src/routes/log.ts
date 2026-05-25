@@ -28,7 +28,8 @@ router.post("/log/client-error", (req, res) => {
   const now = Date.now();
 
   // Global cap first — protects us even if per-IP keys explode.
-  if (now > globalSlot.resetAt) globalSlot = { count: 0, resetAt: now + 60_000 };
+  if (now > globalSlot.resetAt)
+    globalSlot = { count: 0, resetAt: now + 60_000 };
   globalSlot.count += 1;
   if (globalSlot.count > GLOBAL_LIMIT_PER_MIN) {
     res.status(429).json({ error: "Server log capacity reached" });
@@ -62,16 +63,32 @@ router.post("/log/client-error", (req, res) => {
   req.log.error(
     {
       clientError: true,
-      platform: typeof body.platform === "string" ? body.platform.slice(0, 50) : "unknown",
+      platform:
+        typeof body.platform === "string"
+          ? body.platform.slice(0, 50)
+          : "unknown",
       url: stripQuery(body.url),
-      userAgent: typeof body.userAgent === "string" ? body.userAgent.slice(0, 300) : undefined,
-      appVersion: typeof body.appVersion === "string" ? body.appVersion.slice(0, 50) : undefined,
-      route: typeof body.route === "string" ? body.route.slice(0, 200) : undefined,
+      userAgent:
+        typeof body.userAgent === "string"
+          ? body.userAgent.slice(0, 300)
+          : undefined,
+      appVersion:
+        typeof body.appVersion === "string"
+          ? body.appVersion.slice(0, 50)
+          : undefined,
+      route:
+        typeof body.route === "string" ? body.route.slice(0, 200) : undefined,
       userId,
-      message: typeof body.message === "string" ? body.message.slice(0, 1000) : "unknown",
-      stack: typeof body.stack === "string" ? body.stack.slice(0, 4000) : undefined,
+      message:
+        typeof body.message === "string"
+          ? body.message.slice(0, 1000)
+          : "unknown",
+      stack:
+        typeof body.stack === "string" ? body.stack.slice(0, 4000) : undefined,
       componentStack:
-        typeof body.componentStack === "string" ? body.componentStack.slice(0, 2000) : undefined,
+        typeof body.componentStack === "string"
+          ? body.componentStack.slice(0, 2000)
+          : undefined,
     },
     "client error reported",
   );

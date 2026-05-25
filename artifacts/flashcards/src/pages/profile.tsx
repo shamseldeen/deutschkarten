@@ -12,8 +12,17 @@ import { useGetFlashcardStats } from "@workspace/api-client-react";
 import { computeRank, rankImageUrl, RANKS } from "@/lib/ranks";
 
 type Me = {
-  user: { id: string; email: string | null; displayName: string | null; imageUrl: string | null };
-  streak: { currentStreak: number; longestStreak: number; lastActiveDate: string | null };
+  user: {
+    id: string;
+    email: string | null;
+    displayName: string | null;
+    imageUrl: string | null;
+  };
+  streak: {
+    currentStreak: number;
+    longestStreak: number;
+    lastActiveDate: string | null;
+  };
 };
 
 export default function ProfilePage() {
@@ -39,8 +48,14 @@ export default function ProfilePage() {
     return (
       <Layout>
         <div className="max-w-md mx-auto text-center py-12">
-          <p className="text-muted-foreground mb-4">Please sign in to view your profile.</p>
-          <Button onClick={() => (window.location.href = `${basePath}/sign-in`)}>Sign In</Button>
+          <p className="text-muted-foreground mb-4">
+            Please sign in to view your profile.
+          </p>
+          <Button
+            onClick={() => (window.location.href = `${basePath}/sign-in`)}
+          >
+            Sign In
+          </Button>
         </div>
       </Layout>
     );
@@ -52,17 +67,30 @@ export default function ProfilePage() {
         <Card>
           <CardHeader className="flex flex-row items-center gap-4">
             {user.imageUrl ? (
-              <img src={user.imageUrl} alt="" className="w-16 h-16 rounded-full" />
+              <img
+                src={user.imageUrl}
+                alt=""
+                className="w-16 h-16 rounded-full"
+              />
             ) : (
               <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold">
-                {(user.firstName?.[0] ?? user.emailAddresses?.[0]?.emailAddress?.[0] ?? "U").toUpperCase()}
+                {(
+                  user.firstName?.[0] ??
+                  user.emailAddresses?.[0]?.emailAddress?.[0] ??
+                  "U"
+                ).toUpperCase()}
               </div>
             )}
             <div>
               <CardTitle className="text-2xl">
-                {user.firstName || user.username || user.emailAddresses?.[0]?.emailAddress || "User"}
+                {user.firstName ||
+                  user.username ||
+                  user.emailAddresses?.[0]?.emailAddress ||
+                  "User"}
               </CardTitle>
-              <p className="text-sm text-muted-foreground">{user.emailAddresses?.[0]?.emailAddress}</p>
+              <p className="text-sm text-muted-foreground">
+                {user.emailAddresses?.[0]?.emailAddress}
+              </p>
             </div>
           </CardHeader>
         </Card>
@@ -82,11 +110,18 @@ export default function ProfilePage() {
               <div className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
                 Rank {rank.current.tier} of {RANKS.length}
               </div>
-              <div className="text-2xl font-black leading-tight" style={{ color: rank.current.accent }}>
+              <div
+                className="text-2xl font-black leading-tight"
+                style={{ color: rank.current.accent }}
+              >
                 {rank.current.title}
               </div>
-              <div className="text-sm text-muted-foreground italic">{rank.current.legend}</div>
-              <div className="text-sm text-foreground/80 mt-1">{rank.current.blurb}</div>
+              <div className="text-sm text-muted-foreground italic">
+                {rank.current.legend}
+              </div>
+              <div className="text-sm text-foreground/80 mt-1">
+                {rank.current.blurb}
+              </div>
 
               <div className="mt-3 space-y-1">
                 {rank.next ? (
@@ -95,11 +130,20 @@ export default function ProfilePage() {
                       <span>{totalKnown} words mastered</span>
                       <span>
                         {rank.toNext > 0 ? (
-                          <>{rank.toNext} to <span className="font-bold text-foreground">{rank.next.title}</span></>
+                          <>
+                            {rank.toNext} to{" "}
+                            <span className="font-bold text-foreground">
+                              {rank.next.title}
+                            </span>
+                          </>
                         ) : rank.nextBlockedBy === "c1" ? (
-                          <span className="font-bold text-foreground">Learn 1 C1 card to unlock {rank.next.title}</span>
+                          <span className="font-bold text-foreground">
+                            Learn 1 C1 card to unlock {rank.next.title}
+                          </span>
                         ) : (
-                          <span className="font-bold text-foreground">Ready for {rank.next.title}!</span>
+                          <span className="font-bold text-foreground">
+                            Ready for {rank.next.title}!
+                          </span>
                         )}
                       </span>
                     </div>
@@ -119,15 +163,23 @@ export default function ProfilePage() {
           <Card>
             <CardContent className="pt-6 text-center">
               <Flame className="w-8 h-8 mx-auto text-orange-500 mb-2" />
-              <div className="text-3xl font-black">{me?.streak.currentStreak ?? 0}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Current Streak</div>
+              <div className="text-3xl font-black">
+                {me?.streak.currentStreak ?? 0}
+              </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Current Streak
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
               <Trophy className="w-8 h-8 mx-auto text-yellow-500 mb-2" />
-              <div className="text-3xl font-black">{me?.streak.longestStreak ?? 0}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Longest Streak</div>
+              <div className="text-3xl font-black">
+                {me?.streak.longestStreak ?? 0}
+              </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Longest Streak
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -142,8 +194,9 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>
-              DeutschKarten is a community library — every flashcard you generate becomes
-              free for every learner. Translations you request are cached and shared.
+              DeutschKarten is a community library — every flashcard you
+              generate becomes free for every learner. Translations you request
+              are cached and shared.
             </p>
             <a
               href="https://github.com/shamseldeen"
@@ -158,7 +211,11 @@ export default function ProfilePage() {
 
         <DonationCard />
 
-        <Button variant="outline" className="w-full" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => signOut({ redirectUrl: basePath || "/" })}
+        >
           Sign Out
         </Button>
       </div>
@@ -177,12 +234,15 @@ function LanguageSettingsCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Pick the languages you want to see alongside each German word. Translations
-          are generated on-demand and shared with the whole community.
+          Pick the languages you want to see alongside each German word.
+          Translations are generated on-demand and shared with the whole
+          community.
         </p>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold block mb-1">Primary</label>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold block mb-1">
+              Primary
+            </label>
             <select
               className="w-full border border-border rounded-md bg-background px-2 py-2 text-sm"
               disabled={loading}
@@ -190,22 +250,36 @@ function LanguageSettingsCard() {
               onChange={(e) => save({ ...prefs, primaryLang: e.target.value })}
             >
               {SUPPORTED_LANGS.map((l) => (
-                <option key={l.code} value={l.code}>{l.name} — {l.nativeName}</option>
+                <option key={l.code} value={l.code}>
+                  {l.name} — {l.nativeName}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold block mb-1">Secondary</label>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold block mb-1">
+              Secondary
+            </label>
             <select
               className="w-full border border-border rounded-md bg-background px-2 py-2 text-sm"
               disabled={loading}
               value={prefs.secondaryLang ?? "none"}
-              onChange={(e) => save({ ...prefs, secondaryLang: e.target.value === "none" ? null : e.target.value })}
+              onChange={(e) =>
+                save({
+                  ...prefs,
+                  secondaryLang:
+                    e.target.value === "none" ? null : e.target.value,
+                })
+              }
             >
               <option value="none">— None —</option>
-              {SUPPORTED_LANGS.filter((l) => l.code !== prefs.primaryLang).map((l) => (
-                <option key={l.code} value={l.code}>{l.name} — {l.nativeName}</option>
-              ))}
+              {SUPPORTED_LANGS.filter((l) => l.code !== prefs.primaryLang).map(
+                (l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.name} — {l.nativeName}
+                  </option>
+                ),
+              )}
             </select>
           </div>
         </div>

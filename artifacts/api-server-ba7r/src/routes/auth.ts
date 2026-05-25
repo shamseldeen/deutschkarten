@@ -1,4 +1,10 @@
-import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import {
+  Router,
+  type IRouter,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import { clerkClient } from "@clerk/express";
 import { z } from "zod";
 
@@ -11,14 +17,20 @@ const _attempts = new Map<string, number[]>();
 
 function rateLimit(req: Request, res: Response, next: NextFunction) {
   const ip =
-    (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ||
+    (req.headers["x-forwarded-for"] as string | undefined)
+      ?.split(",")[0]
+      ?.trim() ||
     req.socket?.remoteAddress ||
     "unknown";
   const key = `${ip}:${req.path}`;
   const now = Date.now();
-  const arr = (_attempts.get(key) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  const arr = (_attempts.get(key) ?? []).filter(
+    (t) => now - t < RATE_LIMIT_WINDOW_MS,
+  );
   if (arr.length >= RATE_LIMIT_MAX) {
-    res.status(429).json({ error: "Too many attempts. Try again in a minute." });
+    res
+      .status(429)
+      .json({ error: "Too many attempts. Try again in a minute." });
     return;
   }
   arr.push(now);
@@ -117,7 +129,9 @@ router.post("/auth/sign-up", async (req, res) => {
       lastName: lastName ?? null,
     });
   } catch (err: unknown) {
-    const e = err as { errors?: Array<{ message?: string; longMessage?: string }> };
+    const e = err as {
+      errors?: Array<{ message?: string; longMessage?: string }>;
+    };
     const msg =
       e?.errors?.[0]?.longMessage ||
       e?.errors?.[0]?.message ||

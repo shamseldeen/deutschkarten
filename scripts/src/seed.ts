@@ -41,11 +41,24 @@ type FixtureRow = {
 };
 
 const COLS = [
-  "id", "word", "article", "base_word", "level", "category",
-  "english_translation", "arabic_translation",
-  "example_sentence_de", "example_sentence_en", "example_sentence_ar",
-  "translations", "example_translations",
-  "created_by", "image_url", "known", "hidden_at", "created_at",
+  "id",
+  "word",
+  "article",
+  "base_word",
+  "level",
+  "category",
+  "english_translation",
+  "arabic_translation",
+  "example_sentence_de",
+  "example_sentence_en",
+  "example_sentence_ar",
+  "translations",
+  "example_translations",
+  "created_by",
+  "image_url",
+  "known",
+  "hidden_at",
+  "created_at",
 ] as const;
 
 async function seedSchema(pool: pg.Pool, schema: string, rows: FixtureRow[]) {
@@ -117,7 +130,9 @@ async function main() {
     console.error(`Fixture not found at ${FIXTURE_PATH}`);
     process.exit(1);
   }
-  const rows = JSON.parse(fs.readFileSync(FIXTURE_PATH, "utf8")) as FixtureRow[];
+  const rows = JSON.parse(
+    fs.readFileSync(FIXTURE_PATH, "utf8"),
+  ) as FixtureRow[];
   console.log(`seed: loaded ${rows.length} fixture rows from ${FIXTURE_PATH}`);
 
   const pool = new pg.Pool({ connectionString: url });

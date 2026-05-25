@@ -1,20 +1,44 @@
 import { Router } from "express";
-import { db, usersTable, userProgressTable, userStreaksTable, flashcardsTable } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  userProgressTable,
+  userStreaksTable,
+  flashcardsTable,
+} from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { eq, and, sql, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { bumpStreak } from "../lib/streak";
-import { cardVisibleInWorkspace, getCurrentWorkspaceId, upsertProgress, workspaceVisibility } from "../lib/workspace";
+import {
+  cardVisibleInWorkspace,
+  getCurrentWorkspaceId,
+  upsertProgress,
+  workspaceVisibility,
+} from "../lib/workspace";
 
 const router = Router();
 
 router.get("/me", requireAuth, async (req, res) => {
   const userId = req.userId!;
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-  const [streak] = await db.select().from(userStreaksTable).where(eq(userStreaksTable.userId, userId)).limit(1);
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  const [streak] = await db
+    .select()
+    .from(userStreaksTable)
+    .where(eq(userStreaksTable.userId, userId))
+    .limit(1);
   res.json({
     user,
-    streak: streak ?? { userId, currentStreak: 0, longestStreak: 0, lastActiveDate: null },
+    streak: streak ?? {
+      userId,
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActiveDate: null,
+    },
   });
 });
 

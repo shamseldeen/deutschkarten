@@ -1,4 +1,12 @@
-import { pgTable, text, timestamp, integer, date, uniqueIndex, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  integer,
+  date,
+  uniqueIndex,
+  index,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -46,7 +54,10 @@ export const userProgressTable = pgTable(
       .on(t.userId, t.flashcardId)
       .where(sql`${t.workspaceId} IS NULL`),
     byUser: index("user_progress_user_idx").on(t.userId),
-    byUserWorkspace: index("user_progress_user_ws_idx").on(t.userId, t.workspaceId),
+    byUserWorkspace: index("user_progress_user_ws_idx").on(
+      t.userId,
+      t.workspaceId,
+    ),
   }),
 );
 

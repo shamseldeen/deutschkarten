@@ -1,4 +1,9 @@
-export const SUPPORTED_LANGS: { code: string; name: string; nativeName: string; rtl?: boolean }[] = [
+export const SUPPORTED_LANGS: {
+  code: string;
+  name: string;
+  nativeName: string;
+  rtl?: boolean;
+}[] = [
   { code: "en", name: "English", nativeName: "English" },
   { code: "ar", name: "Arabic", nativeName: "العربية", rtl: true },
   { code: "fr", name: "French", nativeName: "Français" },
@@ -19,7 +24,9 @@ export const SUPPORTED_LANGS: { code: string; name: string; nativeName: string; 
 ];
 
 export const SUPPORTED_LANG_CODES = SUPPORTED_LANGS.map((l) => l.code);
-export const RTL_LANGS = new Set(SUPPORTED_LANGS.filter((l) => l.rtl).map((l) => l.code));
+export const RTL_LANGS = new Set(
+  SUPPORTED_LANGS.filter((l) => l.rtl).map((l) => l.code),
+);
 
 export function isSupportedLang(code: string): boolean {
   return SUPPORTED_LANG_CODES.includes(code);

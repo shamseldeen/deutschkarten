@@ -24,18 +24,18 @@ Required secrets (set as env vars; never commit):
 - `DATABASE_URL` — Postgres connection string
 - `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` — Clerk auth
 - `SESSION_SECRET` — ≥16 chars
-- `OPENAI_API_KEY` *(optional)* — enables `/api/flashcards/generate`
-- `ADMIN_USER_IDS` *(optional)* — comma-separated Clerk user IDs for `/api/admin/*`
+- `OPENAI_API_KEY` _(optional)_ — enables `/api/flashcards/generate`
+- `ADMIN_USER_IDS` _(optional)_ — comma-separated Clerk user IDs for `/api/admin/*`
 
 ## Run
 
-| Workflow | Command |
-|---|---|
-| Shams API + web | `pnpm --filter @workspace/api-server run dev` |
-| Ba7r API + web | `pnpm --filter @workspace/api-server-ba7r run dev` |
-| Shams mobile (Expo) | `pnpm --filter @workspace/mobile run dev` |
-| Ba7r mobile (Expo) | `pnpm --filter @workspace/mobile-ba7r run dev` |
-| Kivy desktop | `cd artifacts/kivy-app && python main.py` |
+| Workflow            | Command                                            |
+| ------------------- | -------------------------------------------------- |
+| Shams API + web     | `pnpm --filter @workspace/api-server run dev`      |
+| Ba7r API + web      | `pnpm --filter @workspace/api-server-ba7r run dev` |
+| Shams mobile (Expo) | `pnpm --filter @workspace/mobile run dev`          |
+| Ba7r mobile (Expo)  | `pnpm --filter @workspace/mobile-ba7r run dev`     |
+| Kivy desktop        | `cd artifacts/kivy-app && python main.py`          |
 
 The Vite dev workflows for `flashcards` and `flashcards-ba7r` are not used — their API servers serve the built web assets at `/flashcards/` and `/ba7r/`.
 

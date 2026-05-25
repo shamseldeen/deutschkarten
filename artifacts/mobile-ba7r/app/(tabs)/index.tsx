@@ -26,13 +26,18 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const { data: stats, isLoading: statsLoading, error: statsError } = useFlashcardStats();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useFlashcardStats();
   const { data: daily, error: dailyError } = useDailyFlashcards();
   const apiError = (statsError ?? dailyError) as Error | null;
 
   const totalKnown = stats?.reduce((s, l) => s + l.known, 0) ?? 0;
   const totalCards = stats?.reduce((s, l) => s + l.total, 0) ?? 0;
-  const overallPct = totalCards > 0 ? Math.round((totalKnown / totalCards) * 100) : 0;
+  const overallPct =
+    totalCards > 0 ? Math.round((totalKnown / totalCards) * 100) : 0;
   const c1Known = stats?.find((s) => s.level === "C1")?.known ?? 0;
   const { isSignedIn, user } = useUser();
   const rank = isSignedIn ? computeRank(totalKnown, c1Known) : null;
@@ -44,10 +49,16 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={{ paddingTop, paddingBottom, paddingHorizontal: 20 }}
+      contentContainerStyle={{
+        paddingTop,
+        paddingBottom,
+        paddingHorizontal: 20,
+      }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.appTitle, { color: colors.primary }]}>Ba7r DeutschKarten</Text>
+      <Text style={[styles.appTitle, { color: colors.primary }]}>
+        Ba7r DeutschKarten
+      </Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
         Your German vocabulary companion · Ocean edition
       </Text>
@@ -75,10 +86,23 @@ export default function HomeScreen() {
             style={{ width: 52, height: 52, borderRadius: 12 }}
           />
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 10, fontWeight: "800", color: colors.mutedForeground, letterSpacing: 1 }}>
+            <Text
+              style={{
+                fontSize: 10,
+                fontWeight: "800",
+                color: colors.mutedForeground,
+                letterSpacing: 1,
+              }}
+            >
               RANK {rank.current.tier}
             </Text>
-            <Text style={{ fontSize: 16, fontWeight: "900", color: rank.current.accent }}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "900",
+                color: rank.current.accent,
+              }}
+            >
               {rank.current.title}
             </Text>
             {rank.next && (
@@ -101,10 +125,19 @@ export default function HomeScreen() {
             borderColor: "#dc2626",
           }}
         >
-          <Text style={{ fontSize: 12, fontWeight: "800", color: "#991b1b", marginBottom: 4 }}>
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "800",
+              color: "#991b1b",
+              marginBottom: 4,
+            }}
+          >
             CONNECTION ERROR
           </Text>
-          <Text style={{ fontSize: 12, color: "#7f1d1d" }}>{apiError.message}</Text>
+          <Text style={{ fontSize: 12, color: "#7f1d1d" }}>
+            {apiError.message}
+          </Text>
         </View>
       )}
 
@@ -114,27 +147,36 @@ export default function HomeScreen() {
           {totalKnown} / {totalCards} words
         </Text>
         <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: `${overallPct}%` as any }]} />
+          <View
+            style={[styles.progressBarFill, { width: `${overallPct}%` as any }]}
+          />
         </View>
         <Text style={styles.progressPct}>{overallPct}% mastered</Text>
       </View>
 
       {(daily?.length ?? 0) > 0 && (
         <TouchableOpacity
-          style={[styles.dailyCta, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+          style={[
+            styles.dailyCta,
+            { backgroundColor: colors.secondary, borderColor: colors.border },
+          ]}
           onPress={() => router.push("/(tabs)/daily")}
           testID="button-daily-practice"
         >
           <Text style={[styles.dailyCtaTitle, { color: colors.foreground }]}>
             Daily Practice Ready
           </Text>
-          <Text style={[styles.dailyCtaCount, { color: colors.mutedForeground }]}>
+          <Text
+            style={[styles.dailyCtaCount, { color: colors.mutedForeground }]}
+          >
             {daily?.length} cards waiting for review
           </Text>
         </TouchableOpacity>
       )}
 
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Study by Level</Text>
+      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+        Study by Level
+      </Text>
 
       {statsLoading
         ? LEVELS.map((lvl) => (
@@ -171,8 +213,19 @@ const styles = StyleSheet.create({
   appTitle: { fontSize: 32, fontWeight: "900", marginBottom: 4 },
   subtitle: { fontSize: 14, marginBottom: 24 },
   progressCard: { borderRadius: 20, padding: 20, marginBottom: 16 },
-  progressTitle: { color: "#fff", fontSize: 13, fontWeight: "600", opacity: 0.85, marginBottom: 4 },
-  progressStat: { color: "#fff", fontSize: 28, fontWeight: "800", marginBottom: 12 },
+  progressTitle: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+    opacity: 0.85,
+    marginBottom: 4,
+  },
+  progressStat: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
   progressBarBg: {
     height: 8,
     backgroundColor: "rgba(255,255,255,0.3)",
@@ -182,7 +235,12 @@ const styles = StyleSheet.create({
   },
   progressBarFill: { height: "100%", backgroundColor: "#fff", borderRadius: 4 },
   progressPct: { color: "#fff", fontSize: 13, opacity: 0.85 },
-  dailyCta: { borderRadius: 14, borderWidth: 1.5, padding: 16, marginBottom: 24 },
+  dailyCta: {
+    borderRadius: 14,
+    borderWidth: 1.5,
+    padding: 16,
+    marginBottom: 24,
+  },
   dailyCtaTitle: { fontSize: 16, fontWeight: "700", marginBottom: 4 },
   dailyCtaCount: { fontSize: 13 },
   sectionTitle: { fontSize: 20, fontWeight: "800", marginBottom: 12 },

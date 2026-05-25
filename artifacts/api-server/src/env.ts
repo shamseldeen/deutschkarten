@@ -23,12 +23,16 @@ const envSchema = z.object({
   CLERK_PUBLISHABLE_KEY: z.string().min(1, "CLERK_PUBLISHABLE_KEY is required"),
   CLERK_SECRET_KEY: z.string().min(1, "CLERK_SECRET_KEY is required"),
   // Required for session cookies.
-  SESSION_SECRET: z.string().min(16, "SESSION_SECRET must be at least 16 chars"),
+  SESSION_SECRET: z
+    .string()
+    .min(16, "SESSION_SECRET must be at least 16 chars"),
   // Optional — comma-separated Clerk user IDs allowed into /api/admin/*.
   ADMIN_USER_IDS: z.string().optional(),
   // Optional — enables /api/flashcards/generate.
   OPENAI_API_KEY: z.string().optional(),
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
 });
 
 export type Env = z.infer<typeof envSchema>;

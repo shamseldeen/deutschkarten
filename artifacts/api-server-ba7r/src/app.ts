@@ -48,7 +48,10 @@ app.use(
 app.use("/ba7r-api", router);
 app.use("/ba7r-api/api", router);
 
-const frontendDist = new URL("../../flashcards-ba7r/dist/public", import.meta.url).pathname;
+const frontendDist = new URL(
+  "../../flashcards-ba7r/dist/public",
+  import.meta.url,
+).pathname;
 app.use("/ba7r", express.static(frontendDist));
 app.get("/ba7r/*splat", (_req, res) => {
   res.sendFile("index.html", { root: frontendDist });

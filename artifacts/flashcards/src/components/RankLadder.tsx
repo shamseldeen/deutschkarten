@@ -53,7 +53,11 @@ export function RankLadder({ knownCards, knownAtC1 }: Props) {
                     ? "border-border bg-card"
                     : "border-dashed border-border/60 bg-muted/30",
               )}
-              style={isCurrent ? { boxShadow: `0 6px 24px ${r.accent}33` } : undefined}
+              style={
+                isCurrent
+                  ? { boxShadow: `0 6px 24px ${r.accent}33` }
+                  : undefined
+              }
             >
               <div className="relative aspect-square mb-2 rounded-xl overflow-hidden bg-gradient-to-br from-background to-muted">
                 <img
@@ -82,7 +86,10 @@ export function RankLadder({ knownCards, knownAtC1 }: Props) {
               <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Tier {r.tier}
               </div>
-              <div className="text-sm font-black leading-tight" style={{ color: unlocked ? r.accent : undefined }}>
+              <div
+                className="text-sm font-black leading-tight"
+                style={{ color: unlocked ? r.accent : undefined }}
+              >
                 {r.title}
               </div>
               <div className="text-[11px] text-muted-foreground mt-0.5 italic line-clamp-1">
@@ -90,7 +97,9 @@ export function RankLadder({ knownCards, knownAtC1 }: Props) {
               </div>
               <div className="text-[11px] font-bold mt-1.5 text-foreground/80">
                 {r.threshold === 0 ? "Start here" : `${r.threshold}+ words`}
-                {r.requiresC1 && <span className="ml-1 text-primary">· C1</span>}
+                {r.requiresC1 && (
+                  <span className="ml-1 text-primary">· C1</span>
+                )}
               </div>
             </div>
           );

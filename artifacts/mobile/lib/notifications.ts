@@ -5,7 +5,10 @@ const REMINDER_ID = "daily-review";
 
 const MESSAGES = [
   { title: "Time for German! 🇩🇪", body: "Your daily 10 cards are waiting." },
-  { title: "Don't break the streak!", body: "Just 5 minutes keeps your progress alive." },
+  {
+    title: "Don't break the streak!",
+    body: "Just 5 minutes keeps your progress alive.",
+  },
   { title: "Neue Wörter warten 📚", body: "Quick review — let's go!" },
   { title: "Sprachen lernen!", body: "Your flashcards are ready for today." },
   { title: "Daily German time ⏰", body: "Tap to start your review session." },
@@ -46,7 +49,8 @@ function isGranted(s: LoosePermResponse): boolean {
 }
 
 export async function ensurePermission(): Promise<boolean> {
-  const current = (await Notifications.getPermissionsAsync()) as unknown as LoosePermResponse;
+  const current =
+    (await Notifications.getPermissionsAsync()) as unknown as LoosePermResponse;
   if (isGranted(current)) return true;
   if (current.canAskAgain === false) return false;
   const req = (await Notifications.requestPermissionsAsync({
@@ -74,7 +78,10 @@ export async function cancelDailyReminder(): Promise<void> {
   );
 }
 
-export async function scheduleDailyReminder(hour: number, minute: number): Promise<boolean> {
+export async function scheduleDailyReminder(
+  hour: number,
+  minute: number,
+): Promise<boolean> {
   if (!Number.isFinite(hour) || !Number.isFinite(minute)) return false;
   await cancelDailyReminder();
   await ensureAndroidChannel();

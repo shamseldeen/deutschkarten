@@ -21,8 +21,8 @@ Required secrets (managed via the environment-secrets workflow, never committed)
 - `DATABASE_URL` — Postgres connection string
 - `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` — Clerk auth
 - `SESSION_SECRET` — ≥16 chars, used for session cookies
-- `ADMIN_USER_IDS` *(optional)* — comma-separated Clerk user IDs allowed into `/api/admin/*`
-- `OPENAI_API_KEY` *(optional)* — enables `/api/flashcards/generate`
+- `ADMIN_USER_IDS` _(optional)_ — comma-separated Clerk user IDs allowed into `/api/admin/*`
+- `OPENAI_API_KEY` _(optional)_ — enables `/api/flashcards/generate`
 
 Both API servers validate their env via `src/env.ts` (Zod) at startup. Missing or malformed config fails fast with an aggregated error list instead of cryptic runtime 500s.
 
@@ -104,7 +104,7 @@ Both API servers validate their env via `src/env.ts` (Zod) at startup. Missing o
 ## Gotchas
 
 - The `artifacts/flashcards: web` and `artifacts/flashcards-ba7r: web` workflows always show "failed" — that's expected. The web apps are served by their API server workflows, not the Vite dev workflows. The web apps ARE accessible at `/flashcards/` and `/ba7r/`.
-- **Only one Expo app can be reached via Expo Go at a time.** Both `artifacts/mobile: expo` and `artifacts/mobile-ba7r: expo` workflows bind to the same `$REPLIT_EXPO_DEV_DOMAIN`, so the dev URL routes to whichever Metro started first (usually Shams). To preview the *other* tenant in Expo Go: in the Replit workflows panel, **stop the one you don't want and restart the one you do want**, then re-scan the URL. The in-app title on each home screen tells you which tenant you're currently on (`Shams DeutschKarten · Sun edition` vs `Ba7r DeutschKarten · Ocean edition`).
+- **Only one Expo app can be reached via Expo Go at a time.** Both `artifacts/mobile: expo` and `artifacts/mobile-ba7r: expo` workflows bind to the same `$REPLIT_EXPO_DEV_DOMAIN`, so the dev URL routes to whichever Metro started first (usually Shams). To preview the _other_ tenant in Expo Go: in the Replit workflows panel, **stop the one you don't want and restart the one you do want**, then re-scan the URL. The in-app title on each home screen tells you which tenant you're currently on (`Shams DeutschKarten · Sun edition` vs `Ba7r DeutschKarten · Ocean edition`).
 - Never import `@workspace/api-client-react` in mobile — it's ESM TypeScript that Metro cannot bundle.
 - Metro dev server must run on port 8081 (not the web preview port). The `start-dev.js` wrapper handles orphan cleanup.
 - Express 5 wildcard routes: use `/*splat` not `/*`.

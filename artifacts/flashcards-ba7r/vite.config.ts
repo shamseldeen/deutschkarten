@@ -28,7 +28,20 @@ if (!basePath) {
 
 const healthCheckPlugin = {
   name: "health-check",
-  configureServer(server: { middlewares: { use: (fn: (req: { url?: string }, res: { writeHead: (code: number) => void; end: (body: string) => void }, next: () => void) => void) => void } }) {
+  configureServer(server: {
+    middlewares: {
+      use: (
+        fn: (
+          req: { url?: string },
+          res: {
+            writeHead: (code: number) => void;
+            end: (body: string) => void;
+          },
+          next: () => void,
+        ) => void,
+      ) => void;
+    };
+  }) {
     server.middlewares.use((req, res, next) => {
       if (req.url === "/" || req.url === "") {
         res.writeHead(200);
@@ -64,7 +77,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      "@assets": path.resolve(
+        import.meta.dirname,
+        "..",
+        "..",
+        "attached_assets",
+      ),
     },
     dedupe: ["react", "react-dom"],
   },

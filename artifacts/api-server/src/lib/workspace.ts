@@ -8,7 +8,13 @@ import {
 import { and, eq, isNull, or, sql, type SQL } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
-export const SUPPORTED_SECONDARY_LANGS = ["EN", "ES", "FR", "IT", "TR"] as const;
+export const SUPPORTED_SECONDARY_LANGS = [
+  "EN",
+  "ES",
+  "FR",
+  "IT",
+  "TR",
+] as const;
 export type SupportedSecondaryLang = (typeof SUPPORTED_SECONDARY_LANGS)[number];
 
 export const MAX_USER_WORKSPACES = 2;
@@ -34,7 +40,9 @@ export const LANG_LABELS: Record<string, string> = {
  * user is in their default (virtual) Arabic workspace. Falls back to null
  * when the workspace was deleted out from under them.
  */
-export async function getCurrentWorkspaceId(userId: string): Promise<string | null> {
+export async function getCurrentWorkspaceId(
+  userId: string,
+): Promise<string | null> {
   const [settings] = await db
     .select({ currentWorkspaceId: userSettingsTable.currentWorkspaceId })
     .from(userSettingsTable)
@@ -49,10 +57,12 @@ export async function getCurrentWorkspaceId(userId: string): Promise<string | nu
   const [owned] = await db
     .select({ id: userWorkspacesTable.id })
     .from(userWorkspacesTable)
-    .where(and(
-      eq(userWorkspacesTable.id, id),
-      eq(userWorkspacesTable.userId, userId),
-    ))
+    .where(
+      and(
+        eq(userWorkspacesTable.id, id),
+        eq(userWorkspacesTable.userId, userId),
+      ),
+    )
     .limit(1);
   return owned ? id : null;
 }
@@ -62,7 +72,9 @@ export async function getCurrentWorkspaceId(userId: string): Promise<string | nu
  * - Default workspace (null): only global cards (owner_workspace_id IS NULL).
  * - User workspace: global cards OR cards owned by this workspace.
  */
-export function workspaceVisibility(currentWsId: string | null): SQL | undefined {
+export function workspaceVisibility(
+  currentWsId: string | null,
+): SQL | undefined {
   if (currentWsId === null) return isNull(flashcardsTable.ownerWorkspaceId);
   return or(
     isNull(flashcardsTable.ownerWorkspaceId),
@@ -83,7 +95,11 @@ export async function cardVisibleInWorkspace(
   const [row] = await db
     .select({ id: flashcardsTable.id })
     .from(flashcardsTable)
-    .where(pred ? and(eq(flashcardsTable.id, flashcardId), pred) : eq(flashcardsTable.id, flashcardId))
+    .where(
+      pred
+        ? and(eq(flashcardsTable.id, flashcardId), pred)
+        : eq(flashcardsTable.id, flashcardId),
+    )
     .limit(1);
   return !!row;
 }

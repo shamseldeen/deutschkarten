@@ -1,4 +1,12 @@
-import { pgTable, text, timestamp, integer, boolean, jsonb, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  integer,
+  boolean,
+  jsonb,
+  index,
+} from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { flashcardsTable } from "./flashcards";
 

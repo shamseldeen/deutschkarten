@@ -25,10 +25,11 @@ Required secrets are documented in the [README](./README.md#bootstrap-a-fresh-en
 Before opening a PR, run:
 
 ```bash
-pnpm run check          # typecheck + tests
+pnpm run check          # Prettier + lint + typecheck + tests
 pnpm run codegen:check  # fails if generated API client is stale
-pnpm run format:check   # Prettier
 ```
+
+`pnpm run check` now runs `format:check` as its first step, so unformatted code fails the gate. Run `pnpm run format` to fix style issues before committing.
 
 If you change `lib/api-spec/openapi.yaml`, regenerate the client:
 
@@ -47,7 +48,7 @@ pnpm run seed                          # idempotent
 
 1. Fork and create a feature branch from `main`.
 2. Keep PRs focused — one feature or one fix per PR.
-3. Include a short description of *what* changed and *why*.
+3. Include a short description of _what_ changed and _why_.
 4. Make sure `pnpm run check` passes locally.
 5. If you add a new shared lib, add it to the root `tsconfig.json` `references` array.
 

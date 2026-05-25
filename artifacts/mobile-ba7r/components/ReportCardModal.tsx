@@ -51,8 +51,14 @@ export function ReportCardModal({ visible, onClose, cardId, word }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason, note: note.trim() || undefined }),
       });
-      if (r.status === 401) { setStatus("auth"); return; }
-      if (!r.ok) { setStatus("err"); return; }
+      if (r.status === 401) {
+        setStatus("auth");
+        return;
+      }
+      if (!r.ok) {
+        setStatus("err");
+        return;
+      }
       setStatus("ok");
       setTimeout(close, 1200);
     } catch {
@@ -63,23 +69,45 @@ export function ReportCardModal({ visible, onClose, cardId, word }: Props) {
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={close}
+    >
       <View style={styles.backdrop}>
-        <View style={[styles.sheet, { backgroundColor: c.card, borderColor: c.border }]}>
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: c.card, borderColor: c.border },
+          ]}
+        >
           <View style={styles.headerRow}>
-            <Text style={[styles.title, { color: c.foreground }]}>Report card</Text>
+            <Text style={[styles.title, { color: c.foreground }]}>
+              Report card
+            </Text>
             <TouchableOpacity onPress={close} hitSlop={10}>
               <Feather name="x" size={20} color={c.mutedForeground} />
             </TouchableOpacity>
           </View>
-          <Text style={[styles.subtitle, { color: c.mutedForeground }]} numberOfLines={2}>
+          <Text
+            style={[styles.subtitle, { color: c.mutedForeground }]}
+            numberOfLines={2}
+          >
             What&apos;s wrong with &quot;{word}&quot;?
           </Text>
 
           {status === "ok" ? (
-            <Text style={[styles.statusOk, { color: "#16a34a" }]}>Thanks — we&apos;ll review it.</Text>
+            <Text style={[styles.statusOk, { color: "#16a34a" }]}>
+              Thanks — we&apos;ll review it.
+            </Text>
           ) : status === "auth" ? (
-            <Text style={[styles.subtitle, { color: c.mutedForeground, marginTop: 16 }]}>
+            <Text
+              style={[
+                styles.subtitle,
+                { color: c.mutedForeground, marginTop: 16 },
+              ]}
+            >
               Please sign in to report cards.
             </Text>
           ) : (
@@ -93,10 +121,17 @@ export function ReportCardModal({ visible, onClose, cardId, word }: Props) {
                       onPress={() => setReason(r.value)}
                       style={[
                         styles.chip,
-                        { borderColor: selected ? c.primary : c.border, backgroundColor: selected ? c.primary + "22" : "transparent" },
+                        {
+                          borderColor: selected ? c.primary : c.border,
+                          backgroundColor: selected
+                            ? c.primary + "22"
+                            : "transparent",
+                        },
                       ]}
                     >
-                      <Text style={[styles.chipText, { color: c.foreground }]}>{r.label}</Text>
+                      <Text style={[styles.chipText, { color: c.foreground }]}>
+                        {r.label}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -107,21 +142,47 @@ export function ReportCardModal({ visible, onClose, cardId, word }: Props) {
                 placeholder="Note (optional)"
                 placeholderTextColor={c.mutedForeground}
                 multiline
-                style={[styles.input, { color: c.foreground, borderColor: c.border, backgroundColor: c.background }]}
+                style={[
+                  styles.input,
+                  {
+                    color: c.foreground,
+                    borderColor: c.border,
+                    backgroundColor: c.background,
+                  },
+                ]}
               />
               {status === "err" && (
-                <Text style={styles.errText}>Couldn&apos;t submit. Try again.</Text>
+                <Text style={styles.errText}>
+                  Couldn&apos;t submit. Try again.
+                </Text>
               )}
               <View style={styles.actions}>
-                <TouchableOpacity onPress={close} style={[styles.btn, { backgroundColor: c.muted }]}>
-                  <Text style={[styles.btnText, { color: c.foreground }]}>Cancel</Text>
+                <TouchableOpacity
+                  onPress={close}
+                  style={[styles.btn, { backgroundColor: c.muted }]}
+                >
+                  <Text style={[styles.btnText, { color: c.foreground }]}>
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={submit}
                   disabled={!reason || busy}
-                  style={[styles.btn, { backgroundColor: reason && !busy ? c.primary : c.muted, opacity: reason && !busy ? 1 : 0.6 }]}
+                  style={[
+                    styles.btn,
+                    {
+                      backgroundColor: reason && !busy ? c.primary : c.muted,
+                      opacity: reason && !busy ? 1 : 0.6,
+                    },
+                  ]}
                 >
-                  {busy ? <ActivityIndicator color="#fff" /> : <Text style={[styles.btnText, { color: "#fff" }]}>Submit</Text>}
+                  {busy ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={[styles.btnText, { color: "#fff" }]}>
+                      Submit
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </>
@@ -133,17 +194,44 @@ export function ReportCardModal({ visible, onClose, cardId, word }: Props) {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 20 },
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 20,
+  },
   sheet: { borderRadius: 18, borderWidth: 1, padding: 20 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   title: { fontSize: 18, fontWeight: "700" },
   subtitle: { fontSize: 13, marginTop: 6 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
   chipText: { fontSize: 13, fontWeight: "600" },
-  input: { marginTop: 12, borderWidth: 1, borderRadius: 12, padding: 12, minHeight: 70, textAlignVertical: "top", fontSize: 14 },
+  input: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    minHeight: 70,
+    textAlignVertical: "top",
+    fontSize: 14,
+  },
   errText: { color: "#dc2626", fontSize: 13, marginTop: 8 },
-  statusOk: { fontSize: 14, fontWeight: "600", marginTop: 16, textAlign: "center" },
+  statusOk: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 16,
+    textAlign: "center",
+  },
   actions: { flexDirection: "row", gap: 10, marginTop: 16 },
   btn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: "center" },
   btnText: { fontSize: 15, fontWeight: "700" },

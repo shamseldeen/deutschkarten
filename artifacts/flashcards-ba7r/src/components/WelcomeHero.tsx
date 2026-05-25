@@ -39,7 +39,8 @@ export function WelcomeHero({ name }: { name?: string | null }) {
 
           <div>
             <h2 className="text-2xl md:text-3xl font-black tracking-tight text-foreground font-serif">
-              {greet}{name ? `, ${name}` : ""}!
+              {greet}
+              {name ? `, ${name}` : ""}!
             </h2>
             <p className="text-muted-foreground mt-1 text-sm">
               Every German word you learn brings a new world closer.
@@ -54,7 +55,9 @@ export function WelcomeHero({ name }: { name?: string | null }) {
             <p className="text-sm text-muted-foreground mt-1">
               {m.en}
               <span className="mx-2 opacity-50">·</span>
-              <span dir="rtl" className="font-medium">{m.ar}</span>
+              <span dir="rtl" className="font-medium">
+                {m.ar}
+              </span>
             </p>
           </blockquote>
 

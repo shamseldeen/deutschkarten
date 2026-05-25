@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/react";
 import { Layout } from "@/components/layout";
-import { useListFlashcards, useUpdateFlashcardProgress, FlashcardLevel, getListFlashcardsQueryKey } from "@workspace/api-client-react";
+import {
+  useListFlashcards,
+  useUpdateFlashcardProgress,
+  FlashcardLevel,
+  getListFlashcardsQueryKey,
+} from "@workspace/api-client-react";
 import { Flashcard } from "@/components/flashcard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,10 +17,13 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function Study() {
   const params = useParams();
   const levelParam = (params.level?.toUpperCase() || "A1") as FlashcardLevel;
-  
-  const { data, isLoading } = useListFlashcards({ level: levelParam, limit: 50 });
+
+  const { data, isLoading } = useListFlashcards({
+    level: levelParam,
+    limit: 50,
+  });
   const cards = data?.items || [];
-  
+
   const updateProgress = useUpdateFlashcardProgress();
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
@@ -29,11 +37,13 @@ export default function Study() {
     }
 
     if (currentIndex < cards.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
     } else {
       setIsDone(true);
       // Invalidate to update dashboard stats
-      queryClient.invalidateQueries({ queryKey: getListFlashcardsQueryKey({ level: levelParam, limit: 50 }) });
+      queryClient.invalidateQueries({
+        queryKey: getListFlashcardsQueryKey({ level: levelParam, limit: 50 }),
+      });
     }
   };
 
@@ -55,9 +65,12 @@ export default function Study() {
             <PartyPopper className="w-10 h-10 text-muted-foreground" />
           </div>
           <h2 className="text-3xl font-black font-serif mb-2">No Cards Yet!</h2>
-          <p className="text-muted-foreground mb-8">There are no flashcards available for {levelParam} yet. Generate some to get started!</p>
+          <p className="text-muted-foreground mb-8">
+            There are no flashcards available for {levelParam} yet. Generate
+            some to get started!
+          </p>
           <div className="flex gap-4">
-             <Link href="/">
+            <Link href="/">
               <Button variant="outline">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Dashboard
@@ -73,16 +86,28 @@ export default function Study() {
   }
 
   if (isDone) {
-     return (
+    return (
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center max-w-md mx-auto animate-in fade-in zoom-in">
           <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
             <PartyPopper className="w-12 h-12 text-green-600" />
           </div>
-          <h2 className="text-3xl font-black font-serif mb-2">Level Complete!</h2>
-          <p className="text-muted-foreground mb-8">You've finished your study session for {levelParam}. Keep up the great momentum.</p>
+          <h2 className="text-3xl font-black font-serif mb-2">
+            Level Complete!
+          </h2>
+          <p className="text-muted-foreground mb-8">
+            You've finished your study session for {levelParam}. Keep up the
+            great momentum.
+          </p>
           <div className="flex flex-col gap-3 w-full">
-            <Button size="lg" variant="outline" onClick={() => { setCurrentIndex(0); setIsDone(false); }}>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => {
+                setCurrentIndex(0);
+                setIsDone(false);
+              }}
+            >
               Study Again
             </Button>
             <Link href="/" className="w-full">
@@ -104,18 +129,24 @@ export default function Study() {
       <div className="flex flex-col items-center max-w-md mx-auto w-full">
         <div className="w-full flex justify-between items-center mb-6 px-2">
           <Link href="/">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Exit
             </Button>
           </Link>
-          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{levelParam} Study</span>
+          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+            {levelParam} Study
+          </span>
           <span className="text-sm font-medium bg-muted px-3 py-1 rounded-full">
             {currentIndex + 1} / {cards.length}
           </span>
         </div>
-        
-        <Flashcard 
+
+        <Flashcard
           key={currentCard.id}
           card={currentCard}
           isStudyMode

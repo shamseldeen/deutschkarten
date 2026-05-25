@@ -5,7 +5,10 @@ import { SUPPORTED_LANGS, RTL_LANGS } from "../lib/languages";
 
 const router: IRouter = Router();
 
-type Cache = { at: number; data: { totalCards: number; contributors: number; languages: number } };
+type Cache = {
+  at: number;
+  data: { totalCards: number; contributors: number; languages: number };
+};
 let cache: Cache | null = null;
 const TTL = 60_000;
 
@@ -25,10 +28,12 @@ router.get("/community/stats", async (_req, res) => {
       contributors: sql<number>`count(distinct ${flashcardsTable.createdBy})::int`,
     })
     .from(flashcardsTable)
-    .where(and(
-      isNull(flashcardsTable.hiddenAt),
-      isNull(flashcardsTable.ownerWorkspaceId),
-    ));
+    .where(
+      and(
+        isNull(flashcardsTable.hiddenAt),
+        isNull(flashcardsTable.ownerWorkspaceId),
+      ),
+    );
 
   const data = {
     totalCards: row?.totalCards ?? 0,

@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Switch, Alert, Platform } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Alert,
+  Platform,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useReminderPrefs } from "@/lib/reminderPrefs";
 
@@ -56,13 +64,31 @@ export function ReminderSection({ colors }: { colors: Colors }) {
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.headerRow}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            flex: 1,
+          }}
+        >
           <Feather name="bell" size={18} color={colors.primary} />
-          <Text style={[styles.title, { color: colors.foreground }]}>Daily Reminder</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            Daily Reminder
+          </Text>
         </View>
-        <Switch value={prefs.enabled} onValueChange={onToggle} disabled={busy} />
+        <Switch
+          value={prefs.enabled}
+          onValueChange={onToggle}
+          disabled={busy}
+        />
       </View>
       <Text style={[styles.hint, { color: colors.mutedForeground }]}>
         Get a daily nudge to keep your streak alive.
@@ -103,9 +129,18 @@ export function ReminderSection({ colors }: { colors: Colors }) {
 
 const styles = StyleSheet.create({
   card: { padding: 16, borderRadius: 16, borderWidth: 1, gap: 8 },
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   title: { fontSize: 17, fontWeight: "800", fontFamily: "Inter_700Bold" },
   hint: { fontSize: 12, marginBottom: 4 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 6 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
 });

@@ -52,8 +52,14 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="study/[level]" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false, presentation: "modal" }} />
-      <Stack.Screen name="(auth)/sign-up" options={{ headerShown: false, presentation: "modal" }} />
+      <Stack.Screen
+        name="(auth)/sign-in"
+        options={{ headerShown: false, presentation: "modal" }}
+      />
+      <Stack.Screen
+        name="(auth)/sign-up"
+        options={{ headerShown: false, presentation: "modal" }}
+      />
     </Stack>
   );
 }
@@ -75,10 +81,14 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   if (!CLERK_PUBLISHABLE_KEY) {
-    console.warn("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY — running without auth");
+    console.warn(
+      "Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY — running without auth",
+    );
     return (
       <SafeAreaProvider>
-        <ErrorBoundary onError={(err, stack) => reportError(err, { componentStack: stack })}>
+        <ErrorBoundary
+          onError={(err, stack) => reportError(err, { componentStack: stack })}
+        >
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView>
               <KeyboardProvider>
@@ -92,9 +102,14 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+    <ClerkProvider
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      tokenCache={tokenCache}
+    >
       <SafeAreaProvider>
-        <ErrorBoundary onError={(err, stack) => reportError(err, { componentStack: stack })}>
+        <ErrorBoundary
+          onError={(err, stack) => reportError(err, { componentStack: stack })}
+        >
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView>
               <KeyboardProvider>

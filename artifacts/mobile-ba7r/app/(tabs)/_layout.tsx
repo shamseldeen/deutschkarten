@@ -16,7 +16,9 @@ function NativeTabLayout() {
         <Label>Home</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="browse">
-        <Icon sf={{ default: "rectangle.stack", selected: "rectangle.stack.fill" }} />
+        <Icon
+          sf={{ default: "rectangle.stack", selected: "rectangle.stack.fill" }}
+        />
         <Label>Browse</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="daily">
@@ -24,7 +26,12 @@ function NativeTabLayout() {
         <Label>Daily</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="quiz">
-        <Icon sf={{ default: "brain.head.profile", selected: "brain.head.profile.fill" }} />
+        <Icon
+          sf={{
+            default: "brain.head.profile",
+            selected: "brain.head.profile.fill",
+          }}
+        />
         <Label>Quiz</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="roadmap">
@@ -36,7 +43,12 @@ function NativeTabLayout() {
         <Label>Generate</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person.crop.circle", selected: "person.crop.circle.fill" }} />
+        <Icon
+          sf={{
+            default: "person.crop.circle",
+            selected: "person.crop.circle.fill",
+          }}
+        />
         <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
@@ -72,7 +84,12 @@ function ClassicTabLayout() {
               style={StyleSheet.absoluteFill}
             />
           ) : (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: colors.background },
+              ]}
+            />
           ),
       }}
     >
@@ -118,7 +135,11 @@ function ClassicTabLayout() {
           title: "Quiz",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="brain.head.profile" tintColor={color} size={24} />
+              <SymbolView
+                name="brain.head.profile"
+                tintColor={color}
+                size={24}
+              />
             ) : (
               <Feather name="zap" size={22} color={color} />
             ),
@@ -154,7 +175,11 @@ function ClassicTabLayout() {
           title: "Profile",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="person.crop.circle" tintColor={color} size={24} />
+              <SymbolView
+                name="person.crop.circle"
+                tintColor={color}
+                size={24}
+              />
             ) : (
               <Feather name="user" size={22} color={color} />
             ),

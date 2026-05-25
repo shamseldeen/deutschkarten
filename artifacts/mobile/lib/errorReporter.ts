@@ -6,10 +6,17 @@ const APP_VERSION = "mobile-1.0.0";
 let lastSent = "";
 let lastSentAt = 0;
 
-export function reportError(err: unknown, extra?: Record<string, unknown>): void {
+export function reportError(
+  err: unknown,
+  extra?: Record<string, unknown>,
+): void {
   try {
     const message =
-      err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
+      err instanceof Error
+        ? err.message
+        : typeof err === "string"
+          ? err
+          : "Unknown error";
     const stack = err instanceof Error ? err.stack : undefined;
 
     const sig = `${message}:${stack?.slice(0, 100) ?? ""}`;
@@ -28,7 +35,9 @@ export function reportError(err: unknown, extra?: Record<string, unknown>): void
         appVersion: APP_VERSION,
         extra,
       }),
-    }).catch(() => { /* swallow */ });
+    }).catch(() => {
+      /* swallow */
+    });
   } catch {
     /* never let the reporter itself crash the app */
   }

@@ -4,8 +4,17 @@ import { useAuth } from "@clerk/react";
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export type Me = {
-  user: { id: string; email: string | null; displayName: string | null; imageUrl: string | null };
-  streak: { currentStreak: number; longestStreak: number; lastActiveDate: string | null };
+  user: {
+    id: string;
+    email: string | null;
+    displayName: string | null;
+    imageUrl: string | null;
+  };
+  streak: {
+    currentStreak: number;
+    longestStreak: number;
+    lastActiveDate: string | null;
+  };
 };
 
 export function useMe() {

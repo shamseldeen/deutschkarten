@@ -15,7 +15,13 @@ function currentTier(knownCards: number, knownAtC1: number): number {
   return (eligible[eligible.length - 1] ?? RANKS[0]!).tier;
 }
 
-export function RankLadder({ knownCards, knownAtC1 }: { knownCards: number; knownAtC1: number }) {
+export function RankLadder({
+  knownCards,
+  knownAtC1,
+}: {
+  knownCards: number;
+  knownAtC1: number;
+}) {
   const colors = useColors();
   const curTier = currentTier(knownCards, knownAtC1);
 
@@ -51,7 +57,9 @@ export function RankLadder({ knownCards, knownAtC1 }: { knownCards: number; know
               style={[
                 s.tile,
                 {
-                  backgroundColor: isCurrent ? colors.primary + "15" : colors.background,
+                  backgroundColor: isCurrent
+                    ? colors.primary + "15"
+                    : colors.background,
                   borderColor: isCurrent ? colors.primary : colors.border,
                   borderStyle: unlocked ? "solid" : "dashed",
                   transform: [{ scale: isCurrent ? 1.03 : 1 }],
@@ -66,7 +74,11 @@ export function RankLadder({ knownCards, knownAtC1 }: { knownCards: number; know
                 />
                 {!unlocked && (
                   <View style={s.lockOverlay}>
-                    <Feather name="lock" size={18} color={colors.mutedForeground} />
+                    <Feather
+                      name="lock"
+                      size={18}
+                      color={colors.mutedForeground}
+                    />
                   </View>
                 )}
                 {isCurrent && (
@@ -75,11 +87,22 @@ export function RankLadder({ knownCards, knownAtC1 }: { knownCards: number; know
                   </View>
                 )}
               </View>
-              <Text style={[s.tier, { color: colors.mutedForeground }]}>TIER {r.tier}</Text>
-              <Text style={[s.tileTitle, { color: unlocked ? r.accent : colors.foreground }]} numberOfLines={2}>
+              <Text style={[s.tier, { color: colors.mutedForeground }]}>
+                TIER {r.tier}
+              </Text>
+              <Text
+                style={[
+                  s.tileTitle,
+                  { color: unlocked ? r.accent : colors.foreground },
+                ]}
+                numberOfLines={2}
+              >
                 {r.title}
               </Text>
-              <Text style={[s.legend, { color: colors.mutedForeground }]} numberOfLines={1}>
+              <Text
+                style={[s.legend, { color: colors.mutedForeground }]}
+                numberOfLines={1}
+              >
                 {r.legend}
               </Text>
               <Text style={[s.thresh, { color: colors.foreground }]}>
@@ -96,16 +119,44 @@ export function RankLadder({ knownCards, knownAtC1 }: { knownCards: number; know
 
 const s = StyleSheet.create({
   card: { borderRadius: 20, borderWidth: 1, padding: 16, marginBottom: 16 },
-  header: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
   label: { fontSize: 11, fontWeight: "900", letterSpacing: 1 },
   title: { fontSize: 18, fontWeight: "900", marginBottom: 2 },
   subtitle: { fontSize: 12, marginBottom: 12 },
   tile: { width: 140, borderRadius: 16, borderWidth: 2, padding: 10 },
-  imageWrap: { aspectRatio: 1, borderRadius: 12, overflow: "hidden", marginBottom: 6, position: "relative" },
+  imageWrap: {
+    aspectRatio: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 6,
+    position: "relative",
+  },
   image: { width: "100%", height: "100%" },
-  lockOverlay: { position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" },
-  youBadge: { position: "absolute", top: 4, right: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
-  youText: { color: "white", fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
+  lockOverlay: {
+    position: "absolute",
+    inset: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  youBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  youText: {
+    color: "white",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
   tier: { fontSize: 9, fontWeight: "900", letterSpacing: 1, marginTop: 2 },
   tileTitle: { fontSize: 13, fontWeight: "900", lineHeight: 16, marginTop: 1 },
   legend: { fontSize: 10, fontStyle: "italic", marginTop: 1 },

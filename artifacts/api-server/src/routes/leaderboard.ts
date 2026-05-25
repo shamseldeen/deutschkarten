@@ -1,6 +1,12 @@
 import { Router, type IRouter } from "express";
 import { getAuth } from "@clerk/express";
-import { db, usersTable, userProgressTable, userStreaksTable, quizSessionsTable } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  userProgressTable,
+  userStreaksTable,
+  quizSessionsTable,
+} from "@workspace/db";
 import { eq, sql, desc, isNotNull } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -30,7 +36,10 @@ async function buildLeaderboard(): Promise<Row[]> {
   const known = db
     .select({
       userId: userProgressTable.userId,
-      knownCards: sql<number>`count(*) filter (where ${userProgressTable.known} = 1)::int`.as("known_cards"),
+      knownCards:
+        sql<number>`count(*) filter (where ${userProgressTable.known} = 1)::int`.as(
+          "known_cards",
+        ),
     })
     .from(userProgressTable)
     .groupBy(userProgressTable.userId)
@@ -39,7 +48,10 @@ async function buildLeaderboard(): Promise<Row[]> {
   const quiz = db
     .select({
       userId: quizSessionsTable.userId,
-      correctAnswers: sql<number>`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`.as("correct_answers"),
+      correctAnswers:
+        sql<number>`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`.as(
+          "correct_answers",
+        ),
     })
     .from(quizSessionsTable)
     .where(isNotNull(quizSessionsTable.finishedAt))
@@ -61,12 +73,17 @@ async function buildLeaderboard(): Promise<Row[]> {
     .leftJoin(quiz, eq(quiz.userId, usersTable.id))
     .leftJoin(userStreaksTable, eq(userStreaksTable.userId, usersTable.id))
     .orderBy(
-      desc(sql`coalesce(${known.knownCards}, 0) * ${XP_KNOWN} + coalesce(${quiz.correctAnswers}, 0) * ${XP_CORRECT} + coalesce(${userStreaksTable.longestStreak}, 0) * ${XP_STREAK}`),
+      desc(
+        sql`coalesce(${known.knownCards}, 0) * ${XP_KNOWN} + coalesce(${quiz.correctAnswers}, 0) * ${XP_CORRECT} + coalesce(${userStreaksTable.longestStreak}, 0) * ${XP_STREAK}`,
+      ),
     )
     .limit(500);
 
   return rows.map((r, idx) => {
-    const xp = r.knownCards * XP_KNOWN + r.correctAnswers * XP_CORRECT + r.longestStreak * XP_STREAK;
+    const xp =
+      r.knownCards * XP_KNOWN +
+      r.correctAnswers * XP_CORRECT +
+      r.longestStreak * XP_STREAK;
     const name =
       (r.displayName && r.displayName.trim()) ||
       (r.email ? r.email.split("@")[0] : null) ||

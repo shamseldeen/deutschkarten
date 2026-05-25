@@ -39,15 +39,15 @@ function killPortProcess(targetPort) {
             const link = fs.readlinkSync(`${fdDir}/${fd}`);
             const match = link.match(/socket:\[(\d+)\]/);
             if (match && inodes.has(match[1])) {
-              console.log(`Killing orphan process ${pid} on port ${targetPort}`);
+              console.log(
+                `Killing orphan process ${pid} on port ${targetPort}`,
+              );
               process.kill(parseInt(pid, 10), "SIGKILL");
               break;
             }
-          } catch {
-          }
+          } catch {}
         }
-      } catch {
-      }
+      } catch {}
     }
   } catch (e) {
     // /proc not available or other error — ignore

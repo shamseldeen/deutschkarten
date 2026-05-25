@@ -61,6 +61,7 @@ eas build -p android --profile production
 ```
 
 This produces a signed `.aab` ready to upload to Play Console:
+
 1. Go to https://play.google.com/console
 2. Create a new app → fill in store listing.
 3. Production → Create new release → Upload the `.aab` from the EAS download
@@ -89,8 +90,8 @@ GitHub and connecting it at https://expo.dev → your project → **Builds** →
 
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
-| `eas: command not found` | `npm install -g eas-cli` |
-| Build fails on `expo-router` origin | Edit `app.json` `plugins → expo-router → origin` to your production API URL |
+| Issue                                  | Fix                                                                                                                           |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `eas: command not found`               | `npm install -g eas-cli`                                                                                                      |
+| Build fails on `expo-router` origin    | Edit `app.json` `plugins → expo-router → origin` to your production API URL                                                   |
 | API requests fail in the installed APK | The APK can't reach `localhost`. Deploy the API server (Replit Deployments) and set the URL in `lib/api.ts` `setApiBaseUrl()` |

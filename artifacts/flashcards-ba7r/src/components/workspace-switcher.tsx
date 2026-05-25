@@ -81,7 +81,8 @@ export function WorkspaceSwitcher() {
 
   if (isLoading || !data) return null;
 
-  const current = data.workspaces.find((w) => w.isCurrent) ?? data.workspaces[0];
+  const current =
+    data.workspaces.find((w) => w.isCurrent) ?? data.workspaces[0];
   const userWorkspaces = data.workspaces.filter((w) => !w.isDefault);
   const canCreate = userWorkspaces.length < 2;
 
@@ -94,14 +95,19 @@ export function WorkspaceSwitcher() {
           invalidateScopedQueries(qc);
           toast({ title: `Switched to ${ws.name}` });
         },
-        onError: () => toast({ title: "Could not switch workspace", variant: "destructive" }),
+        onError: () =>
+          toast({
+            title: "Could not switch workspace",
+            variant: "destructive",
+          }),
       },
     );
   };
 
   const handleDelete = (ws: Workspace) => {
     if (ws.isDefault) return;
-    if (!confirm(`Delete "${ws.name}" workspace? Its progress will be lost.`)) return;
+    if (!confirm(`Delete "${ws.name}" workspace? Its progress will be lost.`))
+      return;
     deleteMutation.mutate(
       { id: ws.id },
       {
@@ -109,7 +115,11 @@ export function WorkspaceSwitcher() {
           invalidateScopedQueries(qc);
           toast({ title: "Workspace deleted" });
         },
-        onError: () => toast({ title: "Could not delete workspace", variant: "destructive" }),
+        onError: () =>
+          toast({
+            title: "Could not delete workspace",
+            variant: "destructive",
+          }),
       },
     );
   };
@@ -152,7 +162,8 @@ export function WorkspaceSwitcher() {
           >
             <Layers className="w-4 h-4" />
             <span className="hidden md:inline text-sm">
-              {FLAG[current?.secondaryLanguage ?? "AR"]} {current?.name ?? "Arabic"}
+              {FLAG[current?.secondaryLanguage ?? "AR"]}{" "}
+              {current?.name ?? "Arabic"}
             </span>
             <ChevronDown className="w-3 h-3 opacity-60" />
           </Button>
@@ -164,7 +175,9 @@ export function WorkspaceSwitcher() {
               onSelect={() => handleSwitch(ws)}
               className="flex items-center gap-2"
             >
-              <span className="text-base">{FLAG[ws.secondaryLanguage] ?? "🏳️"}</span>
+              <span className="text-base">
+                {FLAG[ws.secondaryLanguage] ?? "🏳️"}
+              </span>
               <span className="flex-1 truncate">{ws.name}</span>
               {ws.isCurrent && <Check className="w-4 h-4 text-primary" />}
               {!ws.isDefault && !ws.isCurrent && (
@@ -201,13 +214,15 @@ export function WorkspaceSwitcher() {
           <DialogHeader>
             <DialogTitle>New workspace</DialogTitle>
             <DialogDescription>
-              A workspace pairs German with a second language. Cards, progress and stats are kept
-              separate from your other workspaces.
+              A workspace pairs German with a second language. Cards, progress
+              and stats are kept separate from your other workspaces.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Target language</label>
+              <label className="text-sm font-medium mb-1.5 block">
+                Target language
+              </label>
               <Select value={newLang} onValueChange={setNewLang}>
                 <SelectTrigger>
                   <SelectValue />
@@ -222,11 +237,15 @@ export function WorkspaceSwitcher() {
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Name (optional)</label>
+              <label className="text-sm font-medium mb-1.5 block">
+                Name (optional)
+              </label>
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder={LANGUAGES.find((l) => l.code === newLang)?.label ?? ""}
+                placeholder={
+                  LANGUAGES.find((l) => l.code === newLang)?.label ?? ""
+                }
               />
             </div>
           </div>

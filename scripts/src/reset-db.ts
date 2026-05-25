@@ -17,7 +17,10 @@ async function main() {
     throw new Error("Refusing to reset-db with NODE_ENV=production");
   }
   const host = new URL(url).hostname;
-  const isLocal = host === "localhost" || host === "127.0.0.1" || host.endsWith(".replit.dev");
+  const isLocal =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".replit.dev");
   if (!isLocal && process.env.RESET_DB_I_KNOW_WHAT_IM_DOING !== "1") {
     throw new Error(
       `Refusing to reset non-local DB host "${host}". ` +
@@ -61,7 +64,10 @@ function appendSearchPath(url: string, sp: string): string {
     .filter((o) => !/^-c\s*search_path=/i.test(o))
     .join(" ")
     .trim();
-  u.searchParams.set("options", [withoutSp, `-csearch_path=${sp}`].filter(Boolean).join(" "));
+  u.searchParams.set(
+    "options",
+    [withoutSp, `-csearch_path=${sp}`].filter(Boolean).join(" "),
+  );
   return u.toString();
 }
 

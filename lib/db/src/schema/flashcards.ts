@@ -1,4 +1,12 @@
-import { pgTable, text, serial, boolean, timestamp, jsonb, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  boolean,
+  timestamp,
+  jsonb,
+  index,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -19,7 +27,10 @@ export const flashcardsTable = pgTable(
     exampleSentenceEn: text("example_sentence_en").notNull(),
     exampleSentenceAr: text("example_sentence_ar").notNull(),
     translations: jsonb("translations").$type<LangMap>().notNull().default({}),
-    exampleTranslations: jsonb("example_translations").$type<LangMap>().notNull().default({}),
+    exampleTranslations: jsonb("example_translations")
+      .$type<LangMap>()
+      .notNull()
+      .default({}),
     createdBy: text("created_by"),
     imageUrl: text("image_url"),
     known: boolean("known").notNull().default(false),
@@ -35,10 +46,15 @@ export const flashcardsTable = pgTable(
     byLevel: index("flashcards_level_idx").on(t.level),
     byCategory: index("flashcards_category_idx").on(t.category),
     byLevelHidden: index("flashcards_level_hidden_idx").on(t.level, t.hiddenAt),
-    byOwnerWorkspace: index("flashcards_owner_workspace_idx").on(t.ownerWorkspaceId),
+    byOwnerWorkspace: index("flashcards_owner_workspace_idx").on(
+      t.ownerWorkspaceId,
+    ),
   }),
 );
 
-export const insertFlashcardSchema = createInsertSchema(flashcardsTable).omit({ id: true, createdAt: true });
+export const insertFlashcardSchema = createInsertSchema(flashcardsTable).omit({
+  id: true,
+  createdAt: true,
+});
 export type InsertFlashcard = z.infer<typeof insertFlashcardSchema>;
 export type Flashcard = typeof flashcardsTable.$inferSelect;

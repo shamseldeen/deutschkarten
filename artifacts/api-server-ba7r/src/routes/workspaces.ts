@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { db, userWorkspacesTable, userSettingsTable, userProgressTable, flashcardsTable } from "@workspace/db";
+import {
+  db,
+  userWorkspacesTable,
+  userSettingsTable,
+  userProgressTable,
+  flashcardsTable,
+} from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { requireAuth } from "../middlewares/requireAuth";
@@ -106,7 +112,12 @@ router.post("/me/workspaces/:id/switch", requireAuth, async (req, res) => {
   const [ws] = await db
     .select()
     .from(userWorkspacesTable)
-    .where(and(eq(userWorkspacesTable.id, id), eq(userWorkspacesTable.userId, userId)))
+    .where(
+      and(
+        eq(userWorkspacesTable.id, id),
+        eq(userWorkspacesTable.userId, userId),
+      ),
+    )
     .limit(1);
   if (!ws) {
     res.status(404).json({ error: "Workspace not found" });
@@ -135,7 +146,12 @@ router.delete("/me/workspaces/:id", requireAuth, async (req, res) => {
   const [owned] = await db
     .select({ id: userWorkspacesTable.id })
     .from(userWorkspacesTable)
-    .where(and(eq(userWorkspacesTable.id, id), eq(userWorkspacesTable.userId, userId)))
+    .where(
+      and(
+        eq(userWorkspacesTable.id, id),
+        eq(userWorkspacesTable.userId, userId),
+      ),
+    )
     .limit(1);
   if (!owned) {
     res.status(404).json({ error: "Workspace not found" });
@@ -144,17 +160,32 @@ router.delete("/me/workspaces/:id", requireAuth, async (req, res) => {
 
   await db
     .delete(userProgressTable)
-    .where(and(eq(userProgressTable.userId, userId), eq(userProgressTable.workspaceId, id)));
-  await db.delete(flashcardsTable).where(eq(flashcardsTable.ownerWorkspaceId, id));
+    .where(
+      and(
+        eq(userProgressTable.userId, userId),
+        eq(userProgressTable.workspaceId, id),
+      ),
+    );
+  await db
+    .delete(flashcardsTable)
+    .where(eq(flashcardsTable.ownerWorkspaceId, id));
   await db
     .delete(userWorkspacesTable)
-    .where(and(eq(userWorkspacesTable.id, id), eq(userWorkspacesTable.userId, userId)));
+    .where(
+      and(
+        eq(userWorkspacesTable.id, id),
+        eq(userWorkspacesTable.userId, userId),
+      ),
+    );
   // If user was inside this workspace, drop them back to default.
   await db
     .update(userSettingsTable)
     .set({ currentWorkspaceId: null, updatedAt: new Date() })
     .where(
-      and(eq(userSettingsTable.userId, userId), eq(userSettingsTable.currentWorkspaceId, id)),
+      and(
+        eq(userSettingsTable.userId, userId),
+        eq(userSettingsTable.currentWorkspaceId, id),
+      ),
     );
   res.json({ deleted: id });
 });

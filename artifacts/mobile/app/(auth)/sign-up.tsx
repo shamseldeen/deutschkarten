@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { useSignUp } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
@@ -22,7 +30,10 @@ export default function SignUpScreen() {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPendingVerification(true);
     } catch (e: any) {
-      Alert.alert("Sign up failed", e?.errors?.[0]?.message ?? e?.message ?? "Try again");
+      Alert.alert(
+        "Sign up failed",
+        e?.errors?.[0]?.message ?? e?.message ?? "Try again",
+      );
     } finally {
       setLoading(false);
     }
@@ -38,7 +49,10 @@ export default function SignUpScreen() {
         router.replace("/(tabs)");
       }
     } catch (e: any) {
-      Alert.alert("Verification failed", e?.errors?.[0]?.message ?? e?.message ?? "Try again");
+      Alert.alert(
+        "Verification failed",
+        e?.errors?.[0]?.message ?? e?.message ?? "Try again",
+      );
     } finally {
       setLoading(false);
     }
@@ -59,7 +73,14 @@ export default function SignUpScreen() {
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
-            style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[
+              styles.input,
+              {
+                color: colors.foreground,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+              },
+            ]}
           />
           <TextInput
             placeholder="Password"
@@ -67,31 +88,74 @@ export default function SignUpScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[
+              styles.input,
+              {
+                color: colors.foreground,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+              },
+            ]}
           />
-          <Pressable onPress={onSubmit} disabled={loading} style={[styles.btn, { backgroundColor: colors.primary, opacity: loading ? 0.6 : 1 }]}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Sign Up</Text>}
+          <Pressable
+            onPress={onSubmit}
+            disabled={loading}
+            style={[
+              styles.btn,
+              { backgroundColor: colors.primary, opacity: loading ? 0.6 : 1 },
+            ]}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.btnText}>Sign Up</Text>
+            )}
           </Pressable>
         </>
       ) : (
         <>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Enter the code we emailed you.</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            Enter the code we emailed you.
+          </Text>
           <TextInput
             placeholder="Verification code"
             placeholderTextColor={colors.mutedForeground}
             value={code}
             onChangeText={setCode}
             keyboardType="number-pad"
-            style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.card }]}
+            style={[
+              styles.input,
+              {
+                color: colors.foreground,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+              },
+            ]}
           />
-          <Pressable onPress={onVerify} disabled={loading} style={[styles.btn, { backgroundColor: colors.primary, opacity: loading ? 0.6 : 1 }]}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Verify</Text>}
+          <Pressable
+            onPress={onVerify}
+            disabled={loading}
+            style={[
+              styles.btn,
+              { backgroundColor: colors.primary, opacity: loading ? 0.6 : 1 },
+            ]}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.btnText}>Verify</Text>
+            )}
           </Pressable>
         </>
       )}
 
-      <Pressable onPress={() => router.push("/(auth)/sign-in" as any)} style={styles.linkRow}>
-        <Text style={[styles.link, { color: colors.primary }]}>Already have an account? Sign in</Text>
+      <Pressable
+        onPress={() => router.push("/(auth)/sign-in" as any)}
+        style={styles.linkRow}
+      >
+        <Text style={[styles.link, { color: colors.primary }]}>
+          Already have an account? Sign in
+        </Text>
       </Pressable>
     </View>
   );
@@ -103,7 +167,12 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 10, padding: 14, fontSize: 16 },
   btn: { borderRadius: 10, padding: 16, alignItems: "center", marginTop: 8 },
-  btnText: { color: "#fff", fontWeight: "700", fontSize: 16, fontFamily: "Inter_700Bold" },
+  btnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+  },
   linkRow: { alignItems: "center", paddingVertical: 8 },
   link: { fontSize: 14, fontWeight: "500" },
 });

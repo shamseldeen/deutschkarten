@@ -1,13 +1,33 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Layers, PlusCircle, Calendar, User, LogIn, Brain, BarChart3, Trophy, GraduationCap } from "lucide-react";
+import {
+  BookOpen,
+  Layers,
+  PlusCircle,
+  Calendar,
+  User,
+  LogIn,
+  Brain,
+  BarChart3,
+  Trophy,
+  GraduationCap,
+} from "lucide-react";
 import { Show, useUser } from "@clerk/react";
 import { cn } from "@/lib/utils";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 
-function NavLink({ href, icon: Icon, children }: { href: string; icon: any; children: ReactNode }) {
+function NavLink({
+  href,
+  icon: Icon,
+  children,
+}: {
+  href: string;
+  icon: any;
+  children: ReactNode;
+}) {
   const [location] = useLocation();
-  const isActive = location === href || (href !== "/" && location.startsWith(href));
+  const isActive =
+    location === href || (href !== "/" && location.startsWith(href));
   return (
     <Link
       href={href}
@@ -71,14 +91,30 @@ export function Layout({ children }: { children: ReactNode }) {
           </Link>
 
           <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
-            <NavLink href="/" icon={BookOpen}>Dashboard</NavLink>
-            <NavLink href="/daily" icon={Calendar}>Daily</NavLink>
-            <NavLink href="/browse" icon={Layers}>Browse</NavLink>
-            <NavLink href="/quiz" icon={Brain}>Quiz</NavLink>
-            <NavLink href="/roadmap" icon={GraduationCap}>Roadmap</NavLink>
-            <NavLink href="/stats" icon={BarChart3}>Stats</NavLink>
-            <NavLink href="/leaderboard" icon={Trophy}>Leaderboard</NavLink>
-            <NavLink href="/generate" icon={PlusCircle}>Generate</NavLink>
+            <NavLink href="/" icon={BookOpen}>
+              Dashboard
+            </NavLink>
+            <NavLink href="/daily" icon={Calendar}>
+              Daily
+            </NavLink>
+            <NavLink href="/browse" icon={Layers}>
+              Browse
+            </NavLink>
+            <NavLink href="/quiz" icon={Brain}>
+              Quiz
+            </NavLink>
+            <NavLink href="/roadmap" icon={GraduationCap}>
+              Roadmap
+            </NavLink>
+            <NavLink href="/stats" icon={BarChart3}>
+              Stats
+            </NavLink>
+            <NavLink href="/leaderboard" icon={Trophy}>
+              Leaderboard
+            </NavLink>
+            <NavLink href="/generate" icon={PlusCircle}>
+              Generate
+            </NavLink>
           </nav>
 
           <div className="shrink-0 flex items-center gap-1">

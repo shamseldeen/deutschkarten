@@ -34,24 +34,39 @@ interface Question {
 
 // ── In-memory issued-question cache for server-authoritative scoring ─────────
 // Keyed by sessionId (only set for authed users). 30-minute TTL.
-interface CacheEntry { mode: QuizMode; questions: Question[]; expiresAt: number; }
+interface CacheEntry {
+  mode: QuizMode;
+  questions: Question[];
+  expiresAt: number;
+}
 const sessionCache = new Map<string, CacheEntry>();
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
 function setCache(sessionId: string, mode: QuizMode, questions: Question[]) {
-  sessionCache.set(sessionId, { mode, questions, expiresAt: Date.now() + SESSION_TTL_MS });
+  sessionCache.set(sessionId, {
+    mode,
+    questions,
+    expiresAt: Date.now() + SESSION_TTL_MS,
+  });
 }
 function getCache(sessionId: string): CacheEntry | null {
   const e = sessionCache.get(sessionId);
   if (!e) return null;
-  if (e.expiresAt < Date.now()) { sessionCache.delete(sessionId); return null; }
+  if (e.expiresAt < Date.now()) {
+    sessionCache.delete(sessionId);
+    return null;
+  }
   return e;
 }
 // Periodic cleanup (best-effort)
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of sessionCache.entries()) if (v.expiresAt < now) sessionCache.delete(k);
-}, 5 * 60 * 1000).unref?.();
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [k, v] of sessionCache.entries())
+      if (v.expiresAt < now) sessionCache.delete(k);
+  },
+  5 * 60 * 1000,
+).unref?.();
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -80,15 +95,24 @@ function tr(card: Card, lang: string): string | null {
   return null;
 }
 
-function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): Question | null {
+function buildQuestion(
+  mode: QuizMode,
+  card: Card,
+  pool: Card[],
+  lang: string,
+): Question | null {
   if (mode === "de-to-en") {
     const correct = tr(card, lang);
     if (!correct) return null;
-    const poolTrs = pool.map((c) => tr(c, lang)).filter((s): s is string => !!s);
+    const poolTrs = pool
+      .map((c) => tr(c, lang))
+      .filter((s): s is string => !!s);
     const opts = pickDistractors(poolTrs, correct, 3);
     if (opts.length < 3) return null;
     return {
-      flashcardId: card.id, questionType: mode, prompt: card.word,
+      flashcardId: card.id,
+      questionType: mode,
+      prompt: card.word,
       correctAnswer: correct,
       options: shuffle([correct, ...opts]),
       level: card.level,
@@ -97,10 +121,16 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): 
   if (mode === "en-to-de") {
     const prompt = tr(card, lang);
     if (!prompt) return null;
-    const opts = pickDistractors(pool.map((c) => c.word), card.word, 3);
+    const opts = pickDistractors(
+      pool.map((c) => c.word),
+      card.word,
+      3,
+    );
     if (opts.length < 3) return null;
     return {
-      flashcardId: card.id, questionType: mode, prompt,
+      flashcardId: card.id,
+      questionType: mode,
+      prompt,
       correctAnswer: card.word,
       options: shuffle([card.word, ...opts]),
       level: card.level,
@@ -109,8 +139,11 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): 
   if (mode === "article") {
     if (!card.article) return null;
     return {
-      flashcardId: card.id, questionType: mode, prompt: card.baseWord,
-      hint: tr(card, lang) ?? card.englishTranslation, correctAnswer: card.article,
+      flashcardId: card.id,
+      questionType: mode,
+      prompt: card.baseWord,
+      hint: tr(card, lang) ?? card.englishTranslation,
+      correctAnswer: card.article,
       options: ["der", "die", "das"],
       level: card.level,
     };
@@ -119,15 +152,24 @@ function buildQuestion(mode: QuizMode, card: Card, pool: Card[], lang: string): 
   const prompt = tr(card, lang);
   if (!prompt) return null;
   return {
-    flashcardId: card.id, questionType: mode, prompt,
-    hint: card.article ?? null, correctAnswer: card.baseWord,
+    flashcardId: card.id,
+    questionType: mode,
+    prompt,
+    hint: card.article ?? null,
+    correctAnswer: card.baseWord,
     level: card.level,
   };
 }
 
-function isAnswerCorrect(mode: QuizMode, userAnswer: string, correctAnswer: string): boolean {
+function isAnswerCorrect(
+  mode: QuizMode,
+  userAnswer: string,
+  correctAnswer: string,
+): boolean {
   if (mode === "typing") {
-    return userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+    return (
+      userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+    );
   }
   return userAnswer === correctAnswer;
 }
@@ -145,16 +187,23 @@ const StartBody = z.object({
   // Target language for translation-based modes (de-to-en, en-to-de, typing).
   // Defaults to English; "ar" works out of the box, other langs depend on
   // whether the card has a stored translation in that language.
-  lang: z.string().refine((v) => isSupportedLang(v), { message: "Unsupported language" }).default("en"),
+  lang: z
+    .string()
+    .refine((v) => isSupportedLang(v), { message: "Unsupported language" })
+    .default("en"),
 });
 
 const FinishBody = z.object({
   sessionId: z.string().min(1).nullable().optional(),
-  answers: z.array(z.object({
-    flashcardId: z.coerce.number().int().positive(),
-    questionType: z.enum(MODES),
-    userAnswer: z.string().nullable().optional(),
-  })).max(50),
+  answers: z
+    .array(
+      z.object({
+        flashcardId: z.coerce.number().int().positive(),
+        questionType: z.enum(MODES),
+        userAnswer: z.string().nullable().optional(),
+      }),
+    )
+    .max(50),
 });
 
 // POST /api/quiz/start
@@ -184,7 +233,9 @@ router.post("/quiz/start", async (req, res) => {
           .where(
             and(
               eq(flashcardsTable.level, lv),
-              mode === "article" ? isNotNull(flashcardsTable.article) : undefined,
+              mode === "article"
+                ? isNotNull(flashcardsTable.article)
+                : undefined,
               visibility,
             ),
           )
@@ -212,7 +263,9 @@ router.post("/quiz/start", async (req, res) => {
     return;
   }
   if (pool.length < 4 && (mode === "de-to-en" || mode === "en-to-de")) {
-    res.status(400).json({ error: "Not enough cards to build a quiz. Generate more cards first." });
+    res.status(400).json({
+      error: "Not enough cards to build a quiz. Generate more cards first.",
+    });
     return;
   }
 
@@ -231,7 +284,10 @@ router.post("/quiz/start", async (req, res) => {
       for (const card of cards) {
         if (taken >= perLevelTarget) break;
         const q = buildQuestion(mode, card, pool, lang);
-        if (q) { questions.push(q); taken += 1; }
+        if (q) {
+          questions.push(q);
+          taken += 1;
+        }
       }
     }
     // Fill any remaining slots from leftover cards (in case some levels
@@ -302,7 +358,12 @@ router.post("/quiz/finish", async (req, res) => {
   const [session] = await db
     .select()
     .from(quizSessionsTable)
-    .where(and(eq(quizSessionsTable.id, sessionId), eq(quizSessionsTable.userId, userId)))
+    .where(
+      and(
+        eq(quizSessionsTable.id, sessionId),
+        eq(quizSessionsTable.userId, userId),
+      ),
+    )
     .limit(1);
 
   if (!session) {
@@ -316,7 +377,9 @@ router.post("/quiz/finish", async (req, res) => {
 
   const cached = getCache(sessionId);
   if (!cached) {
-    res.status(410).json({ error: "Quiz session expired. Please start a new quiz." });
+    res
+      .status(410)
+      .json({ error: "Quiz session expired. Please start a new quiz." });
     return;
   }
 
@@ -327,14 +390,16 @@ router.post("/quiz/finish", async (req, res) => {
   }
 
   // Server-authoritative scoring
-  const rows: typeof quizAnswersTable.$inferInsert[] = [];
+  const rows: (typeof quizAnswersTable.$inferInsert)[] = [];
   let correctCount = 0;
   for (const a of answers) {
     const key = `${a.flashcardId}:${a.questionType}`;
     const q = issued.get(key);
     if (!q) continue; // ignore answers that weren't part of this session
     const userAnswer = (a.userAnswer ?? "").trim();
-    const correct = userAnswer.length > 0 && isAnswerCorrect(q.questionType, userAnswer, q.correctAnswer);
+    const correct =
+      userAnswer.length > 0 &&
+      isAnswerCorrect(q.questionType, userAnswer, q.correctAnswer);
     if (correct) correctCount += 1;
     rows.push({
       id: randomUUID(),
@@ -368,11 +433,19 @@ router.post("/quiz/finish", async (req, res) => {
 // GET /api/me/quiz-history
 router.get("/me/quiz-history", async (req, res) => {
   const userId = getAuth(req)?.userId ?? null;
-  if (!userId) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
   const rows = await db
     .select()
     .from(quizSessionsTable)
-    .where(and(eq(quizSessionsTable.userId, userId), isNotNull(quizSessionsTable.finishedAt)))
+    .where(
+      and(
+        eq(quizSessionsTable.userId, userId),
+        isNotNull(quizSessionsTable.finishedAt),
+      ),
+    )
     .orderBy(desc(quizSessionsTable.finishedAt))
     .limit(25);
   res.json(rows);
@@ -381,7 +454,10 @@ router.get("/me/quiz-history", async (req, res) => {
 // GET /api/me/quiz-stats
 router.get("/me/quiz-stats", async (req, res) => {
   const userId = getAuth(req)?.userId ?? null;
-  if (!userId) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
 
   const [overall] = await db
     .select({
@@ -390,7 +466,12 @@ router.get("/me/quiz-stats", async (req, res) => {
       correct: sql<number>`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`,
     })
     .from(quizSessionsTable)
-    .where(and(eq(quizSessionsTable.userId, userId), isNotNull(quizSessionsTable.finishedAt)));
+    .where(
+      and(
+        eq(quizSessionsTable.userId, userId),
+        isNotNull(quizSessionsTable.finishedAt),
+      ),
+    );
 
   const byMode = await db
     .select({
@@ -400,7 +481,12 @@ router.get("/me/quiz-stats", async (req, res) => {
       correct: sql<number>`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`,
     })
     .from(quizSessionsTable)
-    .where(and(eq(quizSessionsTable.userId, userId), isNotNull(quizSessionsTable.finishedAt)))
+    .where(
+      and(
+        eq(quizSessionsTable.userId, userId),
+        isNotNull(quizSessionsTable.finishedAt),
+      ),
+    )
     .groupBy(quizSessionsTable.mode);
 
   const o = overall ?? { sessions: 0, questions: 0, correct: 0 };
@@ -409,14 +495,16 @@ router.get("/me/quiz-stats", async (req, res) => {
       sessions: o.sessions,
       questions: o.questions,
       correct: o.correct,
-      accuracy: o.questions > 0 ? Math.round((o.correct / o.questions) * 100) : 0,
+      accuracy:
+        o.questions > 0 ? Math.round((o.correct / o.questions) * 100) : 0,
     },
     byMode: byMode.map((b) => ({
       mode: b.mode,
       sessions: b.sessions,
       questions: b.questions,
       correct: b.correct,
-      accuracy: b.questions > 0 ? Math.round((b.correct / b.questions) * 100) : 0,
+      accuracy:
+        b.questions > 0 ? Math.round((b.correct / b.questions) * 100) : 0,
     })),
   });
 });

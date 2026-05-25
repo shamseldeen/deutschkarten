@@ -47,7 +47,8 @@ app.use(
 
 app.use("/api", router);
 
-const frontendDist = new URL("../../flashcards/dist/public", import.meta.url).pathname;
+const frontendDist = new URL("../../flashcards/dist/public", import.meta.url)
+  .pathname;
 app.use("/flashcards", express.static(frontendDist));
 app.get("/flashcards/*splat", (_req, res) => {
   res.sendFile("index.html", { root: frontendDist });

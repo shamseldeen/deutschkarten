@@ -20,12 +20,18 @@ const LEVELS = ["All", "A1", "A2", "B1", "B2", "C1"];
 
 function getLevelColor(level: string): string {
   switch (level) {
-    case "A1": return colors.light.levelA1;
-    case "A2": return colors.light.levelA2;
-    case "B1": return colors.light.levelB1;
-    case "B2": return colors.light.levelB2;
-    case "C1": return colors.light.levelC1;
-    default: return colors.light.primary;
+    case "A1":
+      return colors.light.levelA1;
+    case "A2":
+      return colors.light.levelA2;
+    case "B1":
+      return colors.light.levelB1;
+    case "B2":
+      return colors.light.levelB2;
+    case "C1":
+      return colors.light.levelC1;
+    default:
+      return colors.light.primary;
   }
 }
 
@@ -35,9 +41,10 @@ export default function BrowseScreen() {
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
 
-  const params = selectedLevel !== "All"
-    ? { level: selectedLevel as Level, limit: 100 }
-    : { limit: 100 };
+  const params =
+    selectedLevel !== "All"
+      ? { level: selectedLevel as Level, limit: 100 }
+      : { limit: 100 };
 
   const { data, isLoading, error } = useFlashcards(params);
   const apiError = error as Error | null;
@@ -48,7 +55,8 @@ export default function BrowseScreen() {
   };
 
   const cards = data?.items ?? [];
-  const activeCard = selectedCard !== null ? cards.find((c) => c.id === selectedCard) : null;
+  const activeCard =
+    selectedCard !== null ? cards.find((c) => c.id === selectedCard) : null;
 
   const paddingTop = Platform.OS === "web" ? 67 : insets.top + 16;
   const paddingBottom = Platform.OS === "web" ? 34 + 84 : insets.bottom + 84;
@@ -56,11 +64,18 @@ export default function BrowseScreen() {
   return (
     <View style={[styles.container, { backgroundColor: appColors.background }]}>
       <View style={[styles.header, { paddingTop }]}>
-        <Text style={[styles.title, { color: appColors.foreground }]}>Browse Cards</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+        <Text style={[styles.title, { color: appColors.foreground }]}>
+          Browse Cards
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScroll}
+        >
           {LEVELS.map((lvl) => {
             const active = selectedLevel === lvl;
-            const lvlColor = lvl === "All" ? appColors.primary : getLevelColor(lvl);
+            const lvlColor =
+              lvl === "All" ? appColors.primary : getLevelColor(lvl);
             return (
               <TouchableOpacity
                 key={lvl}
@@ -74,7 +89,12 @@ export default function BrowseScreen() {
                 onPress={() => setSelectedLevel(lvl)}
                 testID={`filter-level-${lvl}`}
               >
-                <Text style={[styles.filterText, { color: active ? "#fff" : appColors.foreground }]}>
+                <Text
+                  style={[
+                    styles.filterText,
+                    { color: active ? "#fff" : appColors.foreground },
+                  ]}
+                >
                   {lvl}
                 </Text>
               </TouchableOpacity>
@@ -84,22 +104,50 @@ export default function BrowseScreen() {
       </View>
 
       {apiError ? (
-        <View style={{ marginHorizontal: 20, marginTop: 20, padding: 14, borderRadius: 12, backgroundColor: "#fee2e2", borderWidth: 1, borderColor: "#dc2626" }}>
-          <Text style={{ fontSize: 12, fontWeight: "800", color: "#991b1b", marginBottom: 4 }}>CONNECTION ERROR</Text>
-          <Text style={{ fontSize: 12, color: "#7f1d1d" }}>{apiError.message}</Text>
+        <View
+          style={{
+            marginHorizontal: 20,
+            marginTop: 20,
+            padding: 14,
+            borderRadius: 12,
+            backgroundColor: "#fee2e2",
+            borderWidth: 1,
+            borderColor: "#dc2626",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "800",
+              color: "#991b1b",
+              marginBottom: 4,
+            }}
+          >
+            CONNECTION ERROR
+          </Text>
+          <Text style={{ fontSize: 12, color: "#7f1d1d" }}>
+            {apiError.message}
+          </Text>
         </View>
       ) : isLoading ? (
         <View style={styles.loadingContainer}>
           {[1, 2, 3].map((i) => (
-            <View key={i} style={[styles.skeleton, { backgroundColor: appColors.muted }]} />
+            <View
+              key={i}
+              style={[styles.skeleton, { backgroundColor: appColors.muted }]}
+            />
           ))}
         </View>
       ) : cards.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: appColors.mutedForeground }]}>
+          <Text
+            style={[styles.emptyText, { color: appColors.mutedForeground }]}
+          >
             No flashcards yet for this level.
           </Text>
-          <Text style={[styles.emptyHint, { color: appColors.mutedForeground }]}>
+          <Text
+            style={[styles.emptyHint, { color: appColors.mutedForeground }]}
+          >
             Use the Generate tab to create some!
           </Text>
         </View>
@@ -115,7 +163,10 @@ export default function BrowseScreen() {
               <TouchableOpacity
                 style={[
                   styles.cardRow,
-                  { backgroundColor: appColors.card, borderColor: appColors.border },
+                  {
+                    backgroundColor: appColors.card,
+                    borderColor: appColors.border,
+                  },
                   item.known && { opacity: 0.65 },
                 ]}
                 onPress={() => setSelectedCard(item.id)}
@@ -125,8 +176,17 @@ export default function BrowseScreen() {
                   <Text style={styles.levelDotText}>{item.level}</Text>
                 </View>
                 <View style={styles.cardRowInfo}>
-                  <Text style={[styles.cardWord, { color: appColors.foreground }]}>{item.word}</Text>
-                  <Text style={[styles.cardEn, { color: appColors.mutedForeground }]}>
+                  <Text
+                    style={[styles.cardWord, { color: appColors.foreground }]}
+                  >
+                    {item.word}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.cardEn,
+                      { color: appColors.mutedForeground },
+                    ]}
+                  >
                     {item.englishTranslation}
                   </Text>
                 </View>
@@ -143,19 +203,34 @@ export default function BrowseScreen() {
 
       <Modal visible={activeCard !== null} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: appColors.background }]}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: appColors.background },
+            ]}
+          >
             <TouchableOpacity
               style={styles.modalClose}
               onPress={() => setSelectedCard(null)}
               testID="button-close-modal"
             >
-              <Text style={[styles.modalCloseText, { color: appColors.primary }]}>Close</Text>
+              <Text
+                style={[styles.modalCloseText, { color: appColors.primary }]}
+              >
+                Close
+              </Text>
             </TouchableOpacity>
             {activeCard && (
               <FlashCard
                 card={activeCard}
-                onKnown={() => { handleProgress(activeCard.id, true); setSelectedCard(null); }}
-                onUnknown={() => { handleProgress(activeCard.id, false); setSelectedCard(null); }}
+                onKnown={() => {
+                  handleProgress(activeCard.id, true);
+                  setSelectedCard(null);
+                }}
+                onUnknown={() => {
+                  handleProgress(activeCard.id, false);
+                  setSelectedCard(null);
+                }}
               />
             )}
           </View>
@@ -180,7 +255,12 @@ const styles = StyleSheet.create({
   filterText: { fontSize: 13, fontWeight: "600" },
   loadingContainer: { padding: 20, gap: 12 },
   skeleton: { height: 68, borderRadius: 12 },
-  emptyContainer: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
   emptyText: { fontSize: 16, fontWeight: "600" },
   emptyHint: { fontSize: 14 },
   cardRow: {
@@ -192,15 +272,35 @@ const styles = StyleSheet.create({
     marginTop: 10,
     gap: 12,
   },
-  levelDot: { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  levelDot: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   levelDotText: { color: "#fff", fontSize: 11, fontWeight: "800" },
   cardRowInfo: { flex: 1 },
   cardWord: { fontSize: 16, fontWeight: "700" },
   cardEn: { fontSize: 13, marginTop: 2 },
-  knownBadge: { backgroundColor: "#86efac", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  knownBadge: {
+    backgroundColor: "#86efac",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
   knownText: { fontSize: 11, fontWeight: "700", color: "#166534" },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 48 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 48,
+  },
   modalClose: { alignSelf: "flex-end", marginBottom: 16 },
   modalCloseText: { fontSize: 16, fontWeight: "600" },
 });

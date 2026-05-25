@@ -18,8 +18,15 @@ function setState(next: LangPrefs) {
   state = next;
   for (const s of subscribers) s();
 }
-function subscribe(cb: () => void) { subscribers.add(cb); return () => { subscribers.delete(cb); }; }
-function getSnapshot() { return state; }
+function subscribe(cb: () => void) {
+  subscribers.add(cb);
+  return () => {
+    subscribers.delete(cb);
+  };
+}
+function getSnapshot() {
+  return state;
+}
 
 async function hydrateFromStorage() {
   if (hydrated) return;
@@ -30,10 +37,17 @@ async function hydrateFromStorage() {
       const p = JSON.parse(raw);
       setState({
         primaryLang: typeof p.primaryLang === "string" ? p.primaryLang : "en",
-        secondaryLang: p.secondaryLang === null ? null : (typeof p.secondaryLang === "string" ? p.secondaryLang : "ar"),
+        secondaryLang:
+          p.secondaryLang === null
+            ? null
+            : typeof p.secondaryLang === "string"
+              ? p.secondaryLang
+              : "ar",
       });
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 async function loadFromServer() {
@@ -43,7 +57,10 @@ async function loadFromServer() {
       const r = await apiFetch("/ba7r-api/me/settings");
       if (!r.ok) return;
       const s = await r.json();
-      const next: LangPrefs = { primaryLang: s.primaryLang ?? "en", secondaryLang: s.secondaryLang ?? null };
+      const next: LangPrefs = {
+        primaryLang: s.primaryLang ?? "en",
+        secondaryLang: s.secondaryLang ?? null,
+      };
       await AsyncStorage.setItem(KEY, JSON.stringify(next));
       setState(next);
     } finally {
@@ -57,7 +74,9 @@ export function useLangPrefs() {
   const { isSignedIn } = useUser();
   const prefs = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-  useEffect(() => { void hydrateFromStorage(); }, []);
+  useEffect(() => {
+    void hydrateFromStorage();
+  }, []);
 
   useEffect(() => {
     if (isSignedIn === lastSignedIn) return;
@@ -65,16 +84,22 @@ export function useLangPrefs() {
     if (isSignedIn) void loadFromServer();
   }, [isSignedIn]);
 
-  const save = useCallback(async (next: LangPrefs) => {
-    setState(next);
-    await AsyncStorage.setItem(KEY, JSON.stringify(next));
-    if (!isSignedIn) return;
-    await apiFetch("/ba7r-api/me/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ primaryLang: next.primaryLang, secondaryLang: next.secondaryLang ?? "none" }),
-    });
-  }, [isSignedIn]);
+  const save = useCallback(
+    async (next: LangPrefs) => {
+      setState(next);
+      await AsyncStorage.setItem(KEY, JSON.stringify(next));
+      if (!isSignedIn) return;
+      await apiFetch("/ba7r-api/me/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          primaryLang: next.primaryLang,
+          secondaryLang: next.secondaryLang ?? "none",
+        }),
+      });
+    },
+    [isSignedIn],
+  );
 
   return { prefs, save, loading: false };
 }
