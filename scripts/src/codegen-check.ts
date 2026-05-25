@@ -6,6 +6,7 @@
  *
  * Run: `pnpm run codegen:check`
  */
+// lint-no-console-disable-file — CLI script: intentional stdout/stderr prints.
 import { execSync } from "node:child_process";
 
 function run(cmd: string): string {

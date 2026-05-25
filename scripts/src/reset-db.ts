@@ -5,6 +5,8 @@
  * at a non-local host without RESET_DB_I_KNOW_WHAT_IM_DOING=1.
  *
  * Run: `pnpm run reset-db`
+ *
+ * lint-no-console-disable-file — CLI script: intentional stdout/stderr prints.
  */
 import { execSync } from "node:child_process";
 import pg from "pg";

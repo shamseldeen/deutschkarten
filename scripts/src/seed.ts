@@ -7,6 +7,8 @@
  * and on fresh environments where both schemas may be empty.
  *
  * Run: `pnpm run seed`
+ *
+ * lint-no-console-disable-file — CLI script: intentional stdout/stderr prints.
  */
 import fs from "node:fs";
 import path from "node:path";
