@@ -69053,10 +69053,15 @@ var flashcardsTable = pgTable(
     byLevel: index("flashcards_level_idx").on(t.level),
     byCategory: index("flashcards_category_idx").on(t.category),
     byLevelHidden: index("flashcards_level_hidden_idx").on(t.level, t.hiddenAt),
-    byOwnerWorkspace: index("flashcards_owner_workspace_idx").on(t.ownerWorkspaceId)
+    byOwnerWorkspace: index("flashcards_owner_workspace_idx").on(
+      t.ownerWorkspaceId
+    )
   })
 );
-var insertFlashcardSchema = createInsertSchema(flashcardsTable).omit({ id: true, createdAt: true });
+var insertFlashcardSchema = createInsertSchema(flashcardsTable).omit({
+  id: true,
+  createdAt: true
+});
 
 // ../../lib/db/src/schema/users.ts
 var usersTable = pgTable("users", {
@@ -69092,7 +69097,10 @@ var userProgressTable = pgTable(
     // when workspace_id is NULL.
     userCardDefaultUnique: uniqueIndex("user_progress_user_default_card_uq").on(t.userId, t.flashcardId).where(sql`${t.workspaceId} IS NULL`),
     byUser: index("user_progress_user_idx").on(t.userId),
-    byUserWorkspace: index("user_progress_user_ws_idx").on(t.userId, t.workspaceId)
+    byUserWorkspace: index("user_progress_user_ws_idx").on(
+      t.userId,
+      t.workspaceId
+    )
   })
 );
 var userStreaksTable = pgTable("user_streaks", {
@@ -69295,7 +69303,9 @@ var SUPPORTED_LANGS = [
   { code: "nl", name: "Dutch", nativeName: "Nederlands" }
 ];
 var SUPPORTED_LANG_CODES = SUPPORTED_LANGS.map((l) => l.code);
-var RTL_LANGS = new Set(SUPPORTED_LANGS.filter((l) => l.rtl).map((l) => l.code));
+var RTL_LANGS = new Set(
+  SUPPORTED_LANGS.filter((l) => l.rtl).map((l) => l.code)
+);
 function isSupportedLang(code) {
   return SUPPORTED_LANG_CODES.includes(code);
 }
@@ -69349,10 +69359,12 @@ router2.get("/community/stats", async (_req, res) => {
   const [row] = await db.select({
     totalCards: sql`count(*)::int`,
     contributors: sql`count(distinct ${flashcardsTable.createdBy})::int`
-  }).from(flashcardsTable).where(and(
-    isNull(flashcardsTable.hiddenAt),
-    isNull(flashcardsTable.ownerWorkspaceId)
-  ));
+  }).from(flashcardsTable).where(
+    and(
+      isNull(flashcardsTable.hiddenAt),
+      isNull(flashcardsTable.ownerWorkspaceId)
+    )
+  );
   const data = {
     totalCards: row?.totalCards ?? 0,
     contributors: row?.contributors ?? 0,
@@ -69394,7 +69406,13 @@ async function bumpStreak(userId) {
 
 // src/lib/workspace.ts
 import { randomUUID } from "crypto";
-var SUPPORTED_SECONDARY_LANGS = ["EN", "ES", "FR", "IT", "TR"];
+var SUPPORTED_SECONDARY_LANGS = [
+  "EN",
+  "ES",
+  "FR",
+  "IT",
+  "TR"
+];
 var MAX_USER_WORKSPACES = 2;
 var DEFAULT_WORKSPACE = {
   id: "default",
@@ -69414,10 +69432,12 @@ async function getCurrentWorkspaceId(userId) {
   const [settings] = await db.select({ currentWorkspaceId: userSettingsTable.currentWorkspaceId }).from(userSettingsTable).where(eq(userSettingsTable.userId, userId)).limit(1);
   const id = settings?.currentWorkspaceId ?? null;
   if (!id) return null;
-  const [owned] = await db.select({ id: userWorkspacesTable.id }).from(userWorkspacesTable).where(and(
-    eq(userWorkspacesTable.id, id),
-    eq(userWorkspacesTable.userId, userId)
-  )).limit(1);
+  const [owned] = await db.select({ id: userWorkspacesTable.id }).from(userWorkspacesTable).where(
+    and(
+      eq(userWorkspacesTable.id, id),
+      eq(userWorkspacesTable.userId, userId)
+    )
+  ).limit(1);
   return owned ? id : null;
 }
 function workspaceVisibility(currentWsId) {
@@ -69429,7 +69449,9 @@ function workspaceVisibility(currentWsId) {
 }
 async function cardVisibleInWorkspace(flashcardId, currentWsId) {
   const pred = workspaceVisibility(currentWsId);
-  const [row] = await db.select({ id: flashcardsTable.id }).from(flashcardsTable).where(pred ? and(eq(flashcardsTable.id, flashcardId), pred) : eq(flashcardsTable.id, flashcardId)).limit(1);
+  const [row] = await db.select({ id: flashcardsTable.id }).from(flashcardsTable).where(
+    pred ? and(eq(flashcardsTable.id, flashcardId), pred) : eq(flashcardsTable.id, flashcardId)
+  ).limit(1);
   return !!row;
 }
 async function upsertProgress(args) {
@@ -69586,7 +69608,11 @@ router3.get("/flashcards/:id", async (req, res) => {
   const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
   const visibility = workspaceVisibility(wsId);
   const [card] = await db.select().from(flashcardsTable).where(
-    and(eq(flashcardsTable.id, parsed.data.id), isNull(flashcardsTable.hiddenAt), visibility)
+    and(
+      eq(flashcardsTable.id, parsed.data.id),
+      isNull(flashcardsTable.hiddenAt),
+      visibility
+    )
   ).limit(1);
   if (!card) {
     res.status(404).json({ error: "Flashcard not found" });
@@ -69737,7 +69763,9 @@ router3.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
   }
   const wsIdForVisibility = await getCurrentWorkspaceId(userId);
   const visPred = workspaceVisibility(wsIdForVisibility);
-  const [card] = await db.select().from(flashcardsTable).where(visPred ? and(eq(flashcardsTable.id, id), visPred) : eq(flashcardsTable.id, id)).limit(1);
+  const [card] = await db.select().from(flashcardsTable).where(
+    visPred ? and(eq(flashcardsTable.id, id), visPred) : eq(flashcardsTable.id, id)
+  ).limit(1);
   if (!card) {
     res.status(404).json({ error: "Flashcard not found" });
     return;
@@ -69770,11 +69798,17 @@ Use the native script of the target language. Be concise and natural.`;
         const r = await ai.models.generateContent({
           model: "gemini-2.5-flash",
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          config: { responseMimeType: "application/json", maxOutputTokens: 8192 }
+          config: {
+            responseMimeType: "application/json",
+            maxOutputTokens: 8192
+          }
         });
         text2 = r.text ?? "";
       } catch (err) {
-        req.log?.warn({ err, id, lang }, "gemini translate failed, falling back to openai");
+        req.log?.warn(
+          { err, id, lang },
+          "gemini translate failed, falling back to openai"
+        );
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           max_completion_tokens: 400,
@@ -69853,7 +69887,12 @@ router4.get("/me", requireAuth, async (req, res) => {
   const [streak] = await db.select().from(userStreaksTable).where(eq(userStreaksTable.userId, userId)).limit(1);
   res.json({
     user,
-    streak: streak ?? { userId, currentStreak: 0, longestStreak: 0, lastActiveDate: null }
+    streak: streak ?? {
+      userId,
+      currentStreak: 0,
+      longestStreak: 0,
+      lastActiveDate: null
+    }
   });
 });
 router4.get("/me/stats", requireAuth, async (req, res) => {
@@ -69908,7 +69947,11 @@ var MODES = ["de-to-en", "en-to-de", "article", "typing"];
 var sessionCache = /* @__PURE__ */ new Map();
 var SESSION_TTL_MS = 30 * 60 * 1e3;
 function setCache(sessionId, mode, questions) {
-  sessionCache.set(sessionId, { mode, questions, expiresAt: Date.now() + SESSION_TTL_MS });
+  sessionCache.set(sessionId, {
+    mode,
+    questions,
+    expiresAt: Date.now() + SESSION_TTL_MS
+  });
 }
 function getCache(sessionId) {
   const e = sessionCache.get(sessionId);
@@ -69919,10 +69962,14 @@ function getCache(sessionId) {
   }
   return e;
 }
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of sessionCache.entries()) if (v.expiresAt < now) sessionCache.delete(k);
-}, 5 * 60 * 1e3).unref?.();
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [k, v] of sessionCache.entries())
+      if (v.expiresAt < now) sessionCache.delete(k);
+  },
+  5 * 60 * 1e3
+).unref?.();
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -69962,7 +70009,11 @@ function buildQuestion(mode, card, pool2, lang) {
   if (mode === "en-to-de") {
     const prompt2 = tr(card, lang);
     if (!prompt2) return null;
-    const opts = pickDistractors(pool2.map((c) => c.word), card.word, 3);
+    const opts = pickDistractors(
+      pool2.map((c) => c.word),
+      card.word,
+      3
+    );
     if (opts.length < 3) return null;
     return {
       flashcardId: card.id,
@@ -70017,11 +70068,13 @@ var StartBody = external_exports.object({
 });
 var FinishBody = external_exports.object({
   sessionId: external_exports.string().min(1).nullable().optional(),
-  answers: external_exports.array(external_exports.object({
-    flashcardId: external_exports.coerce.number().int().positive(),
-    questionType: external_exports.enum(MODES),
-    userAnswer: external_exports.string().nullable().optional()
-  })).max(50)
+  answers: external_exports.array(
+    external_exports.object({
+      flashcardId: external_exports.coerce.number().int().positive(),
+      questionType: external_exports.enum(MODES),
+      userAnswer: external_exports.string().nullable().optional()
+    })
+  ).max(50)
 });
 router5.post("/quiz/start", async (req, res) => {
   const parsed = StartBody.safeParse(req.body);
@@ -70062,7 +70115,9 @@ router5.post("/quiz/start", async (req, res) => {
     return;
   }
   if (pool2.length < 4 && (mode === "de-to-en" || mode === "en-to-de")) {
-    res.status(400).json({ error: "Not enough cards to build a quiz. Generate more cards first." });
+    res.status(400).json({
+      error: "Not enough cards to build a quiz. Generate more cards first."
+    });
     return;
   }
   const questions = [];
@@ -70133,7 +70188,12 @@ router5.post("/quiz/finish", async (req, res) => {
     res.json({ saved: false, total: answers.length });
     return;
   }
-  const [session] = await db.select().from(quizSessionsTable).where(and(eq(quizSessionsTable.id, sessionId), eq(quizSessionsTable.userId, userId))).limit(1);
+  const [session] = await db.select().from(quizSessionsTable).where(
+    and(
+      eq(quizSessionsTable.id, sessionId),
+      eq(quizSessionsTable.userId, userId)
+    )
+  ).limit(1);
   if (!session) {
     res.status(404).json({ error: "Session not found" });
     return;
@@ -70187,7 +70247,12 @@ router5.get("/me/quiz-history", async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const rows = await db.select().from(quizSessionsTable).where(and(eq(quizSessionsTable.userId, userId), isNotNull(quizSessionsTable.finishedAt))).orderBy(desc(quizSessionsTable.finishedAt)).limit(25);
+  const rows = await db.select().from(quizSessionsTable).where(
+    and(
+      eq(quizSessionsTable.userId, userId),
+      isNotNull(quizSessionsTable.finishedAt)
+    )
+  ).orderBy(desc(quizSessionsTable.finishedAt)).limit(25);
   res.json(rows);
 });
 router5.get("/me/quiz-stats", async (req, res) => {
@@ -70200,13 +70265,23 @@ router5.get("/me/quiz-stats", async (req, res) => {
     sessions: sql`count(*)::int`,
     questions: sql`coalesce(sum(${quizSessionsTable.totalQuestions}), 0)::int`,
     correct: sql`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`
-  }).from(quizSessionsTable).where(and(eq(quizSessionsTable.userId, userId), isNotNull(quizSessionsTable.finishedAt)));
+  }).from(quizSessionsTable).where(
+    and(
+      eq(quizSessionsTable.userId, userId),
+      isNotNull(quizSessionsTable.finishedAt)
+    )
+  );
   const byMode = await db.select({
     mode: quizSessionsTable.mode,
     sessions: sql`count(*)::int`,
     questions: sql`coalesce(sum(${quizSessionsTable.totalQuestions}), 0)::int`,
     correct: sql`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`
-  }).from(quizSessionsTable).where(and(eq(quizSessionsTable.userId, userId), isNotNull(quizSessionsTable.finishedAt))).groupBy(quizSessionsTable.mode);
+  }).from(quizSessionsTable).where(
+    and(
+      eq(quizSessionsTable.userId, userId),
+      isNotNull(quizSessionsTable.finishedAt)
+    )
+  ).groupBy(quizSessionsTable.mode);
   const o = overall ?? { sessions: 0, questions: 0, correct: 0 };
   res.json({
     overall: {
@@ -70236,7 +70311,9 @@ function rateLimit(req, res, next) {
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
   const key = `${ip}:${req.path}`;
   const now = Date.now();
-  const arr = (_attempts.get(key) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  const arr = (_attempts.get(key) ?? []).filter(
+    (t) => now - t < RATE_LIMIT_WINDOW_MS
+  );
   if (arr.length >= RATE_LIMIT_MAX) {
     res.status(429).json({ error: "Too many attempts. Try again in a minute." });
     return;
@@ -70349,11 +70426,15 @@ var CACHE_TTL_MS = 6e4;
 async function buildLeaderboard() {
   const known = db.select({
     userId: userProgressTable.userId,
-    knownCards: sql`count(*) filter (where ${userProgressTable.known} = 1)::int`.as("known_cards")
+    knownCards: sql`count(*) filter (where ${userProgressTable.known} = 1)::int`.as(
+      "known_cards"
+    )
   }).from(userProgressTable).groupBy(userProgressTable.userId).as("k");
   const quiz = db.select({
     userId: quizSessionsTable.userId,
-    correctAnswers: sql`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`.as("correct_answers")
+    correctAnswers: sql`coalesce(sum(${quizSessionsTable.correctAnswers}), 0)::int`.as(
+      "correct_answers"
+    )
   }).from(quizSessionsTable).where(isNotNull(quizSessionsTable.finishedAt)).groupBy(quizSessionsTable.userId).as("q");
   const rows = await db.select({
     userId: usersTable.id,
@@ -70364,7 +70445,9 @@ async function buildLeaderboard() {
     correctAnswers: sql`coalesce(${quiz.correctAnswers}, 0)::int`,
     longestStreak: sql`coalesce(${userStreaksTable.longestStreak}, 0)::int`
   }).from(usersTable).leftJoin(known, eq(known.userId, usersTable.id)).leftJoin(quiz, eq(quiz.userId, usersTable.id)).leftJoin(userStreaksTable, eq(userStreaksTable.userId, usersTable.id)).orderBy(
-    desc(sql`coalesce(${known.knownCards}, 0) * ${XP_KNOWN} + coalesce(${quiz.correctAnswers}, 0) * ${XP_CORRECT} + coalesce(${userStreaksTable.longestStreak}, 0) * ${XP_STREAK}`)
+    desc(
+      sql`coalesce(${known.knownCards}, 0) * ${XP_KNOWN} + coalesce(${quiz.correctAnswers}, 0) * ${XP_CORRECT} + coalesce(${userStreaksTable.longestStreak}, 0) * ${XP_STREAK}`
+    )
   ).limit(500);
   return rows.map((r, idx) => {
     const xp = r.knownCards * XP_KNOWN + r.correctAnswers * XP_CORRECT + r.longestStreak * XP_STREAK;
@@ -70464,7 +70547,8 @@ function stripQuery(u) {
 }
 router9.post("/log/client-error", (req, res) => {
   const now = Date.now();
-  if (now > globalSlot.resetAt) globalSlot = { count: 0, resetAt: now + 6e4 };
+  if (now > globalSlot.resetAt)
+    globalSlot = { count: 0, resetAt: now + 6e4 };
   globalSlot.count += 1;
   if (globalSlot.count > GLOBAL_LIMIT_PER_MIN) {
     res.status(429).json({ error: "Server log capacity reached" });
@@ -70590,7 +70674,9 @@ router10.post("/flashcards/:id/report", requireAuth, async (req, res) => {
       }
       throw e;
     }
-    const rows = await tx.select({ c: sql`count(distinct ${flashcardReportsTable.userId})::int` }).from(flashcardReportsTable).where(
+    const rows = await tx.select({
+      c: sql`count(distinct ${flashcardReportsTable.userId})::int`
+    }).from(flashcardReportsTable).where(
       and(
         eq(flashcardReportsTable.flashcardId, id),
         eq(flashcardReportsTable.status, "open")
@@ -70598,12 +70684,21 @@ router10.post("/flashcards/:id/report", requireAuth, async (req, res) => {
     );
     distinctReporters = rows[0]?.c ?? 0;
     if (distinctReporters >= AUTO_HIDE_AT) {
-      const updated = await tx.update(flashcardsTable).set({ hiddenAt: /* @__PURE__ */ new Date() }).where(and(eq(flashcardsTable.id, id), isNull(flashcardsTable.hiddenAt))).returning({ id: flashcardsTable.id });
+      const updated = await tx.update(flashcardsTable).set({ hiddenAt: /* @__PURE__ */ new Date() }).where(
+        and(eq(flashcardsTable.id, id), isNull(flashcardsTable.hiddenAt))
+      ).returning({ id: flashcardsTable.id });
       autoHidden = updated.length > 0;
     }
   });
   req.log.info(
-    { flashcardId: id, userId, reason: parsed.data.reason, distinctReporters, autoHidden, alreadyReported },
+    {
+      flashcardId: id,
+      userId,
+      reason: parsed.data.reason,
+      distinctReporters,
+      autoHidden,
+      alreadyReported
+    },
     "card reported"
   );
   res.status(alreadyReported ? 200 : 201).json({ ok: true, autoHidden, alreadyReported });
@@ -70620,43 +70715,61 @@ router10.get("/admin/reports", requireAuth, requireAdmin, async (_req, res) => {
     word: flashcardsTable.word,
     level: flashcardsTable.level,
     hiddenAt: flashcardsTable.hiddenAt
-  }).from(flashcardReportsTable).leftJoin(flashcardsTable, eq(flashcardReportsTable.flashcardId, flashcardsTable.id)).where(eq(flashcardReportsTable.status, "open")).orderBy(desc(flashcardReportsTable.createdAt)).limit(200);
+  }).from(flashcardReportsTable).leftJoin(
+    flashcardsTable,
+    eq(flashcardReportsTable.flashcardId, flashcardsTable.id)
+  ).where(eq(flashcardReportsTable.status, "open")).orderBy(desc(flashcardReportsTable.createdAt)).limit(200);
   res.json({ reports: rows });
 });
-router10.post("/admin/reports/:id/dismiss", requireAuth, requireAdmin, async (req, res) => {
-  const id = Number(req.params["id"]);
-  if (!Number.isFinite(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
+router10.post(
+  "/admin/reports/:id/dismiss",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const id = Number(req.params["id"]);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db.update(flashcardReportsTable).set({ status: "dismissed", resolvedAt: /* @__PURE__ */ new Date() }).where(eq(flashcardReportsTable.id, id));
+    res.json({ ok: true });
   }
-  await db.update(flashcardReportsTable).set({ status: "dismissed", resolvedAt: /* @__PURE__ */ new Date() }).where(eq(flashcardReportsTable.id, id));
-  res.json({ ok: true });
-});
-router10.post("/admin/flashcards/:id/unhide", requireAuth, requireAdmin, async (req, res) => {
-  const id = Number(req.params["id"]);
-  if (!Number.isFinite(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
+);
+router10.post(
+  "/admin/flashcards/:id/unhide",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const id = Number(req.params["id"]);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db.update(flashcardsTable).set({ hiddenAt: null }).where(eq(flashcardsTable.id, id));
+    await db.update(flashcardReportsTable).set({ status: "dismissed", resolvedAt: /* @__PURE__ */ new Date() }).where(
+      and(
+        eq(flashcardReportsTable.flashcardId, id),
+        eq(flashcardReportsTable.status, "open")
+      )
+    );
+    res.json({ ok: true });
   }
-  await db.update(flashcardsTable).set({ hiddenAt: null }).where(eq(flashcardsTable.id, id));
-  await db.update(flashcardReportsTable).set({ status: "dismissed", resolvedAt: /* @__PURE__ */ new Date() }).where(
-    and(
-      eq(flashcardReportsTable.flashcardId, id),
-      eq(flashcardReportsTable.status, "open")
-    )
-  );
-  res.json({ ok: true });
-});
-router10.delete("/admin/flashcards/:id", requireAuth, requireAdmin, async (req, res) => {
-  const id = Number(req.params["id"]);
-  if (!Number.isFinite(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
+);
+router10.delete(
+  "/admin/flashcards/:id",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    const id = Number(req.params["id"]);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db.update(flashcardReportsTable).set({ status: "actioned", resolvedAt: /* @__PURE__ */ new Date() }).where(eq(flashcardReportsTable.flashcardId, id));
+    await db.delete(flashcardsTable).where(eq(flashcardsTable.id, id));
+    res.json({ ok: true });
   }
-  await db.update(flashcardReportsTable).set({ status: "actioned", resolvedAt: /* @__PURE__ */ new Date() }).where(eq(flashcardReportsTable.flashcardId, id));
-  await db.delete(flashcardsTable).where(eq(flashcardsTable.id, id));
-  res.json({ ok: true });
-});
+);
 var reports_default = router10;
 
 // src/routes/workspaces.ts
@@ -70726,7 +70839,12 @@ router11.post("/me/workspaces/:id/switch", requireAuth, async (req, res) => {
     res.json({ currentId: null });
     return;
   }
-  const [ws] = await db.select().from(userWorkspacesTable).where(and(eq(userWorkspacesTable.id, id), eq(userWorkspacesTable.userId, userId))).limit(1);
+  const [ws] = await db.select().from(userWorkspacesTable).where(
+    and(
+      eq(userWorkspacesTable.id, id),
+      eq(userWorkspacesTable.userId, userId)
+    )
+  ).limit(1);
   if (!ws) {
     res.status(404).json({ error: "Workspace not found" });
     return;
@@ -70744,16 +70862,34 @@ router11.delete("/me/workspaces/:id", requireAuth, async (req, res) => {
     res.status(400).json({ error: "The default workspace cannot be deleted." });
     return;
   }
-  const [owned] = await db.select({ id: userWorkspacesTable.id }).from(userWorkspacesTable).where(and(eq(userWorkspacesTable.id, id), eq(userWorkspacesTable.userId, userId))).limit(1);
+  const [owned] = await db.select({ id: userWorkspacesTable.id }).from(userWorkspacesTable).where(
+    and(
+      eq(userWorkspacesTable.id, id),
+      eq(userWorkspacesTable.userId, userId)
+    )
+  ).limit(1);
   if (!owned) {
     res.status(404).json({ error: "Workspace not found" });
     return;
   }
-  await db.delete(userProgressTable).where(and(eq(userProgressTable.userId, userId), eq(userProgressTable.workspaceId, id)));
+  await db.delete(userProgressTable).where(
+    and(
+      eq(userProgressTable.userId, userId),
+      eq(userProgressTable.workspaceId, id)
+    )
+  );
   await db.delete(flashcardsTable).where(eq(flashcardsTable.ownerWorkspaceId, id));
-  await db.delete(userWorkspacesTable).where(and(eq(userWorkspacesTable.id, id), eq(userWorkspacesTable.userId, userId)));
+  await db.delete(userWorkspacesTable).where(
+    and(
+      eq(userWorkspacesTable.id, id),
+      eq(userWorkspacesTable.userId, userId)
+    )
+  );
   await db.update(userSettingsTable).set({ currentWorkspaceId: null, updatedAt: /* @__PURE__ */ new Date() }).where(
-    and(eq(userSettingsTable.userId, userId), eq(userSettingsTable.currentWorkspaceId, id))
+    and(
+      eq(userSettingsTable.userId, userId),
+      eq(userSettingsTable.currentWorkspaceId, id)
+    )
   );
   res.json({ deleted: id });
 });
@@ -70846,7 +70982,10 @@ app.use(
 );
 app.use("/ba7r-api", routes_default);
 app.use("/ba7r-api/api", routes_default);
-var frontendDist = new URL("../../flashcards-ba7r/dist/public", import.meta.url).pathname;
+var frontendDist = new URL(
+  "../../flashcards-ba7r/dist/public",
+  import.meta.url
+).pathname;
 app.use("/ba7r", import_express19.default.static(frontendDist));
 app.get("/ba7r/*splat", (_req, res) => {
   res.sendFile("index.html", { root: frontendDist });
