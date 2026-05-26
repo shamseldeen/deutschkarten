@@ -22,6 +22,7 @@ const envSchema = z.object({
     .min(16, "SESSION_SECRET must be at least 16 chars"),
   ADMIN_USER_IDS: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),

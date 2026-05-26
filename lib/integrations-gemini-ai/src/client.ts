@@ -1,21 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 
-if (!process.env.AI_INTEGRATIONS_GEMINI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_GEMINI_BASE_URL must be set. Did you forget to provision the Gemini AI integration?",
-  );
-}
+// Supports both Replit-managed proxy and a direct personal API key.
+// Priority: Replit proxy vars → personal GEMINI_API_KEY → error.
+const apiKey =
+  process.env.AI_INTEGRATIONS_GEMINI_API_KEY ?? process.env.GEMINI_API_KEY;
 
-if (!process.env.AI_INTEGRATIONS_GEMINI_API_KEY) {
+const baseUrl = process.env.AI_INTEGRATIONS_GEMINI_BASE_URL ?? undefined;
+
+if (!apiKey) {
   throw new Error(
-    "AI_INTEGRATIONS_GEMINI_API_KEY must be set. Did you forget to provision the Gemini AI integration?",
+    "Gemini API key not found.\n" +
+      "Set GEMINI_API_KEY in your environment variables.\n" +
+      "Get a free key at: https://aistudio.google.com/apikey",
   );
 }
 
 export const ai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-  httpOptions: {
-    apiVersion: "",
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
-  },
+  apiKey,
+  ...(baseUrl ? { httpOptions: { apiVersion: "", baseUrl } } : {}),
 });
