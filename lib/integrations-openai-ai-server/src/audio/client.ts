@@ -157,7 +157,7 @@ export async function voiceChat(
       },
     ],
   });
-  const message = response.choices[0]?.message as Record<string, unknown>;
+  const message = response.choices[0]?.message as unknown as Record<string, unknown>;
   const audio = message?.audio as Record<string, unknown> | undefined;
   const transcript = (audio?.transcript as string) || (message?.content as string) || "";
   const audioData = (audio?.data as string) ?? "";
@@ -226,7 +226,7 @@ export async function textToSpeech(
       },
     ],
   });
-  const audio = (response.choices[0]?.message as Record<string, unknown>)?.audio as Record<string, unknown> | undefined;
+  const audio = (response.choices[0]?.message as unknown as Record<string, unknown>)?.audio as Record<string, unknown> | undefined;
   const audioData = (audio?.data as string) ?? "";
   return Buffer.from(audioData, "base64");
 }
