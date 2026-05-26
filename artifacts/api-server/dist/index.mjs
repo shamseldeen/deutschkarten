@@ -37063,14 +37063,14 @@ function createDevOrStagingUrlCache() {
     return res;
   } };
 }
-function isDevelopmentFromPublishableKey(apiKey) {
-  return apiKey.startsWith("test_") || apiKey.startsWith("pk_test_");
+function isDevelopmentFromPublishableKey(apiKey3) {
+  return apiKey3.startsWith("test_") || apiKey3.startsWith("pk_test_");
 }
-function isProductionFromPublishableKey(apiKey) {
-  return apiKey.startsWith("live_") || apiKey.startsWith("pk_live_");
+function isProductionFromPublishableKey(apiKey3) {
+  return apiKey3.startsWith("live_") || apiKey3.startsWith("pk_live_");
 }
-function isDevelopmentFromSecretKey(apiKey) {
-  return apiKey.startsWith("test_") || apiKey.startsWith("sk_test_");
+function isDevelopmentFromSecretKey(apiKey3) {
+  return apiKey3.startsWith("test_") || apiKey3.startsWith("sk_test_");
 }
 async function getCookieSuffix(publishableKey, subtle = globalThis.crypto.subtle) {
   const data = new TextEncoder().encode(publishableKey);
@@ -43478,9 +43478,9 @@ var HandshakeService = class {
       throw new Error("Missing clerkUrl in authenticateContext");
     }
     const redirectUrl = this.removeDevBrowserFromURL(this.authenticateContext.clerkUrl);
-    let baseUrl = this.authenticateContext.frontendApi.startsWith("http") ? this.authenticateContext.frontendApi : `https://${this.authenticateContext.frontendApi}`;
-    baseUrl = baseUrl.replace(/\/+$/, "") + "/";
-    const url2 = new URL("v1/client/handshake", baseUrl);
+    let baseUrl2 = this.authenticateContext.frontendApi.startsWith("http") ? this.authenticateContext.frontendApi : `https://${this.authenticateContext.frontendApi}`;
+    baseUrl2 = baseUrl2.replace(/\/+$/, "") + "/";
+    const url2 = new URL("v1/client/handshake", baseUrl2);
     url2.searchParams.append("redirect_url", redirectUrl?.href || "");
     url2.searchParams.append("__clerk_api_version", SUPPORTED_BAPI_VERSION);
     url2.searchParams.append(
@@ -45009,11 +45009,11 @@ var setResponseForHandshake = (requestState, res) => {
   }
   return;
 };
-var absoluteProxyUrl = (relativeOrAbsoluteUrl, baseUrl) => {
+var absoluteProxyUrl = (relativeOrAbsoluteUrl, baseUrl2) => {
   if (!relativeOrAbsoluteUrl || !isValidProxyUrl(relativeOrAbsoluteUrl) || !isProxyUrlRelative(relativeOrAbsoluteUrl)) {
     return relativeOrAbsoluteUrl;
   }
-  return new URL(relativeOrAbsoluteUrl, baseUrl).toString();
+  return new URL(relativeOrAbsoluteUrl, baseUrl2).toString();
 };
 var resolveDefaultClerkClient = (options) => {
   if (!options.apiUrl && !options.apiVersion) {
@@ -69199,19 +69199,16 @@ var db = drizzle(pool, { schema: schema_exports });
 
 // ../../lib/integrations-openai-ai-server/src/client.ts
 import OpenAI from "openai";
-if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
+var apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+var baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? void 0;
+if (!apiKey) {
   throw new Error(
-    "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?"
-  );
-}
-if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?"
+    "OpenAI API key not found.\nSet OPENAI_API_KEY in your environment variables.\nGet a key at: https://platform.openai.com/api-keys"
   );
 }
 var openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
+  apiKey,
+  ...baseURL ? { baseURL } : {}
 });
 
 // ../../lib/integrations-openai-ai-server/src/image/client.ts
@@ -69233,22 +69230,16 @@ var openai2 = new OpenAI2({
 
 // ../../lib/integrations-gemini-ai/src/client.ts
 import { GoogleGenAI } from "@google/genai";
-if (!process.env.AI_INTEGRATIONS_GEMINI_BASE_URL) {
+var apiKey2 = process.env.AI_INTEGRATIONS_GEMINI_API_KEY ?? process.env.GEMINI_API_KEY;
+var baseUrl = process.env.AI_INTEGRATIONS_GEMINI_BASE_URL ?? void 0;
+if (!apiKey2) {
   throw new Error(
-    "AI_INTEGRATIONS_GEMINI_BASE_URL must be set. Did you forget to provision the Gemini AI integration?"
-  );
-}
-if (!process.env.AI_INTEGRATIONS_GEMINI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_GEMINI_API_KEY must be set. Did you forget to provision the Gemini AI integration?"
+    "Gemini API key not found.\nSet GEMINI_API_KEY in your environment variables.\nGet a free key at: https://aistudio.google.com/apikey"
   );
 }
 var ai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-  httpOptions: {
-    apiVersion: "",
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
-  }
+  apiKey: apiKey2,
+  ...baseUrl ? { httpOptions: { apiVersion: "", baseUrl } } : {}
 });
 
 // ../../lib/integrations-gemini-ai/src/image/client.ts
@@ -70995,8 +70986,10 @@ var envSchema = external_exports2.object({
   SESSION_SECRET: external_exports2.string().min(16, "SESSION_SECRET must be at least 16 chars"),
   // Optional — comma-separated Clerk user IDs allowed into /api/admin/*.
   ADMIN_USER_IDS: external_exports2.string().optional(),
-  // Optional — enables /api/flashcards/generate.
+  // Optional — enables /api/flashcards/generate (use your own key outside Replit).
   OPENAI_API_KEY: external_exports2.string().optional(),
+  // Optional — Gemini AI key (use your own key outside Replit).
+  GEMINI_API_KEY: external_exports2.string().optional(),
   NODE_ENV: external_exports2.enum(["development", "production", "test"]).default("development")
 });
 function validateEnv() {
