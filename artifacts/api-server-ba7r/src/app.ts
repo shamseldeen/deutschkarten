@@ -36,6 +36,11 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Health check before any auth middleware so it never hangs
+app.get("/ba7r-api/healthz", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 app.use(
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(
@@ -48,7 +53,10 @@ app.use(
 app.use("/ba7r-api", router);
 app.use("/ba7r-api/api", router);
 
-const frontendDist = new URL("../../flashcards-ba7r/dist/public", import.meta.url).pathname;
+const frontendDist = new URL(
+  "../../flashcards-ba7r/dist/public",
+  import.meta.url,
+).pathname;
 app.use("/ba7r", express.static(frontendDist));
 app.get("/ba7r/*splat", (_req, res) => {
   res.sendFile("index.html", { root: frontendDist });
