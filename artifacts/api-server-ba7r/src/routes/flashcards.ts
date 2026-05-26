@@ -297,7 +297,10 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
     });
   } catch (err) {
     req.log.error({ err }, "Gemini generateContent failed");
-    res.status(502).json({ error: "AI generation failed", detail: err instanceof Error ? err.message : String(err) });
+    res.status(502).json({
+      error: "AI generation failed",
+      detail: err instanceof Error ? err.message : String(err),
+    });
     return;
   }
 
@@ -324,12 +327,17 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
       .trim();
     cards = JSON.parse(cleaned);
   } catch {
-    res.status(502).json({ error: "Failed to parse AI response", rawText: text.slice(0, 300) });
+    res.status(502).json({
+      error: "Failed to parse AI response",
+      rawText: text.slice(0, 300),
+    });
     return;
   }
 
   if (!Array.isArray(cards) || cards.length === 0) {
-    res.status(502).json({ error: "AI returned no cards", rawText: text.slice(0, 300) });
+    res
+      .status(502)
+      .json({ error: "AI returned no cards", rawText: text.slice(0, 300) });
     return;
   }
 
@@ -337,47 +345,50 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
   let inserted: (typeof flashcardsTable.$inferSelect)[];
   try {
     inserted = await db
-    .insert(flashcardsTable)
-    .values(
-      cards.map((c) => {
-        const translations: Record<string, string> = {
-          en: c.englishTranslation,
-          ar: c.arabicTranslation,
-        };
-        const exampleTranslations: Record<string, string> = {
-          en: c.exampleSentenceEn,
-          ar: c.exampleSentenceAr,
-        };
-        if (wantsExtraLang && c.extraTranslation) {
-          translations[extraLangKey] = c.extraTranslation;
-        }
-        if (wantsExtraLang && c.extraExample) {
-          exampleTranslations[extraLangKey] = c.extraExample;
-        }
-        return {
-          word: c.word,
-          article: c.article ?? null,
-          baseWord: c.baseWord,
-          level: c.level,
-          category: c.category,
-          englishTranslation: c.englishTranslation,
-          arabicTranslation: c.arabicTranslation,
-          exampleSentenceDe: c.exampleSentenceDe,
-          exampleSentenceEn: c.exampleSentenceEn,
-          exampleSentenceAr: c.exampleSentenceAr,
-          translations,
-          exampleTranslations,
-          createdBy: userId,
-          ownerWorkspaceId: wsId,
-          imageUrl: null,
-          known: false,
-        };
-      }),
-    )
-    .returning();
+      .insert(flashcardsTable)
+      .values(
+        cards.map((c) => {
+          const translations: Record<string, string> = {
+            en: c.englishTranslation,
+            ar: c.arabicTranslation,
+          };
+          const exampleTranslations: Record<string, string> = {
+            en: c.exampleSentenceEn,
+            ar: c.exampleSentenceAr,
+          };
+          if (wantsExtraLang && c.extraTranslation) {
+            translations[extraLangKey] = c.extraTranslation;
+          }
+          if (wantsExtraLang && c.extraExample) {
+            exampleTranslations[extraLangKey] = c.extraExample;
+          }
+          return {
+            word: c.word,
+            article: c.article ?? null,
+            baseWord: c.baseWord,
+            level: c.level,
+            category: c.category,
+            englishTranslation: c.englishTranslation,
+            arabicTranslation: c.arabicTranslation,
+            exampleSentenceDe: c.exampleSentenceDe,
+            exampleSentenceEn: c.exampleSentenceEn,
+            exampleSentenceAr: c.exampleSentenceAr,
+            translations,
+            exampleTranslations,
+            createdBy: userId,
+            ownerWorkspaceId: wsId,
+            imageUrl: null,
+            known: false,
+          };
+        }),
+      )
+      .returning();
   } catch (dbErr) {
     req.log.error({ dbErr }, "DB insert failed after AI generation");
-    res.status(502).json({ error: "Failed to save generated cards", detail: dbErr instanceof Error ? dbErr.message : String(dbErr) });
+    res.status(502).json({
+      error: "Failed to save generated cards",
+      detail: dbErr instanceof Error ? dbErr.message : String(dbErr),
+    });
     return;
   }
 
