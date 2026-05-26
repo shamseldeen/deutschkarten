@@ -69896,7 +69896,10 @@ router3.post("/admin/flashcards/backfill-images", async (req, res) => {
     id: flashcardsTable.id,
     englishTranslation: flashcardsTable.englishTranslation
   }).from(flashcardsTable).where(isNull(flashcardsTable.imageUrl));
-  res.json({ message: `Backfilling ${cards.length} cards in background\u2026`, count: cards.length });
+  res.json({
+    message: `Backfilling ${cards.length} cards in background\u2026`,
+    count: cards.length
+  });
   (async () => {
     for (const card of cards) {
       const imageUrl = await fetchPexelsImage(card.englishTranslation);
