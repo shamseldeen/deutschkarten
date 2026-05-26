@@ -1,18 +1,21 @@
 import OpenAI from "openai";
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?",
-  );
-}
+const apiKey =
+  process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?",
-  );
-}
+const baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? undefined;
 
-export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+// Lazy client — only throws when actually called, so servers start fine
+// without an OpenAI key. Gemini is the primary AI; OpenAI is optional.
+export const openai = new Proxy({} as OpenAI, {
+  get(_target, prop) {
+    if (!apiKey) {
+      throw new Error(
+        "OpenAI API key not set. Add OPENAI_API_KEY to use this feature, " +
+          "or the app will use Gemini instead.",
+      );
+    }
+    const client = new OpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) });
+    return (client as any)[prop];
+  },
 });
