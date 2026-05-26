@@ -65,15 +65,12 @@ export function Flashcard({
     (async () => {
       for (const lang of missing) {
         try {
-          const r = await fetch(
-            `/api/flashcards/${card.id}/translate`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({ lang }),
-            },
-          );
+          const r = await fetch(`/api/flashcards/${card.id}/translate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ lang }),
+          });
           if (!r.ok) continue;
           const updated = await r.json();
           if (cancelled) return;

@@ -8,6 +8,7 @@
     "seed": "tsx ./src/seed.ts",
     "codegen-check": "tsx ./src/codegen-check.ts",
     "reset-db": "tsx ./src/reset-db.ts",
+    "backfill-images": "tsx ./src/backfill-images.ts",
     "lint-no-console": "tsx ./src/lint-no-console.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

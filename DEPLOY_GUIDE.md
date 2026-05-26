@@ -70,6 +70,7 @@
 ## الخطوة 4ب — Railway (Ba7r API Server)
 
 نفس الخطوات، لكن:
+
 - Dockerfile Path: `artifacts/api-server-ba7r/Dockerfile`
 - PORT = 8083
 
@@ -78,9 +79,11 @@
 ## الخطوة 5 — تهيئة قاعدة البيانات
 
 على جهازك في مجلد المشروع:
+
 ```bash
 DATABASE_URL="postgresql://...neon.tech/neondb?sslmode=require" pnpm run reset-db
 ```
+
 النتيجة المتوقعة: `✅ Seeded 114 cards`
 
 ---
@@ -88,26 +91,32 @@ DATABASE_URL="postgresql://...neon.tech/neondb?sslmode=require" pnpm run reset-d
 ## الخطوة 6 — Android APK (Shams)
 
 ### ثبّت الأدوات:
+
 ```bash
 npm install -g pnpm eas-cli
 eas login
 ```
 
 ### عدّل eas.json — استبدل القيم:
+
 ملف: `artifacts/mobile/eas.json`
+
 ```json
 "EXPO_PUBLIC_API_BASE_URL": "https://xxx.up.railway.app",
 "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_..."
 ```
 
 ### ابنِ APK:
+
 ```bash
 cd artifacts/mobile
 eas build --platform android --profile preview
 ```
+
 ⏱️ يستغرق 5-15 دقيقة → ستحصل على رابط تنزيل APK
 
 ### Android (Ba7r):
+
 ```bash
 cd ../mobile-ba7r
 # عدّل artifacts/mobile-ba7r/eas.json بنفس الطريقة (رابط Ba7r API)
@@ -119,6 +128,7 @@ eas build --platform android --profile preview
 ## الخطوة 7 — Vercel (الويب)
 
 ### Shams Frontend:
+
 1. https://vercel.com → Login with GitHub
 2. Add New Project → deutschkarten
 3. إعدادات:
@@ -132,7 +142,9 @@ eas build --platform android --profile preview
 5. Deploy ✅
 
 ### Ba7r Frontend:
+
 نفس الخطوات:
+
 - Root Directory: `artifacts/flashcards-ba7r`
 - Build Command: `cd ../.. && pnpm --filter @workspace/flashcards-ba7r run build`
 
@@ -140,26 +152,26 @@ eas build --platform android --profile preview
 
 ## المتغيرات المطلوبة — ملخص
 
-| المتغير | من أين؟ | مطلوب في |
-|---------|---------|----------|
-| DATABASE_URL | neon.tech | Railway |
-| CLERK_PUBLISHABLE_KEY | clerk.com | Railway + Vercel + EAS |
-| CLERK_SECRET_KEY | clerk.com | Railway فقط |
-| SESSION_SECRET | اخترعه أنت (32 حرف) | Railway |
-| GEMINI_API_KEY | aistudio.google.com | Railway |
-| OPENAI_API_KEY | platform.openai.com | Railway (اختياري) |
-| EXPO_PUBLIC_API_BASE_URL | رابط Railway | EAS (mobile) |
+| المتغير                  | من أين؟             | مطلوب في               |
+| ------------------------ | ------------------- | ---------------------- |
+| DATABASE_URL             | neon.tech           | Railway                |
+| CLERK_PUBLISHABLE_KEY    | clerk.com           | Railway + Vercel + EAS |
+| CLERK_SECRET_KEY         | clerk.com           | Railway فقط            |
+| SESSION_SECRET           | اخترعه أنت (32 حرف) | Railway                |
+| GEMINI_API_KEY           | aistudio.google.com | Railway                |
+| OPENAI_API_KEY           | platform.openai.com | Railway (اختياري)      |
+| EXPO_PUBLIC_API_BASE_URL | رابط Railway        | EAS (mobile)           |
 
 ---
 
 ## التكاليف
 
-| الخدمة | التكلفة |
-|--------|---------|
-| Neon DB | مجاني |
-| Clerk | مجاني حتى 10k مستخدم |
-| Gemini API | مجاني (حد سخي) |
-| Railway | مجاني ($5 credit) |
-| Vercel | مجاني |
-| Expo EAS Build | مجاني (30 بناء/شهر) |
-| **المجموع** | **$0/شهر** |
+| الخدمة         | التكلفة              |
+| -------------- | -------------------- |
+| Neon DB        | مجاني                |
+| Clerk          | مجاني حتى 10k مستخدم |
+| Gemini API     | مجاني (حد سخي)       |
+| Railway        | مجاني ($5 credit)    |
+| Vercel         | مجاني                |
+| Expo EAS Build | مجاني (30 بناء/شهر)  |
+| **المجموع**    | **$0/شهر**           |

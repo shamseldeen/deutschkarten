@@ -30,10 +30,7 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
-      [
-        "expo-router",
-        {}
-      ],
+      ["expo-router", {}],
       "expo-font",
       "expo-web-browser",
       [

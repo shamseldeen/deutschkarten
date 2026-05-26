@@ -594,7 +594,9 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
 // Admin-only. Runs in background — responds immediately with count.
 router.post("/admin/flashcards/backfill-images", async (req, res) => {
   const userId = getAuth(req)?.userId;
-  const adminIds = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
+  const adminIds = (process.env.ADMIN_USER_IDS ?? "")
+    .split(",")
+    .filter(Boolean);
   if (!userId || !adminIds.includes(userId)) {
     res.status(403).json({ error: "Forbidden" });
     return;
@@ -608,7 +610,10 @@ router.post("/admin/flashcards/backfill-images", async (req, res) => {
     .from(flashcardsTable)
     .where(isNull(flashcardsTable.imageUrl));
 
-  res.json({ message: `Backfilling ${cards.length} cards in background…`, count: cards.length });
+  res.json({
+    message: `Backfilling ${cards.length} cards in background…`,
+    count: cards.length,
+  });
 
   // Run in background after responding
   (async () => {
