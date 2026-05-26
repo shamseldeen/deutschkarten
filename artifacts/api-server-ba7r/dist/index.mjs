@@ -69226,19 +69226,29 @@ var openai = new Proxy({}, {
 
 // ../../lib/integrations-openai-ai-server/src/image/client.ts
 import OpenAI2, { toFile } from "openai";
-if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?"
-  );
+var _openai = null;
+function getOpenAI() {
+  if (_openai) return _openai;
+  if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
+    throw new Error(
+      "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?"
+    );
+  }
+  if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+    throw new Error(
+      "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?"
+    );
+  }
+  _openai = new OpenAI2({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
+  });
+  return _openai;
 }
-if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?"
-  );
-}
-var openai2 = new OpenAI2({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
+var openai2 = new Proxy({}, {
+  get(_target, prop) {
+    return getOpenAI()[prop];
+  }
 });
 
 // ../../lib/integrations-gemini-ai/src/client.ts
@@ -69267,21 +69277,31 @@ var ai = new Proxy({}, {
 
 // ../../lib/integrations-gemini-ai/src/image/client.ts
 import { GoogleGenAI as GoogleGenAI2, Modality } from "@google/genai";
-if (!process.env.AI_INTEGRATIONS_GEMINI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_GEMINI_BASE_URL must be set. Did you forget to provision the Gemini AI integration?"
-  );
+var _ai2 = null;
+function getAi2() {
+  if (_ai2) return _ai2;
+  if (!process.env.AI_INTEGRATIONS_GEMINI_BASE_URL) {
+    throw new Error(
+      "AI_INTEGRATIONS_GEMINI_BASE_URL must be set. Did you forget to provision the Gemini AI integration?"
+    );
+  }
+  if (!process.env.AI_INTEGRATIONS_GEMINI_API_KEY) {
+    throw new Error(
+      "AI_INTEGRATIONS_GEMINI_API_KEY must be set. Did you forget to provision the Gemini AI integration?"
+    );
+  }
+  _ai2 = new GoogleGenAI2({
+    apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
+    httpOptions: {
+      apiVersion: "",
+      baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+    }
+  });
+  return _ai2;
 }
-if (!process.env.AI_INTEGRATIONS_GEMINI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_GEMINI_API_KEY must be set. Did you forget to provision the Gemini AI integration?"
-  );
-}
-var ai2 = new GoogleGenAI2({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-  httpOptions: {
-    apiVersion: "",
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL
+var ai2 = new Proxy({}, {
+  get(_target, prop) {
+    return getAi2()[prop];
   }
 });
 
