@@ -67,7 +67,7 @@ export default function StatsPage() {
     queryKey: ["quiz-stats"],
     enabled: Boolean(isSignedIn),
     queryFn: async () => {
-      const r = await fetch(`${basePath}/api/me/quiz-stats`, {
+      const r = await fetch(`/api/me/quiz-stats`, {
         credentials: "include",
       });
       if (!r.ok) throw new Error("failed");
@@ -79,7 +79,7 @@ export default function StatsPage() {
     queryKey: ["quiz-history"],
     enabled: Boolean(isSignedIn),
     queryFn: async () => {
-      const r = await fetch(`${basePath}/api/me/quiz-history`, {
+      const r = await fetch(`/api/me/quiz-history`, {
         credentials: "include",
       });
       if (!r.ok) throw new Error("failed");

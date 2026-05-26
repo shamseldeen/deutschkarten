@@ -50,7 +50,7 @@ export default function Home() {
   const { data: community } = useQuery<CommunityStats>({
     queryKey: ["community-stats"],
     queryFn: () =>
-      fetch(`${basePath}/api/community/stats`).then((r) => r.json()),
+      fetch(`/api/community/stats`).then((r) => r.json()),
     staleTime: 60_000,
   });
 

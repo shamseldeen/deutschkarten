@@ -63,7 +63,7 @@ async function loadFromServer(getToken: () => Promise<string | null>) {
   inFlightFetch = (async () => {
     try {
       const token = await getToken();
-      const r = await fetch(`${basePath}/api/me/settings`, {
+      const r = await fetch(`/api/me/settings`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!r.ok) return;
@@ -102,7 +102,7 @@ export function useLangPrefs() {
       setState(next);
       if (!isSignedIn) return;
       const token = await getToken();
-      await fetch(`${basePath}/api/me/settings`, {
+      await fetch(`/api/me/settings`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

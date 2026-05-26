@@ -36,7 +36,7 @@ export default function LeaderboardPage() {
   const { data, isLoading } = useQuery<Resp>({
     queryKey: ["leaderboard"],
     queryFn: async () => {
-      const r = await fetch(`${basePath}/api/leaderboard`, {
+      const r = await fetch(`/api/leaderboard`, {
         credentials: "include",
       });
       if (!r.ok) throw new Error("failed");

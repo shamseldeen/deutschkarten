@@ -23,7 +23,7 @@ export function useMe() {
     queryKey: ["me", isSignedIn],
     enabled: Boolean(isSignedIn),
     queryFn: async () => {
-      const r = await fetch(`${basePath}/api/me`, { credentials: "include" });
+      const r = await fetch(`/api/me`, { credentials: "include" });
       if (!r.ok) return null;
       return r.json() as Promise<Me>;
     },

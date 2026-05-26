@@ -37,7 +37,7 @@ export function ReportCardButton({ cardId, word }: Props) {
     if (!reason || busy) return;
     setBusy(true);
     try {
-      const r = await fetch(`${basePath}/api/flashcards/${cardId}/report`, {
+      const r = await fetch(`/api/flashcards/${cardId}/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -66,7 +66,7 @@ export function Flashcard({
       for (const lang of missing) {
         try {
           const r = await fetch(
-            `${basePath}/api/flashcards/${card.id}/translate`,
+            `/api/flashcards/${card.id}/translate`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

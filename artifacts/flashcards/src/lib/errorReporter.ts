@@ -50,7 +50,7 @@ export function reportError(
       payload.componentStack = extra.componentStack;
     }
 
-    fetch(`${basePath}/api/log/client-error`, {
+    fetch(`/api/log/client-error`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
