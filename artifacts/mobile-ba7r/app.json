@@ -15,15 +15,16 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ba7r.deutschkarten"
+      "bundleIdentifier": "com.deutschkarten.ba7r"
     },
     "android": {
-      "package": "com.ba7r.deutschkarten",
+      "package": "com.deutschkarten.ba7r",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#f0f9ff"
-      }
+        "backgroundColor": "#0ea5e9"
+      },
+      "permissions": []
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -31,9 +32,7 @@
     "plugins": [
       [
         "expo-router",
-        {
-          "origin": "https://replit.com/"
-        }
+        {}
       ],
       "expo-font",
       "expo-web-browser",

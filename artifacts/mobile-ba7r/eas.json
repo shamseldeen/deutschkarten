@@ -1,7 +1,7 @@
 {
   "cli": {
-    "version": ">= 5.0.0",
-    "appVersionSource": "remote"
+    "version": ">= 12.0.0",
+    "appVersionSource": "local"
   },
   "build": {
     "preview": {
@@ -9,14 +9,20 @@
         "buildType": "apk"
       },
       "distribution": "internal",
-      "channel": "preview"
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://YOUR-BA7R-RAILWAY-API-URL.up.railway.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_YOUR_KEY_HERE"
+      }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
       },
       "autoIncrement": true,
-      "channel": "production"
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://YOUR-BA7R-RAILWAY-API-URL.up.railway.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_YOUR_KEY_HERE"
+      }
     }
   },
   "submit": {
