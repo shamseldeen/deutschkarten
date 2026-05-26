@@ -23,7 +23,7 @@ COPY artifacts/flashcards/ ./artifacts/flashcards/
 RUN pnpm --filter @workspace/api-server run build
 RUN PORT=3000 BASE_PATH=/flashcards/ pnpm --filter @workspace/flashcards run build
 
-FROM node:24-slim AS runner
+FROM node:24-alpine AS runner
 RUN npm install -g pnpm@10
 WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
