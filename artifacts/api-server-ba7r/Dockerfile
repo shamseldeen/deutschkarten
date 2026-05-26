@@ -6,7 +6,10 @@ FROM base AS deps
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY lib/db/package.json ./lib/db/
 COPY lib/api-spec/package.json ./lib/api-spec/
+COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/content/package.json ./lib/content/
+COPY lib/integrations-gemini-ai/package.json ./lib/integrations-gemini-ai/
+COPY lib/integrations-openai-ai-server/package.json ./lib/integrations-openai-ai-server/
 COPY artifacts/api-server-ba7r/package.json ./artifacts/api-server-ba7r/
 RUN pnpm install --frozen-lockfile --filter @workspace/api-server-ba7r...
 
@@ -22,7 +25,10 @@ WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY lib/db/package.json ./lib/db/
 COPY lib/api-spec/package.json ./lib/api-spec/
+COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/content/package.json ./lib/content/
+COPY lib/integrations-gemini-ai/package.json ./lib/integrations-gemini-ai/
+COPY lib/integrations-openai-ai-server/package.json ./lib/integrations-openai-ai-server/
 COPY artifacts/api-server-ba7r/package.json ./artifacts/api-server-ba7r/
 RUN pnpm install --frozen-lockfile --filter @workspace/api-server-ba7r... --prod
 COPY --from=builder /app/artifacts/api-server-ba7r/dist ./artifacts/api-server-ba7r/dist
