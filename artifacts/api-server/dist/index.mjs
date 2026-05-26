@@ -69201,14 +69201,16 @@ var db = drizzle(pool, { schema: schema_exports });
 import OpenAI from "openai";
 var apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
 var baseURL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ?? void 0;
-if (!apiKey) {
-  throw new Error(
-    "OpenAI API key not found.\nSet OPENAI_API_KEY in your environment variables.\nGet a key at: https://platform.openai.com/api-keys"
-  );
-}
-var openai = new OpenAI({
-  apiKey,
-  ...baseURL ? { baseURL } : {}
+var openai = new Proxy({}, {
+  get(_target, prop) {
+    if (!apiKey) {
+      throw new Error(
+        "OpenAI API key not set. Add OPENAI_API_KEY to use this feature, or the app will use Gemini instead."
+      );
+    }
+    const client = new OpenAI({ apiKey, ...baseURL ? { baseURL } : {} });
+    return client[prop];
+  }
 });
 
 // ../../lib/integrations-openai-ai-server/src/image/client.ts
@@ -69660,12 +69662,12 @@ Return a JSON array (no markdown, no code block) where each item has exactly the
 - exampleSentenceAr: string (Arabic translation of the example sentence, in Arabic script)${extraTransField}
 
 Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    max_completion_tokens: 4096,
-    messages: [{ role: "user", content: prompt }]
+  const r = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    config: { responseMimeType: "application/json", maxOutputTokens: 8192 }
   });
-  const text2 = completion.choices[0]?.message?.content ?? "[]";
+  const text2 = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
   let cards = [];
   try {
     const cleaned = text2.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();

@@ -287,13 +287,13 @@ Return a JSON array (no markdown, no code block) where each item has exactly the
 
 Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    max_completion_tokens: 4096,
-    messages: [{ role: "user", content: prompt }],
+  const r = await gemini.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
   });
 
-  const text = completion.choices[0]?.message?.content ?? "[]";
+  const text = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
   let cards: Array<{
     word: string;
     article: string | null;
