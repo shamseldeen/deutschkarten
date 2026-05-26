@@ -1,8 +1,13 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { flashcardsTable, userProgressTable, userStreaksTable } from "@workspace/db";
+import {
+  flashcardsTable,
+  userProgressTable,
+  userStreaksTable,
+} from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { ai as gemini } from "@workspace/integrations-gemini-ai";
+import { fetchPexelsImage } from "../lib/pexels.js";
 import { getAuth } from "@clerk/express";
 import { randomUUID } from "crypto";
 import {
@@ -39,7 +44,10 @@ const generateLimits = new Map<string, RateLimitEntry>();
 function getClientIp(req: import("express").Request): string {
   const forwarded = req.headers["x-forwarded-for"];
   return (
-    (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0])?.trim() ??
+    (Array.isArray(forwarded)
+      ? forwarded[0]
+      : forwarded?.split(",")[0]
+    )?.trim() ??
     req.socket.remoteAddress ??
     "unknown"
   );
@@ -121,19 +129,19 @@ router.get("/flashcards/stats", async (req, res) => {
       .where(and(isNull(flashcardsTable.hiddenAt), visibility))
       .groupBy(flashcardsTable.level);
 
-      const byLevel = new Map(rows.map((r) => [r.level, r]));
-      const stats = levels.map((level) => {
-        const r = byLevel.get(level) ?? { total: 0, known: 0 };
-        return {
-          level,
-          total: r.total,
-          known: r.known,
-          unknown: r.total - r.known,
-          percentage: r.total > 0 ? Math.round((r.known / r.total) * 100) : 0,
-        };
-      });
-      res.json(stats);
-      return;
+    const byLevel = new Map(rows.map((r) => [r.level, r]));
+    const stats = levels.map((level) => {
+      const r = byLevel.get(level) ?? { total: 0, known: 0 };
+      return {
+        level,
+        total: r.total,
+        known: r.known,
+        unknown: r.total - r.known,
+        percentage: r.total > 0 ? Math.round((r.known / r.total) * 100) : 0,
+      };
+    });
+    res.json(stats);
+    return;
   }
 
   const totalsByLevel = await db
@@ -195,7 +203,11 @@ router.get("/flashcards/:id", async (req, res) => {
     .select()
     .from(flashcardsTable)
     .where(
-      and(eq(flashcardsTable.id, parsed.data.id), isNull(flashcardsTable.hiddenAt), visibility),
+      and(
+        eq(flashcardsTable.id, parsed.data.id),
+        isNull(flashcardsTable.hiddenAt),
+        visibility,
+      ),
     )
     .limit(1);
 
@@ -243,7 +255,9 @@ router.post("/flashcards/generate", async (req, res) => {
 
   const userId = getAuth(req)?.userId ?? null;
   const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
-  const secondaryLang = userId ? await getWorkspaceSecondaryLang(userId, wsId) : "AR";
+  const secondaryLang = userId
+    ? await getWorkspaceSecondaryLang(userId, wsId)
+    : "AR";
   const langNames: Record<string, string> = {
     AR: "Arabic (in Arabic script)",
     EN: "English",
@@ -274,13 +288,20 @@ Return a JSON array (no markdown, no code block) where each item has exactly the
 
 Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    max_completion_tokens: 4096,
-    messages: [{ role: "user", content: prompt }],
-  });
+  let r;
+  try {
+    r = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
+    });
+  } catch (err) {
+    req.log.error({ err }, "Gemini generateContent failed");
+    res.status(502).json({ error: "AI generation failed", detail: err instanceof Error ? err.message : String(err) });
+    return;
+  }
 
-  const text = completion.choices[0]?.message?.content ?? "[]";
+  const text = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
   let cards: Array<{
     word: string;
     article: string | null;
@@ -297,7 +318,10 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
   }> = [];
 
   try {
-    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const cleaned = text
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
     cards = JSON.parse(cleaned);
   } catch {
     res.status(500).json({ error: "Failed to parse AI response" });
@@ -349,7 +373,22 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
   entry.used += 1;
   invalidateCommunityStats();
 
-  res.status(201).json(inserted);
+  // Fetch images from Pexels in parallel (fire-and-forget updates; don't block response)
+  const withImages = await Promise.all(
+    inserted.map(async (card) => {
+      const imageUrl = await fetchPexelsImage(card.englishTranslation);
+      if (imageUrl) {
+        await db
+          .update(flashcardsTable)
+          .set({ imageUrl })
+          .where(eq(flashcardsTable.id, card.id));
+        return { ...card, imageUrl };
+      }
+      return card;
+    }),
+  );
+
+  res.status(201).json(withImages);
 });
 
 // POST /api/flashcards/:id/translate  — translate a card to a target language on-demand
@@ -358,7 +397,10 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
 // Per-user rate-limited and in-flight deduped so concurrent callers share one OpenAI call.
 const translateLimits = new Map<string, { count: number; resetAt: number }>();
 const TRANSLATE_LIMIT_PER_MIN = 30;
-const inFlightTranslations = new Map<string, Promise<typeof flashcardsTable.$inferSelect>>();
+const inFlightTranslations = new Map<
+  string,
+  Promise<typeof flashcardsTable.$inferSelect>
+>();
 
 router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
   const userId = req.userId!;
@@ -368,7 +410,9 @@ router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
     translateLimits.set(userId, { count: 1, resetAt: now + 60_000 });
   } else {
     if (slot.count >= TRANSLATE_LIMIT_PER_MIN) {
-      res.status(429).json({ error: "Too many translation requests, slow down" });
+      res
+        .status(429)
+        .json({ error: "Too many translation requests, slow down" });
       return;
     }
     slot.count += 1;
@@ -390,7 +434,11 @@ router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
   const [card] = await db
     .select()
     .from(flashcardsTable)
-    .where(visPred ? and(eq(flashcardsTable.id, id), visPred) : eq(flashcardsTable.id, id))
+    .where(
+      visPred
+        ? and(eq(flashcardsTable.id, id), visPred)
+        : eq(flashcardsTable.id, id),
+    )
     .limit(1);
   if (!card) {
     res.status(404).json({ error: "Flashcard not found" });
@@ -398,7 +446,10 @@ router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
   }
 
   const existingTrans = (card.translations ?? {}) as Record<string, string>;
-  const existingExamples = (card.exampleTranslations ?? {}) as Record<string, string>;
+  const existingExamples = (card.exampleTranslations ?? {}) as Record<
+    string,
+    string
+  >;
 
   if (existingTrans[lang] && existingExamples[lang]) {
     res.json(card);
@@ -431,11 +482,17 @@ Use the native script of the target language. Be concise and natural.`;
         const r = await gemini.models.generateContent({
           model: "gemini-2.5-flash",
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
+          config: {
+            responseMimeType: "application/json",
+            maxOutputTokens: 8192,
+          },
         });
-        text = r.text ?? "";
+        text = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       } catch (err) {
-        req.log?.warn({ err, id, lang }, "gemini translate failed, falling back to openai");
+        req.log?.warn(
+          { err, id, lang },
+          "gemini translate failed, falling back to openai",
+        );
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           max_completion_tokens: 400,
@@ -443,7 +500,10 @@ Use the native script of the target language. Be concise and natural.`;
         });
         text = completion.choices[0]?.message?.content ?? "{}";
       }
-      const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const cleaned = text
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
       const parsed = JSON.parse(cleaned);
       const translation = String(parsed.translation ?? "").trim();
       const example = String(parsed.example ?? "").trim();
@@ -502,7 +562,9 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
       .select()
       .from(flashcardsTable)
       .where(
-        visPred ? and(eq(flashcardsTable.id, flashcardId), visPred) : eq(flashcardsTable.id, flashcardId),
+        visPred
+          ? and(eq(flashcardsTable.id, flashcardId), visPred)
+          : eq(flashcardsTable.id, flashcardId),
       )
       .limit(1);
     if (!card) {
@@ -532,6 +594,48 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
   // every user's "known" flag. They can still browse and study locally; the
   // client should store guest progress in localStorage / AsyncStorage.
   res.status(401).json({ error: "Sign in to save progress across devices." });
+});
+
+// POST /api/admin/flashcards/backfill-images
+// Fetches Pexels images for all cards that currently have no imageUrl.
+// Admin-only. Runs in background — responds immediately with count.
+router.post("/admin/flashcards/backfill-images", async (req, res) => {
+  const userId = getAuth(req)?.userId;
+  const adminIds = (process.env.ADMIN_USER_IDS ?? "")
+    .split(",")
+    .filter(Boolean);
+  if (!userId || !adminIds.includes(userId)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const cards = await db
+    .select({
+      id: flashcardsTable.id,
+      englishTranslation: flashcardsTable.englishTranslation,
+    })
+    .from(flashcardsTable)
+    .where(isNull(flashcardsTable.imageUrl));
+
+  res.json({
+    message: `Backfilling ${cards.length} cards in background…`,
+    count: cards.length,
+  });
+
+  // Run in background after responding
+  (async () => {
+    for (const card of cards) {
+      const imageUrl = await fetchPexelsImage(card.englishTranslation);
+      if (imageUrl) {
+        await db
+          .update(flashcardsTable)
+          .set({ imageUrl })
+          .where(eq(flashcardsTable.id, card.id));
+      }
+      // Small delay to respect Pexels rate limits
+      await new Promise((r) => setTimeout(r, 200));
+    }
+  })().catch(() => {});
 });
 
 export default router;
