@@ -36,6 +36,11 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Health check before any auth middleware so it never hangs
+app.get("/api/healthz", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 app.use(
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(
@@ -47,7 +52,8 @@ app.use(
 
 app.use("/api", router);
 
-const frontendDist = new URL("../../flashcards/dist/public", import.meta.url).pathname;
+const frontendDist = new URL("../../flashcards/dist/public", import.meta.url)
+  .pathname;
 app.use("/flashcards", express.static(frontendDist));
 app.get("/flashcards/*splat", (_req, res) => {
   res.sendFile("index.html", { root: frontendDist });
