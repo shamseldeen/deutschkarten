@@ -1,0 +1,10 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "artifacts/api-server-ba7r/Dockerfile"
+
+[deploy]
+startCommand = "node --enable-source-maps artifacts/api-server-ba7r/dist/index.mjs"
+healthcheckPath = "/ba7r-api/healthz"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
