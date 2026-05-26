@@ -69709,57 +69709,75 @@ Return a JSON array (no markdown, no code block) where each item has exactly the
 - exampleSentenceAr: string (Arabic translation of the example sentence, in Arabic script)${extraTransField}
 
 Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
-  const r = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: { responseMimeType: "application/json", maxOutputTokens: 8192 }
-  });
+  let r;
+  try {
+    r = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { responseMimeType: "application/json", maxOutputTokens: 8192 }
+    });
+  } catch (err) {
+    req.log.error({ err }, "Gemini generateContent failed");
+    res.status(502).json({ error: "AI generation failed", detail: err instanceof Error ? err.message : String(err) });
+    return;
+  }
   const text2 = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
   let cards = [];
   try {
     const cleaned = text2.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     cards = JSON.parse(cleaned);
   } catch {
-    res.status(500).json({ error: "Failed to parse AI response" });
+    res.status(502).json({ error: "Failed to parse AI response", rawText: text2.slice(0, 300) });
+    return;
+  }
+  if (!Array.isArray(cards) || cards.length === 0) {
+    res.status(502).json({ error: "AI returned no cards", rawText: text2.slice(0, 300) });
     return;
   }
   const extraLangKey = secondaryLang.toLowerCase();
-  const inserted = await db.insert(flashcardsTable).values(
-    cards.map((c) => {
-      const translations = {
-        en: c.englishTranslation,
-        ar: c.arabicTranslation
-      };
-      const exampleTranslations = {
-        en: c.exampleSentenceEn,
-        ar: c.exampleSentenceAr
-      };
-      if (wantsExtraLang && c.extraTranslation) {
-        translations[extraLangKey] = c.extraTranslation;
-      }
-      if (wantsExtraLang && c.extraExample) {
-        exampleTranslations[extraLangKey] = c.extraExample;
-      }
-      return {
-        word: c.word,
-        article: c.article ?? null,
-        baseWord: c.baseWord,
-        level: c.level,
-        category: c.category,
-        englishTranslation: c.englishTranslation,
-        arabicTranslation: c.arabicTranslation,
-        exampleSentenceDe: c.exampleSentenceDe,
-        exampleSentenceEn: c.exampleSentenceEn,
-        exampleSentenceAr: c.exampleSentenceAr,
-        translations,
-        exampleTranslations,
-        createdBy: userId,
-        ownerWorkspaceId: wsId,
-        imageUrl: null,
-        known: false
-      };
-    })
-  ).returning();
+  let inserted;
+  try {
+    inserted = await db.insert(flashcardsTable).values(
+      cards.map((c) => {
+        const translations = {
+          en: c.englishTranslation,
+          ar: c.arabicTranslation
+        };
+        const exampleTranslations = {
+          en: c.exampleSentenceEn,
+          ar: c.exampleSentenceAr
+        };
+        if (wantsExtraLang && c.extraTranslation) {
+          translations[extraLangKey] = c.extraTranslation;
+        }
+        if (wantsExtraLang && c.extraExample) {
+          exampleTranslations[extraLangKey] = c.extraExample;
+        }
+        return {
+          word: c.word,
+          article: c.article ?? null,
+          baseWord: c.baseWord,
+          level: c.level,
+          category: c.category,
+          englishTranslation: c.englishTranslation,
+          arabicTranslation: c.arabicTranslation,
+          exampleSentenceDe: c.exampleSentenceDe,
+          exampleSentenceEn: c.exampleSentenceEn,
+          exampleSentenceAr: c.exampleSentenceAr,
+          translations,
+          exampleTranslations,
+          createdBy: userId,
+          ownerWorkspaceId: wsId,
+          imageUrl: null,
+          known: false
+        };
+      })
+    ).returning();
+  } catch (dbErr) {
+    req.log.error({ dbErr }, "DB insert failed after AI generation");
+    res.status(502).json({ error: "Failed to save generated cards", detail: dbErr instanceof Error ? dbErr.message : String(dbErr) });
+    return;
+  }
   entry.used += 1;
   invalidateCommunityStats();
   const withImages = await Promise.all(
@@ -71039,7 +71057,7 @@ app.use((0, import_cors.default)({ credentials: true, origin: true }));
 app.use(import_express19.default.json());
 app.use(import_express19.default.urlencoded({ extended: true }));
 app.get("/api/healthz", (_req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", v: "2026-05-26-b" });
 });
 app.use(
   clerkMiddleware((req) => ({
