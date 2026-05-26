@@ -69794,7 +69794,7 @@ Use the native script of the target language. Be concise and natural.`;
             maxOutputTokens: 8192
           }
         });
-        text2 = r.text ?? "";
+        text2 = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       } catch (err) {
         req.log?.warn(
           { err, id, lang },

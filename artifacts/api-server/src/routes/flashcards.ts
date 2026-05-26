@@ -464,7 +464,7 @@ Use the native script of the target language. Be concise and natural.`;
             maxOutputTokens: 8192,
           },
         });
-        text = r.text ?? "";
+        text = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       } catch (err) {
         req.log?.warn(
           { err, id, lang },
