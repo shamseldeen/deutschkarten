@@ -288,11 +288,18 @@ Return a JSON array (no markdown, no code block) where each item has exactly the
 
 Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
 
-  const r = await gemini.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
-  });
+  let r;
+  try {
+    r = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
+    });
+  } catch (err) {
+    req.log.error({ err }, "Gemini generateContent failed");
+    res.status(502).json({ error: "AI generation failed", detail: err instanceof Error ? err.message : String(err) });
+    return;
+  }
 
   const text = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
   let cards: Array<{
