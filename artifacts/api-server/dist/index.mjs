@@ -71008,6 +71008,9 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use((0, import_cors.default)({ credentials: true, origin: true }));
 app.use(import_express19.default.json());
 app.use(import_express19.default.urlencoded({ extended: true }));
+app.get("/api/healthz", (_req, res) => {
+  res.json({ status: "ok" });
+});
 app.use(
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(
