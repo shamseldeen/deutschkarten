@@ -69275,6 +69275,23 @@ var ai2 = new GoogleGenAI2({
   }
 });
 
+// src/lib/pexels.ts
+var PEXELS_API_KEY = process.env.PEXELS_API_KEY;
+async function fetchPexelsImage(query) {
+  if (!PEXELS_API_KEY) return null;
+  try {
+    const url3 = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=square`;
+    const resp = await fetch(url3, {
+      headers: { Authorization: PEXELS_API_KEY }
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.photos?.[0]?.src?.medium ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // src/lib/languages.ts
 var SUPPORTED_LANGS = [
   { code: "en", name: "English", nativeName: "English" },
@@ -69726,7 +69743,17 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
   ).returning();
   entry.used += 1;
   invalidateCommunityStats();
-  res.status(201).json(inserted);
+  const withImages = await Promise.all(
+    inserted.map(async (card) => {
+      const imageUrl = await fetchPexelsImage(card.englishTranslation);
+      if (imageUrl) {
+        await db.update(flashcardsTable).set({ imageUrl }).where(eq(flashcardsTable.id, card.id));
+        return { ...card, imageUrl };
+      }
+      return card;
+    })
+  );
+  res.status(201).json(withImages);
 });
 var translateLimits = /* @__PURE__ */ new Map();
 var TRANSLATE_LIMIT_PER_MIN = 30;
@@ -69868,6 +69895,29 @@ router3.patch("/flashcards/:id/progress", async (req, res) => {
     return;
   }
   res.status(401).json({ error: "Sign in to save progress across devices." });
+});
+router3.post("/admin/flashcards/backfill-images", async (req, res) => {
+  const userId = getAuth(req)?.userId;
+  const adminIds = (process.env.ADMIN_USER_IDS ?? "").split(",").filter(Boolean);
+  if (!userId || !adminIds.includes(userId)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  const cards = await db.select({
+    id: flashcardsTable.id,
+    englishTranslation: flashcardsTable.englishTranslation
+  }).from(flashcardsTable).where(isNull(flashcardsTable.imageUrl));
+  res.json({ message: `Backfilling ${cards.length} cards in background\u2026`, count: cards.length });
+  (async () => {
+    for (const card of cards) {
+      const imageUrl = await fetchPexelsImage(card.englishTranslation);
+      if (imageUrl) {
+        await db.update(flashcardsTable).set({ imageUrl }).where(eq(flashcardsTable.id, card.id));
+      }
+      await new Promise((r) => setTimeout(r, 200));
+    }
+  })().catch(() => {
+  });
 });
 var flashcards_default = router3;
 
