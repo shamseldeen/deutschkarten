@@ -10,8 +10,8 @@
       },
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://YOUR-RAILWAY-API-URL.up.railway.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_YOUR_KEY_HERE"
+        "EXPO_PUBLIC_API_BASE_URL": "https://deutschkarten-production.up.railway.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YnJpZ2h0LWNoYW1vaXMtNTYuY2xlcmsuYWNjb3VudHMuZGV2JA"
       }
     },
     "production": {
@@ -20,8 +20,8 @@
       },
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://YOUR-RAILWAY-API-URL.up.railway.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_YOUR_KEY_HERE"
+        "EXPO_PUBLIC_API_BASE_URL": "https://deutschkarten-production.up.railway.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_YnJpZ2h0LWNoYW1vaXMtNTYuY2xlcmsuYWNjb3VudHMuZGV2JA"
       }
     }
   },

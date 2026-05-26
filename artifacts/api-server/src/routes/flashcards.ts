@@ -324,12 +324,19 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
       .trim();
     cards = JSON.parse(cleaned);
   } catch {
-    res.status(500).json({ error: "Failed to parse AI response" });
+    res.status(502).json({ error: "Failed to parse AI response", rawText: text.slice(0, 300) });
+    return;
+  }
+
+  if (!Array.isArray(cards) || cards.length === 0) {
+    res.status(502).json({ error: "AI returned no cards", rawText: text.slice(0, 300) });
     return;
   }
 
   const extraLangKey = secondaryLang.toLowerCase();
-  const inserted = await db
+  let inserted: (typeof flashcardsTable.$inferSelect)[];
+  try {
+    inserted = await db
     .insert(flashcardsTable)
     .values(
       cards.map((c) => {
@@ -368,6 +375,11 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
       }),
     )
     .returning();
+  } catch (dbErr) {
+    req.log.error({ dbErr }, "DB insert failed after AI generation");
+    res.status(502).json({ error: "Failed to save generated cards", detail: dbErr instanceof Error ? dbErr.message : String(dbErr) });
+    return;
+  }
 
   // Increment the daily counter only after successful generation
   entry.used += 1;
