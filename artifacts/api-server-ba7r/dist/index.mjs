@@ -69729,7 +69729,10 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
     });
   } catch (err) {
     req.log.error({ err }, "Gemini generateContent failed");
-    res.status(502).json({ error: "AI generation failed", detail: err instanceof Error ? err.message : String(err) });
+    res.status(502).json({
+      error: "AI generation failed",
+      detail: err instanceof Error ? err.message : String(err)
+    });
     return;
   }
   const text2 = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
@@ -69738,7 +69741,10 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
     const cleaned = text2.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     cards = JSON.parse(cleaned);
   } catch {
-    res.status(502).json({ error: "Failed to parse AI response", rawText: text2.slice(0, 300) });
+    res.status(502).json({
+      error: "Failed to parse AI response",
+      rawText: text2.slice(0, 300)
+    });
     return;
   }
   if (!Array.isArray(cards) || cards.length === 0) {
@@ -69786,7 +69792,10 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
     ).returning();
   } catch (dbErr) {
     req.log.error({ dbErr }, "DB insert failed after AI generation");
-    res.status(502).json({ error: "Failed to save generated cards", detail: dbErr instanceof Error ? dbErr.message : String(dbErr) });
+    res.status(502).json({
+      error: "Failed to save generated cards",
+      detail: dbErr instanceof Error ? dbErr.message : String(dbErr)
+    });
     return;
   }
   entry.used += 1;
