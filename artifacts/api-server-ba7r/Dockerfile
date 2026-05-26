@@ -21,7 +21,7 @@ COPY lib/ ./lib/
 COPY artifacts/api-server-ba7r/ ./artifacts/api-server-ba7r/
 COPY artifacts/flashcards-ba7r/ ./artifacts/flashcards-ba7r/
 RUN pnpm --filter @workspace/api-server-ba7r run build
-RUN BASE_PATH=/ba7r/ pnpm --filter @workspace/flashcards-ba7r run build
+RUN PORT=3000 BASE_PATH=/ba7r/ pnpm --filter @workspace/flashcards-ba7r run build
 
 FROM node:24-alpine AS runner
 RUN npm install -g pnpm@10
