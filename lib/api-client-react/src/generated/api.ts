@@ -21,15 +21,25 @@ import type {
 
 import type {
   ApiError,
+  AuthResponse,
   DeleteWorkspace200,
   Flashcard,
   FlashcardGenerateInput,
   FlashcardList,
   GetDailyFlashcardsParams,
   HealthStatus,
+  LeaderboardResponse,
   LevelStats,
   ListFlashcardsParams,
   ProgressUpdate,
+  QuizFinishInput,
+  QuizFinishResponse,
+  QuizHistoryRow,
+  QuizStartInput,
+  QuizStartResponse,
+  QuizStats,
+  SignInInput,
+  SignUpInput,
   Workspace,
   WorkspaceCreateInput,
   WorkspaceList,
@@ -124,6 +134,148 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
+
+export const getSignInUrl = () => {
+
+
+
+
+  return `/api/auth/sign-in`
+}
+
+/**
+ * @summary Sign in with email and password
+ */
+export const signIn = async (signInInput: SignInInput, options?: RequestInit): Promise<AuthResponse> => {
+
+  return customFetch<AuthResponse>(getSignInUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signInInput,)
+  }
+);}
+
+
+
+
+export const getSignInMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,{data: BodyType<SignInInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,{data: BodyType<SignInInput>}, TContext> => {
+
+const mutationKey = ['signIn'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signIn>>, {data: BodyType<SignInInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  signIn(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignInMutationResult = NonNullable<Awaited<ReturnType<typeof signIn>>>
+    export type SignInMutationBody = BodyType<SignInInput>
+    export type SignInMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Sign in with email and password
+ */
+export const useSignIn = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,{data: BodyType<SignInInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof signIn>>,
+        TError,
+        {data: BodyType<SignInInput>},
+        TContext
+      > => {
+      return useMutation(getSignInMutationOptions(options));
+    }
+
+export const getSignUpUrl = () => {
+
+
+
+
+  return `/api/auth/sign-up`
+}
+
+/**
+ * @summary Register a new account
+ */
+export const signUp = async (signUpInput: SignUpInput, options?: RequestInit): Promise<AuthResponse> => {
+
+  return customFetch<AuthResponse>(getSignUpUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signUpInput,)
+  }
+);}
+
+
+
+
+export const getSignUpMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,{data: BodyType<SignUpInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,{data: BodyType<SignUpInput>}, TContext> => {
+
+const mutationKey = ['signUp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signUp>>, {data: BodyType<SignUpInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  signUp(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignUpMutationResult = NonNullable<Awaited<ReturnType<typeof signUp>>>
+    export type SignUpMutationBody = BodyType<SignUpInput>
+    export type SignUpMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Register a new account
+ */
+export const useSignUp = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,{data: BodyType<SignUpInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof signUp>>,
+        TError,
+        {data: BodyType<SignUpInput>},
+        TContext
+      > => {
+      return useMutation(getSignUpMutationOptions(options));
+    }
 
 export const getListFlashcardsUrl = (params?: ListFlashcardsParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -589,6 +741,379 @@ export const useUpdateFlashcardProgress = <TError = ErrorType<ApiError>,
       > => {
       return useMutation(getUpdateFlashcardProgressMutationOptions(options));
     }
+
+export const getGetLeaderboardUrl = () => {
+
+
+
+
+  return `/api/leaderboard`
+}
+
+/**
+ * @summary Get top learners and the caller's own rank
+ */
+export const getLeaderboard = async ( options?: RequestInit): Promise<LeaderboardResponse> => {
+
+  return customFetch<LeaderboardResponse>(getGetLeaderboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeaderboardQueryKey = () => {
+    return [
+    `/api/leaderboard`
+    ] as const;
+    }
+
+
+export const getGetLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeaderboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeaderboard>>> = ({ signal }) => getLeaderboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getLeaderboard>>>
+export type GetLeaderboardQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get top learners and the caller's own rank
+ */
+
+export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboard>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeaderboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getStartQuizUrl = () => {
+
+
+
+
+  return `/api/quiz/start`
+}
+
+/**
+ * @summary Start a quiz session and get questions
+ */
+export const startQuiz = async (quizStartInput: QuizStartInput, options?: RequestInit): Promise<QuizStartResponse> => {
+
+  return customFetch<QuizStartResponse>(getStartQuizUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      quizStartInput,)
+  }
+);}
+
+
+
+
+export const getStartQuizMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startQuiz>>, TError,{data: BodyType<QuizStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startQuiz>>, TError,{data: BodyType<QuizStartInput>}, TContext> => {
+
+const mutationKey = ['startQuiz'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startQuiz>>, {data: BodyType<QuizStartInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  startQuiz(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartQuizMutationResult = NonNullable<Awaited<ReturnType<typeof startQuiz>>>
+    export type StartQuizMutationBody = BodyType<QuizStartInput>
+    export type StartQuizMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Start a quiz session and get questions
+ */
+export const useStartQuiz = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startQuiz>>, TError,{data: BodyType<QuizStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startQuiz>>,
+        TError,
+        {data: BodyType<QuizStartInput>},
+        TContext
+      > => {
+      return useMutation(getStartQuizMutationOptions(options));
+    }
+
+export const getFinishQuizUrl = () => {
+
+
+
+
+  return `/api/quiz/finish`
+}
+
+/**
+ * @summary Submit quiz answers and save results
+ */
+export const finishQuiz = async (quizFinishInput: QuizFinishInput, options?: RequestInit): Promise<QuizFinishResponse> => {
+
+  return customFetch<QuizFinishResponse>(getFinishQuizUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      quizFinishInput,)
+  }
+);}
+
+
+
+
+export const getFinishQuizMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finishQuiz>>, TError,{data: BodyType<QuizFinishInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof finishQuiz>>, TError,{data: BodyType<QuizFinishInput>}, TContext> => {
+
+const mutationKey = ['finishQuiz'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof finishQuiz>>, {data: BodyType<QuizFinishInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  finishQuiz(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FinishQuizMutationResult = NonNullable<Awaited<ReturnType<typeof finishQuiz>>>
+    export type FinishQuizMutationBody = BodyType<QuizFinishInput>
+    export type FinishQuizMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Submit quiz answers and save results
+ */
+export const useFinishQuiz = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finishQuiz>>, TError,{data: BodyType<QuizFinishInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof finishQuiz>>,
+        TError,
+        {data: BodyType<QuizFinishInput>},
+        TContext
+      > => {
+      return useMutation(getFinishQuizMutationOptions(options));
+    }
+
+export const getGetQuizHistoryUrl = () => {
+
+
+
+
+  return `/api/me/quiz-history`
+}
+
+/**
+ * @summary Get the signed-in user's quiz history
+ */
+export const getQuizHistory = async ( options?: RequestInit): Promise<QuizHistoryRow[]> => {
+
+  return customFetch<QuizHistoryRow[]>(getGetQuizHistoryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetQuizHistoryQueryKey = () => {
+    return [
+    `/api/me/quiz-history`
+    ] as const;
+    }
+
+
+export const getGetQuizHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getQuizHistory>>, TError = ErrorType<ApiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuizHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetQuizHistoryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getQuizHistory>>> = ({ signal }) => getQuizHistory({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getQuizHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetQuizHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getQuizHistory>>>
+export type GetQuizHistoryQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get the signed-in user's quiz history
+ */
+
+export function useGetQuizHistory<TData = Awaited<ReturnType<typeof getQuizHistory>>, TError = ErrorType<ApiError>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuizHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetQuizHistoryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetQuizStatsUrl = () => {
+
+
+
+
+  return `/api/me/quiz-stats`
+}
+
+/**
+ * @summary Get aggregate quiz statistics for the signed-in user
+ */
+export const getQuizStats = async ( options?: RequestInit): Promise<QuizStats> => {
+
+  return customFetch<QuizStats>(getGetQuizStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetQuizStatsQueryKey = () => {
+    return [
+    `/api/me/quiz-stats`
+    ] as const;
+    }
+
+
+export const getGetQuizStatsQueryOptions = <TData = Awaited<ReturnType<typeof getQuizStats>>, TError = ErrorType<ApiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuizStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetQuizStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getQuizStats>>> = ({ signal }) => getQuizStats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getQuizStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetQuizStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getQuizStats>>>
+export type GetQuizStatsQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get aggregate quiz statistics for the signed-in user
+ */
+
+export function useGetQuizStats<TData = Awaited<ReturnType<typeof getQuizStats>>, TError = ErrorType<ApiError>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuizStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetQuizStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListWorkspacesUrl = () => {
 
