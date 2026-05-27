@@ -28,7 +28,7 @@ import {
   upsertProgress,
   workspaceVisibility,
 } from "../lib/workspace";
-import { correctLevel } from "@workspace/content";
+import { lookupWord } from "@workspace/content";
 
 const router = Router();
 
@@ -311,7 +311,8 @@ Do NOT include words that clearly belong to a lower level.
 Return a JSON array (no markdown, no code block) where each item has exactly these fields:
 - word: string (German word WITH article for nouns, e.g. "der Hund"; bare word for verbs/adjectives)
 - article: string or null (der/die/das for nouns, null for verbs/adjectives)
-- baseWord: string (the word without article)
+- baseWord: string (the word without article, lowercase)
+- pos: "n" | "v" | "adj" | "adv" (part of speech: noun / verb / adjective / adverb)
 - level: "${level}"
 - category: "${category}"
 - englishTranslation: string
@@ -343,6 +344,7 @@ Return ONLY a valid JSON array, no explanation.`;
     word: string;
     article: string | null;
     baseWord: string;
+    pos?: string;
     level: string;
     category: string;
     englishTranslation: string;
@@ -437,11 +439,24 @@ Return ONLY a valid JSON array, no explanation.`;
           if (wantsExtraLang && c.extraExample) {
             exampleTranslations[extraLangKey] = c.extraExample;
           }
+          const dict = lookupWord(c.baseWord);
+          if (dict.level && dict.level !== c.level) {
+            req.log.info(
+              { word: c.baseWord, aiLevel: c.level, dictLevel: dict.level },
+              "CEFR level corrected by dictionary",
+            );
+          }
+          if (dict.pos && c.pos && dict.pos !== c.pos) {
+            req.log.info(
+              { word: c.baseWord, aiPos: c.pos, dictPos: dict.pos },
+              "POS mismatch between AI and dictionary",
+            );
+          }
           return {
             word: c.word,
             article: c.article ?? null,
             baseWord: c.baseWord,
-            level: correctLevel(c.baseWord, c.level),
+            level: dict.level ?? c.level,
             category: c.category,
             englishTranslation: c.englishTranslation,
             arabicTranslation: c.arabicTranslation,
