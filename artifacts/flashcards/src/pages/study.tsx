@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@clerk/react";
 import { Layout } from "@/components/layout";
 import {
@@ -13,7 +13,9 @@ import { Flashcard } from "@/components/flashcard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GuestProgressBanner } from "@/components/GuestProgressBanner";
+import { GuestMilestoneToast } from "@/components/GuestMilestoneToast";
 import { recordGuestCard } from "@/lib/guestProgress";
+import { incrementSessionCount, getSessionCardCount, checkMilestone, type Milestone } from "@/lib/guestMilestones";
 import { PartyPopper, ArrowRight, ArrowLeft, RefreshCw, Zap } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,8 +39,11 @@ export default function Study() {
   const [relearningCards, setRelearningCards] = useState<typeof allCards>([]);
   const [isRelearning, setIsRelearning] = useState(false);
   const [relearningIndex, setRelearningIndex] = useState(0);
+  const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(null);
 
   const cards = isRelearning ? relearningCards : allCards;
+
+  const dismissMilestone = useCallback(() => setActiveMilestone(null), []);
 
   const handleProgress = (id: number, known: boolean) => {
     const wrongCount = wrongIds.filter((w) => w === id).length;
@@ -57,6 +62,9 @@ export default function Study() {
       });
     } else {
       recordGuestCard(id, levelParam, known, xp);
+      const newCount = incrementSessionCount();
+      const hit = checkMilestone(newCount);
+      if (hit) setActiveMilestone(hit);
     }
 
     if (known) {
@@ -245,6 +253,14 @@ export default function Study() {
           />
         )}
       </div>
+
+      {!isSignedIn && activeMilestone && (
+        <GuestMilestoneToast
+          milestone={activeMilestone}
+          totalCards={getSessionCardCount()}
+          onDismiss={dismissMilestone}
+        />
+      )}
     </Layout>
   );
 }

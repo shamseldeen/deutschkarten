@@ -290,3 +290,8 @@
     inset: -1px;
   }
 }
+
+@keyframes shrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
