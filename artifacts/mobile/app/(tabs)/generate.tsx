@@ -91,6 +91,7 @@ export default function GenerateScreen() {
   const [selectedCategory, setSelectedCategory] = useState("general");
   const [selectedCount, setSelectedCount] = useState(10);
   const [success, setSuccess] = useState(false);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [limitStatus, setLimitStatus] = useState<LimitStatus | null>(null);
   const [blockedResetsAt, setBlockedResetsAt] = useState<string | null>(null);
   const countdown = useCountdown(blockedResetsAt);
@@ -130,6 +131,11 @@ export default function GenerateScreen() {
           if (status === 429 || body?.resetsAt) {
             setBlockedResetsAt(body.resetsAt ?? null);
             setLimitStatus((prev) => (prev ? { ...prev, remaining: 0 } : null));
+            setErrorDetail(null);
+          } else {
+            const msg =
+              body?.detail ?? body?.error ?? `HTTP ${status ?? "?"} error`;
+            setErrorDetail(msg);
           }
           fetchStatus();
         },
@@ -371,7 +377,8 @@ export default function GenerateScreen() {
               ]}
             >
               <Text style={styles.errorText}>
-                Failed to generate. Please try again.
+                Generation failed:{" "}
+                {errorDetail ?? "Unknown error — please try again."}
               </Text>
             </View>
           )}

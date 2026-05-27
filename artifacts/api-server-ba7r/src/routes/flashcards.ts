@@ -558,7 +558,10 @@ Use the native script of the target language. Be concise and natural.`;
     res.json(updated);
   } catch (err) {
     req.log?.error({ err, id, lang }, "translation failed");
-    res.status(502).json({ error: "Translation failed" });
+    res.status(502).json({
+      error: "Translation failed",
+      detail: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
