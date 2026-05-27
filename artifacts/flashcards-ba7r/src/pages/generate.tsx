@@ -128,8 +128,9 @@ export default function Generate() {
           setLocation("/browse");
         },
         onError: (error: any) => {
-          const body = error?.response?.data ?? error?.body ?? {};
-          if (error?.response?.status === 429 || body?.resetsAt) {
+          const status = error?.status ?? error?.response?.status;
+          const body = error?.data ?? error?.response?.data ?? {};
+          if (status === 429 || body?.resetsAt) {
             setBlockedResetsAt(body.resetsAt ?? null);
             setLimitStatus((prev) =>
               prev ? { ...prev, remaining: 0, used: prev.limit } : null,
@@ -140,10 +141,19 @@ export default function Generate() {
                 "You've used all free AI generations for today. Keep learning in the meantime!",
               variant: "destructive",
             });
+          } else if (status === 502) {
+            toast({
+              title: "AI Generation Failed",
+              description:
+                body?.detail ??
+                body?.error ??
+                "The AI service is unavailable. Please try again in a moment.",
+              variant: "destructive",
+            });
           } else {
             toast({
               title: "Generation Failed",
-              description: "Please try again.",
+              description: body?.error ?? "Please try again.",
               variant: "destructive",
             });
           }

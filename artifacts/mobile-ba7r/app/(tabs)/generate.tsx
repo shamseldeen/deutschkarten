@@ -125,9 +125,10 @@ export default function GenerateScreen() {
           fetchStatus();
         },
         onError: (err: any) => {
-          const body = err?.body ?? err?.response?.data ?? {};
-          if (body?.resetsAt) {
-            setBlockedResetsAt(body.resetsAt);
+          const status = err?.status ?? err?.response?.status;
+          const body = err?.data ?? err?.body ?? err?.response?.data ?? {};
+          if (status === 429 || body?.resetsAt) {
+            setBlockedResetsAt(body.resetsAt ?? null);
             setLimitStatus((prev) => (prev ? { ...prev, remaining: 0 } : null));
           }
           fetchStatus();
