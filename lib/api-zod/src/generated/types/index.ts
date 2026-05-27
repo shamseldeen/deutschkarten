@@ -7,6 +7,7 @@
  */
 
 export * from './apiError';
+export * from './authResponse';
 export * from './deleteWorkspace200';
 export * from './flashcard';
 export * from './flashcardGenerateInput';
@@ -16,10 +17,25 @@ export * from './flashcardList';
 export * from './getDailyFlashcardsLevel';
 export * from './getDailyFlashcardsParams';
 export * from './healthStatus';
+export * from './leaderboardResponse';
+export * from './leaderboardRow';
 export * from './levelStats';
 export * from './listFlashcardsLevel';
 export * from './listFlashcardsParams';
 export * from './progressUpdate';
+export * from './quizAnswerInput';
+export * from './quizFinishInput';
+export * from './quizFinishResponse';
+export * from './quizHistoryRow';
+export * from './quizQuestion';
+export * from './quizQuestionQuestionType';
+export * from './quizStartInput';
+export * from './quizStartInputLevel';
+export * from './quizStartInputMode';
+export * from './quizStartResponse';
+export * from './quizStats';
+export * from './signInInput';
+export * from './signUpInput';
 export * from './workspace';
 export * from './workspaceCreateInput';
 export * from './workspaceCreateInputSecondaryLanguage';

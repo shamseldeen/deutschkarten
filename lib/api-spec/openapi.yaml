@@ -9,10 +9,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication (Clerk-backed)
   - name: flashcards
     description: German flashcard operations
   - name: progress
     description: User study progress
+  - name: quiz
+    description: Quiz sessions and results
+  - name: leaderboard
+    description: Community leaderboard
   - name: workspaces
     description: Per-user dashboards (German→X language pairs)
 paths:
@@ -28,6 +34,74 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/sign-in:
+    post:
+      operationId: signIn
+      tags: [auth]
+      summary: Sign in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Wrong credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/sign-up:
+    post:
+      operationId: signUp
+      tags: [auth]
+      summary: Register a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input or email taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /flashcards:
     get:
@@ -180,6 +254,109 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [leaderboard]
+      summary: Get top learners and the caller's own rank
+      responses:
+        "200":
+          description: Leaderboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardResponse"
+
+  /quiz/start:
+    post:
+      operationId: startQuiz
+      tags: [quiz]
+      summary: Start a quiz session and get questions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizStartInput"
+      responses:
+        "200":
+          description: Quiz session with questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizStartResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /quiz/finish:
+    post:
+      operationId: finishQuiz
+      tags: [quiz]
+      summary: Submit quiz answers and save results
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizFinishInput"
+      responses:
+        "200":
+          description: Quiz saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizFinishResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /me/quiz-history:
+    get:
+      operationId: getQuizHistory
+      tags: [quiz]
+      summary: Get the signed-in user's quiz history
+      responses:
+        "200":
+          description: List of past quiz sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuizHistoryRow"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /me/quiz-stats:
+    get:
+      operationId: getQuizStats
+      tags: [quiz]
+      summary: Get aggregate quiz statistics for the signed-in user
+      responses:
+        "200":
+          description: Quiz aggregate stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizStats"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /me/workspaces:
     get:
       operationId: listWorkspaces
@@ -299,6 +476,47 @@ components:
       required:
         - status
 
+    SignInInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required:
+        - email
+        - password
+
+    SignUpInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        token:
+          type: string
+      required:
+        - sessionId
+        - token
+
     Flashcard:
       type: object
       properties:
@@ -411,6 +629,208 @@ components:
           type: boolean
       required:
         - known
+
+    LeaderboardRow:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: string
+        displayName:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        knownCards:
+          type: integer
+        correctAnswers:
+          type: integer
+        longestStreak:
+          type: integer
+        xp:
+          type: integer
+      required:
+        - rank
+        - userId
+        - displayName
+        - imageUrl
+        - knownCards
+        - correctAnswers
+        - longestStreak
+        - xp
+
+    LeaderboardResponse:
+      type: object
+      properties:
+        top:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardRow"
+        me:
+          oneOf:
+            - $ref: "#/components/schemas/LeaderboardRow"
+            - type: "null"
+      required:
+        - top
+        - me
+
+    QuizStartInput:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [de-to-en, en-to-de, article, typing]
+          description: Omit for random mode
+        level:
+          type: string
+          enum: [A1, A2, B1, B2, C1, mixed]
+          description: Omit for all levels; mixed = placement test
+        count:
+          type: integer
+          default: 10
+          description: Number of questions (max 25)
+        lang:
+          type: string
+          default: ar
+          description: Secondary language code for translations
+      required: []
+
+    QuizQuestion:
+      type: object
+      properties:
+        flashcardId:
+          type: integer
+        questionType:
+          type: string
+          enum: [de-to-en, en-to-de, article, typing]
+        prompt:
+          type: string
+        hint:
+          type: ["string", "null"]
+        options:
+          type: array
+          items:
+            type: string
+          description: Multiple-choice options; absent for typing mode
+        correctAnswer:
+          type: string
+        level:
+          type: string
+      required:
+        - flashcardId
+        - questionType
+        - prompt
+        - correctAnswer
+        - level
+
+    QuizStartResponse:
+      type: object
+      properties:
+        sessionId:
+          type: ["string", "null"]
+          description: Null for anonymous users
+        mode:
+          type: string
+        level:
+          type: ["string", "null"]
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizQuestion"
+      required:
+        - sessionId
+        - mode
+        - level
+        - questions
+
+    QuizAnswerInput:
+      type: object
+      properties:
+        flashcardId:
+          type: integer
+        questionType:
+          type: string
+        userAnswer:
+          type: string
+        correct:
+          type: boolean
+        prompt:
+          type: string
+        level:
+          type: string
+      required:
+        - flashcardId
+        - questionType
+        - userAnswer
+        - correct
+        - prompt
+        - level
+
+    QuizFinishInput:
+      type: object
+      properties:
+        sessionId:
+          type: ["string", "null"]
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizAnswerInput"
+      required:
+        - sessionId
+        - answers
+
+    QuizFinishResponse:
+      type: object
+      properties:
+        saved:
+          type: boolean
+        total:
+          type: integer
+        correct:
+          type: integer
+      required:
+        - saved
+        - total
+
+    QuizHistoryRow:
+      type: object
+      properties:
+        id:
+          type: string
+        mode:
+          type: string
+        level:
+          type: ["string", "null"]
+        totalQuestions:
+          type: integer
+        correctAnswers:
+          type: integer
+        finishedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - mode
+        - totalQuestions
+        - correctAnswers
+
+    QuizStats:
+      type: object
+      properties:
+        totalSessions:
+          type: integer
+        totalCorrect:
+          type: integer
+        totalQuestions:
+          type: integer
+        accuracy:
+          type: number
+          description: Percentage 0-100
+      required:
+        - totalSessions
+        - totalCorrect
+        - totalQuestions
+        - accuracy
 
     Workspace:
       type: object

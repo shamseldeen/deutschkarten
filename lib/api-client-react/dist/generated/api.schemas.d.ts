@@ -8,6 +8,22 @@
 export interface HealthStatus {
     status: string;
 }
+export interface SignInInput {
+    email: string;
+    /** @minLength 8 */
+    password: string;
+}
+export interface SignUpInput {
+    email: string;
+    /** @minLength 8 */
+    password: string;
+    firstName?: string;
+    lastName?: string;
+}
+export interface AuthResponse {
+    sessionId: string;
+    token: string;
+}
 export type FlashcardLevel = typeof FlashcardLevel[keyof typeof FlashcardLevel];
 export declare const FlashcardLevel: {
     readonly A1: "A1";
@@ -67,6 +83,116 @@ export interface LevelStats {
 }
 export interface ProgressUpdate {
     known: boolean;
+}
+export interface LeaderboardRow {
+    rank: number;
+    userId: string;
+    displayName: string;
+    /** @nullable */
+    imageUrl: string | null;
+    knownCards: number;
+    correctAnswers: number;
+    longestStreak: number;
+    xp: number;
+}
+export interface LeaderboardResponse {
+    top: LeaderboardRow[];
+    me: LeaderboardRow | null;
+}
+/**
+ * Omit for random mode
+ */
+export type QuizStartInputMode = typeof QuizStartInputMode[keyof typeof QuizStartInputMode];
+export declare const QuizStartInputMode: {
+    readonly 'de-to-en': "de-to-en";
+    readonly 'en-to-de': "en-to-de";
+    readonly article: "article";
+    readonly typing: "typing";
+};
+/**
+ * Omit for all levels; mixed = placement test
+ */
+export type QuizStartInputLevel = typeof QuizStartInputLevel[keyof typeof QuizStartInputLevel];
+export declare const QuizStartInputLevel: {
+    readonly A1: "A1";
+    readonly A2: "A2";
+    readonly B1: "B1";
+    readonly B2: "B2";
+    readonly C1: "C1";
+    readonly mixed: "mixed";
+};
+export interface QuizStartInput {
+    /** Omit for random mode */
+    mode?: QuizStartInputMode;
+    /** Omit for all levels; mixed = placement test */
+    level?: QuizStartInputLevel;
+    /** Number of questions (max 25) */
+    count?: number;
+    /** Secondary language code for translations */
+    lang?: string;
+}
+export type QuizQuestionQuestionType = typeof QuizQuestionQuestionType[keyof typeof QuizQuestionQuestionType];
+export declare const QuizQuestionQuestionType: {
+    readonly 'de-to-en': "de-to-en";
+    readonly 'en-to-de': "en-to-de";
+    readonly article: "article";
+    readonly typing: "typing";
+};
+export interface QuizQuestion {
+    flashcardId: number;
+    questionType: QuizQuestionQuestionType;
+    prompt: string;
+    /** @nullable */
+    hint?: string | null;
+    /** Multiple-choice options; absent for typing mode */
+    options?: string[];
+    correctAnswer: string;
+    level: string;
+}
+export interface QuizStartResponse {
+    /**
+       * Null for anonymous users
+       * @nullable
+       */
+    sessionId: string | null;
+    mode: string;
+    /** @nullable */
+    level: string | null;
+    questions: QuizQuestion[];
+}
+export interface QuizAnswerInput {
+    flashcardId: number;
+    questionType: string;
+    userAnswer: string;
+    correct: boolean;
+    prompt: string;
+    level: string;
+}
+export interface QuizFinishInput {
+    /** @nullable */
+    sessionId: string | null;
+    answers: QuizAnswerInput[];
+}
+export interface QuizFinishResponse {
+    saved: boolean;
+    total: number;
+    correct?: number;
+}
+export interface QuizHistoryRow {
+    id: string;
+    mode: string;
+    /** @nullable */
+    level?: string | null;
+    totalQuestions: number;
+    correctAnswers: number;
+    finishedAt?: string;
+}
+export interface QuizStats {
+    totalSessions: number;
+    totalCorrect: number;
+    totalQuestions: number;
+    /** Percentage 0-100 */
+    accuracy: number;
 }
 export interface Workspace {
     /** The string 'default' for the virtual default workspace, otherwise a UUID */

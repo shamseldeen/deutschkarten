@@ -38,6 +38,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "map", selected: "map.fill" }} />
         <Label>Roadmap</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="leaderboard">
+        <Icon sf={{ default: "trophy", selected: "trophy.fill" }} />
+        <Label>Ranks</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="generate">
         <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
         <Label>Generate</Label>
@@ -154,6 +158,18 @@ function ClassicTabLayout() {
               <SymbolView name="map" tintColor={color} size={24} />
             ) : (
               <Feather name="map" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: "Ranks",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="trophy" tintColor={color} size={24} />
+            ) : (
+              <Feather name="award" size={22} color={color} />
             ),
         }}
       />

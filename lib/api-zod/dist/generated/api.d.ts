@@ -17,6 +17,50 @@ export declare const HealthCheckResponse: zod.ZodObject<{
     status: string;
 }>;
 /**
+ * @summary Sign in with email and password
+ */
+export declare const signInBodyPasswordMin = 8;
+export declare const SignInBody: zod.ZodObject<{
+    email: zod.ZodString;
+    password: zod.ZodString;
+}, "strip", zod.ZodTypeAny, {
+    email: string;
+    password: string;
+}, {
+    email: string;
+    password: string;
+}>;
+export declare const SignInResponse: zod.ZodObject<{
+    sessionId: zod.ZodString;
+    token: zod.ZodString;
+}, "strip", zod.ZodTypeAny, {
+    sessionId: string;
+    token: string;
+}, {
+    sessionId: string;
+    token: string;
+}>;
+/**
+ * @summary Register a new account
+ */
+export declare const signUpBodyPasswordMin = 8;
+export declare const SignUpBody: zod.ZodObject<{
+    email: zod.ZodString;
+    password: zod.ZodString;
+    firstName: zod.ZodOptional<zod.ZodString>;
+    lastName: zod.ZodOptional<zod.ZodString>;
+}, "strip", zod.ZodTypeAny, {
+    email: string;
+    password: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+}, {
+    email: string;
+    password: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+}>;
+/**
  * @summary List flashcards with optional level filter
  */
 export declare const listFlashcardsQueryLimitDefault = 20;
@@ -406,6 +450,313 @@ export declare const UpdateFlashcardProgressResponse: zod.ZodObject<{
     imageUrl: string | null;
     known: boolean;
     createdAt: Date;
+}>;
+/**
+ * @summary Get top learners and the caller's own rank
+ */
+export declare const GetLeaderboardResponse: zod.ZodObject<{
+    top: zod.ZodArray<zod.ZodObject<{
+        rank: zod.ZodNumber;
+        userId: zod.ZodString;
+        displayName: zod.ZodString;
+        imageUrl: zod.ZodNullable<zod.ZodString>;
+        knownCards: zod.ZodNumber;
+        correctAnswers: zod.ZodNumber;
+        longestStreak: zod.ZodNumber;
+        xp: zod.ZodNumber;
+    }, "strip", zod.ZodTypeAny, {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    }, {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    }>, "many">;
+    me: zod.ZodUnion<[zod.ZodObject<{
+        rank: zod.ZodNumber;
+        userId: zod.ZodString;
+        displayName: zod.ZodString;
+        imageUrl: zod.ZodNullable<zod.ZodString>;
+        knownCards: zod.ZodNumber;
+        correctAnswers: zod.ZodNumber;
+        longestStreak: zod.ZodNumber;
+        xp: zod.ZodNumber;
+    }, "strip", zod.ZodTypeAny, {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    }, {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    }>, zod.ZodNull]>;
+}, "strip", zod.ZodTypeAny, {
+    top: {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    }[];
+    me: {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    } | null;
+}, {
+    top: {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    }[];
+    me: {
+        imageUrl: string | null;
+        rank: number;
+        userId: string;
+        displayName: string;
+        knownCards: number;
+        correctAnswers: number;
+        longestStreak: number;
+        xp: number;
+    } | null;
+}>;
+/**
+ * @summary Start a quiz session and get questions
+ */
+export declare const startQuizBodyCountDefault = 10;
+export declare const startQuizBodyLangDefault = "ar";
+export declare const StartQuizBody: zod.ZodObject<{
+    mode: zod.ZodOptional<zod.ZodEnum<["de-to-en", "en-to-de", "article", "typing"]>>;
+    level: zod.ZodOptional<zod.ZodEnum<["A1", "A2", "B1", "B2", "C1", "mixed"]>>;
+    count: zod.ZodDefault<zod.ZodNumber>;
+    lang: zod.ZodDefault<zod.ZodString>;
+}, "strip", zod.ZodTypeAny, {
+    count: number;
+    lang: string;
+    level?: "A1" | "A2" | "B1" | "B2" | "C1" | "mixed" | undefined;
+    mode?: "article" | "de-to-en" | "en-to-de" | "typing" | undefined;
+}, {
+    level?: "A1" | "A2" | "B1" | "B2" | "C1" | "mixed" | undefined;
+    count?: number | undefined;
+    mode?: "article" | "de-to-en" | "en-to-de" | "typing" | undefined;
+    lang?: string | undefined;
+}>;
+export declare const StartQuizResponse: zod.ZodObject<{
+    sessionId: zod.ZodNullable<zod.ZodString>;
+    mode: zod.ZodString;
+    level: zod.ZodNullable<zod.ZodString>;
+    questions: zod.ZodArray<zod.ZodObject<{
+        flashcardId: zod.ZodNumber;
+        questionType: zod.ZodEnum<["de-to-en", "en-to-de", "article", "typing"]>;
+        prompt: zod.ZodString;
+        hint: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+        options: zod.ZodOptional<zod.ZodArray<zod.ZodString, "many">>;
+        correctAnswer: zod.ZodString;
+        level: zod.ZodString;
+    }, "strip", zod.ZodTypeAny, {
+        level: string;
+        flashcardId: number;
+        questionType: "article" | "de-to-en" | "en-to-de" | "typing";
+        prompt: string;
+        correctAnswer: string;
+        options?: string[] | undefined;
+        hint?: string | null | undefined;
+    }, {
+        level: string;
+        flashcardId: number;
+        questionType: "article" | "de-to-en" | "en-to-de" | "typing";
+        prompt: string;
+        correctAnswer: string;
+        options?: string[] | undefined;
+        hint?: string | null | undefined;
+    }>, "many">;
+}, "strip", zod.ZodTypeAny, {
+    sessionId: string | null;
+    level: string | null;
+    mode: string;
+    questions: {
+        level: string;
+        flashcardId: number;
+        questionType: "article" | "de-to-en" | "en-to-de" | "typing";
+        prompt: string;
+        correctAnswer: string;
+        options?: string[] | undefined;
+        hint?: string | null | undefined;
+    }[];
+}, {
+    sessionId: string | null;
+    level: string | null;
+    mode: string;
+    questions: {
+        level: string;
+        flashcardId: number;
+        questionType: "article" | "de-to-en" | "en-to-de" | "typing";
+        prompt: string;
+        correctAnswer: string;
+        options?: string[] | undefined;
+        hint?: string | null | undefined;
+    }[];
+}>;
+/**
+ * @summary Submit quiz answers and save results
+ */
+export declare const FinishQuizBody: zod.ZodObject<{
+    sessionId: zod.ZodNullable<zod.ZodString>;
+    answers: zod.ZodArray<zod.ZodObject<{
+        flashcardId: zod.ZodNumber;
+        questionType: zod.ZodString;
+        userAnswer: zod.ZodString;
+        correct: zod.ZodBoolean;
+        prompt: zod.ZodString;
+        level: zod.ZodString;
+    }, "strip", zod.ZodTypeAny, {
+        level: string;
+        flashcardId: number;
+        questionType: string;
+        prompt: string;
+        userAnswer: string;
+        correct: boolean;
+    }, {
+        level: string;
+        flashcardId: number;
+        questionType: string;
+        prompt: string;
+        userAnswer: string;
+        correct: boolean;
+    }>, "many">;
+}, "strip", zod.ZodTypeAny, {
+    sessionId: string | null;
+    answers: {
+        level: string;
+        flashcardId: number;
+        questionType: string;
+        prompt: string;
+        userAnswer: string;
+        correct: boolean;
+    }[];
+}, {
+    sessionId: string | null;
+    answers: {
+        level: string;
+        flashcardId: number;
+        questionType: string;
+        prompt: string;
+        userAnswer: string;
+        correct: boolean;
+    }[];
+}>;
+export declare const FinishQuizResponse: zod.ZodObject<{
+    saved: zod.ZodBoolean;
+    total: zod.ZodNumber;
+    correct: zod.ZodOptional<zod.ZodNumber>;
+}, "strip", zod.ZodTypeAny, {
+    total: number;
+    saved: boolean;
+    correct?: number | undefined;
+}, {
+    total: number;
+    saved: boolean;
+    correct?: number | undefined;
+}>;
+/**
+ * @summary Get the signed-in user's quiz history
+ */
+export declare const GetQuizHistoryResponseItem: zod.ZodObject<{
+    id: zod.ZodString;
+    mode: zod.ZodString;
+    level: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+    totalQuestions: zod.ZodNumber;
+    correctAnswers: zod.ZodNumber;
+    finishedAt: zod.ZodOptional<zod.ZodDate>;
+}, "strip", zod.ZodTypeAny, {
+    id: string;
+    correctAnswers: number;
+    mode: string;
+    totalQuestions: number;
+    level?: string | null | undefined;
+    finishedAt?: Date | undefined;
+}, {
+    id: string;
+    correctAnswers: number;
+    mode: string;
+    totalQuestions: number;
+    level?: string | null | undefined;
+    finishedAt?: Date | undefined;
+}>;
+export declare const GetQuizHistoryResponse: zod.ZodArray<zod.ZodObject<{
+    id: zod.ZodString;
+    mode: zod.ZodString;
+    level: zod.ZodOptional<zod.ZodNullable<zod.ZodString>>;
+    totalQuestions: zod.ZodNumber;
+    correctAnswers: zod.ZodNumber;
+    finishedAt: zod.ZodOptional<zod.ZodDate>;
+}, "strip", zod.ZodTypeAny, {
+    id: string;
+    correctAnswers: number;
+    mode: string;
+    totalQuestions: number;
+    level?: string | null | undefined;
+    finishedAt?: Date | undefined;
+}, {
+    id: string;
+    correctAnswers: number;
+    mode: string;
+    totalQuestions: number;
+    level?: string | null | undefined;
+    finishedAt?: Date | undefined;
+}>, "many">;
+/**
+ * @summary Get aggregate quiz statistics for the signed-in user
+ */
+export declare const GetQuizStatsResponse: zod.ZodObject<{
+    totalSessions: zod.ZodNumber;
+    totalCorrect: zod.ZodNumber;
+    totalQuestions: zod.ZodNumber;
+    accuracy: zod.ZodNumber;
+}, "strip", zod.ZodTypeAny, {
+    totalQuestions: number;
+    totalSessions: number;
+    totalCorrect: number;
+    accuracy: number;
+}, {
+    totalQuestions: number;
+    totalSessions: number;
+    totalCorrect: number;
+    accuracy: number;
 }>;
 /**
  * @summary List the caller's workspaces (default + user-created)
