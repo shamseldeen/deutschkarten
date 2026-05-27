@@ -17,6 +17,39 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Sign in with email and password
+ */
+export const signInBodyPasswordMin = 8;
+
+
+
+export const SignInBody = zod.object({
+  "email": zod.string().email(),
+  "password": zod.string().min(signInBodyPasswordMin)
+})
+
+export const SignInResponse = zod.object({
+  "sessionId": zod.string(),
+  "token": zod.string()
+})
+
+
+/**
+ * @summary Register a new account
+ */
+export const signUpBodyPasswordMin = 8;
+
+
+
+export const SignUpBody = zod.object({
+  "email": zod.string().email(),
+  "password": zod.string().min(signUpBodyPasswordMin),
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional()
+})
+
+
+/**
  * @summary List flashcards with optional level filter
  */
 export const listFlashcardsQueryLimitDefault = 20;
@@ -154,6 +187,109 @@ export const UpdateFlashcardProgressResponse = zod.object({
   "imageUrl": zod.string().nullable(),
   "known": zod.boolean(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get top learners and the caller's own rank
+ */
+export const GetLeaderboardResponse = zod.object({
+  "top": zod.array(zod.object({
+  "rank": zod.number(),
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "imageUrl": zod.string().nullable(),
+  "knownCards": zod.number(),
+  "correctAnswers": zod.number(),
+  "longestStreak": zod.number(),
+  "xp": zod.number()
+})),
+  "me": zod.union([zod.object({
+  "rank": zod.number(),
+  "userId": zod.string(),
+  "displayName": zod.string(),
+  "imageUrl": zod.string().nullable(),
+  "knownCards": zod.number(),
+  "correctAnswers": zod.number(),
+  "longestStreak": zod.number(),
+  "xp": zod.number()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Start a quiz session and get questions
+ */
+export const startQuizBodyCountDefault = 10;
+export const startQuizBodyLangDefault = `ar`;
+
+export const StartQuizBody = zod.object({
+  "mode": zod.enum(['de-to-en', 'en-to-de', 'article', 'typing']).optional().describe('Omit for random mode'),
+  "level": zod.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'mixed']).optional().describe('Omit for all levels; mixed = placement test'),
+  "count": zod.number().default(startQuizBodyCountDefault).describe('Number of questions (max 25)'),
+  "lang": zod.string().default(startQuizBodyLangDefault).describe('Secondary language code for translations')
+})
+
+export const StartQuizResponse = zod.object({
+  "sessionId": zod.string().nullable().describe('Null for anonymous users'),
+  "mode": zod.string(),
+  "level": zod.string().nullable(),
+  "questions": zod.array(zod.object({
+  "flashcardId": zod.number(),
+  "questionType": zod.enum(['de-to-en', 'en-to-de', 'article', 'typing']),
+  "prompt": zod.string(),
+  "hint": zod.string().nullish(),
+  "options": zod.array(zod.string()).optional().describe('Multiple-choice options; absent for typing mode'),
+  "correctAnswer": zod.string(),
+  "level": zod.string()
+}))
+})
+
+
+/**
+ * @summary Submit quiz answers and save results
+ */
+export const FinishQuizBody = zod.object({
+  "sessionId": zod.string().nullable(),
+  "answers": zod.array(zod.object({
+  "flashcardId": zod.number(),
+  "questionType": zod.string(),
+  "userAnswer": zod.string(),
+  "correct": zod.boolean(),
+  "prompt": zod.string(),
+  "level": zod.string()
+}))
+})
+
+export const FinishQuizResponse = zod.object({
+  "saved": zod.boolean(),
+  "total": zod.number(),
+  "correct": zod.number().optional()
+})
+
+
+/**
+ * @summary Get the signed-in user's quiz history
+ */
+export const GetQuizHistoryResponseItem = zod.object({
+  "id": zod.string(),
+  "mode": zod.string(),
+  "level": zod.string().nullish(),
+  "totalQuestions": zod.number(),
+  "correctAnswers": zod.number(),
+  "finishedAt": zod.coerce.date().optional()
+})
+export const GetQuizHistoryResponse = zod.array(GetQuizHistoryResponseItem)
+
+
+/**
+ * @summary Get aggregate quiz statistics for the signed-in user
+ */
+export const GetQuizStatsResponse = zod.object({
+  "totalSessions": zod.number(),
+  "totalCorrect": zod.number(),
+  "totalQuestions": zod.number(),
+  "accuracy": zod.number().describe('Percentage 0-100')
 })
 
 
