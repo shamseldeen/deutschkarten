@@ -61,6 +61,13 @@ export interface FlashcardList {
     offset: number;
     limit: number;
 }
+export interface FlashcardGenerateResult {
+    cards: Flashcard[];
+    /** Number of words skipped because they already exist in the card set */
+    skipped: number;
+    /** Human-readable message when all words were skipped */
+    message?: string;
+}
 export type FlashcardGenerateInputLevel = typeof FlashcardGenerateInputLevel[keyof typeof FlashcardGenerateInputLevel];
 export declare const FlashcardGenerateInputLevel: {
     readonly A1: "A1";

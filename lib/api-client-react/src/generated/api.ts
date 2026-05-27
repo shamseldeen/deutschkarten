@@ -25,6 +25,7 @@ import type {
   DeleteWorkspace200,
   Flashcard,
   FlashcardGenerateInput,
+  FlashcardGenerateResult,
   FlashcardList,
   GetDailyFlashcardsParams,
   HealthStatus,
@@ -372,9 +373,9 @@ export const getGenerateFlashcardsUrl = () => {
 /**
  * @summary Generate new flashcards using AI for a specific level
  */
-export const generateFlashcards = async (flashcardGenerateInput: FlashcardGenerateInput, options?: RequestInit): Promise<Flashcard[]> => {
+export const generateFlashcards = async (flashcardGenerateInput: FlashcardGenerateInput, options?: RequestInit): Promise<FlashcardGenerateResult> => {
 
-  return customFetch<Flashcard[]>(getGenerateFlashcardsUrl(),
+  return customFetch<FlashcardGenerateResult>(getGenerateFlashcardsUrl(),
   {
     ...options,
     method: 'POST',

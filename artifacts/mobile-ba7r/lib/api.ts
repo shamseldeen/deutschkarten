@@ -142,10 +142,10 @@ export const api = {
     category?: string;
     count?: number;
   }) =>
-    fetchJson<Flashcard[]>("/ba7r-api/flashcards/generate", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    fetchJson<{ cards: Flashcard[]; skipped: number; message?: string }>(
+      "/ba7r-api/flashcards/generate",
+      { method: "POST", body: JSON.stringify(data) },
+    ),
 
   updateProgress: (id: number, known: boolean) =>
     fetchJson<Flashcard>(`/ba7r-api/flashcards/${id}/progress`, {

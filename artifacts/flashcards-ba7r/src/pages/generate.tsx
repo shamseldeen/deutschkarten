@@ -119,10 +119,17 @@ export default function Generate() {
     generateMutation.mutate(
       { data },
       {
-        onSuccess: (cards) => {
+        onSuccess: (result) => {
+          const created = result.cards.length;
+          const skipped = result.skipped ?? 0;
           toast({
             title: "Cards Generated!",
-            description: `Created ${cards.length} new flashcards.`,
+            description:
+              created > 0
+                ? skipped > 0
+                  ? `Created ${created} new flashcards (${skipped} duplicates skipped).`
+                  : `Created ${created} new flashcards.`
+                : `All ${skipped} words already exist in your card set.`,
           });
           fetchStatus();
           setLocation("/browse");

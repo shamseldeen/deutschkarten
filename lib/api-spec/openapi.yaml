@@ -152,14 +152,18 @@ paths:
             schema:
               $ref: "#/components/schemas/FlashcardGenerateInput"
       responses:
+        "200":
+          description: All generated words already exist (all skipped)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlashcardGenerateResult"
         "201":
           description: Generated flashcards
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Flashcard"
+                $ref: "#/components/schemas/FlashcardGenerateResult"
 
   /flashcards/stats:
     get:
@@ -587,6 +591,23 @@ components:
         - total
         - offset
         - limit
+
+    FlashcardGenerateResult:
+      type: object
+      properties:
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/Flashcard"
+        skipped:
+          type: integer
+          description: Number of words skipped because they already exist in the card set
+        message:
+          type: string
+          description: Human-readable message when all words were skipped
+      required:
+        - cards
+        - skipped
 
     FlashcardGenerateInput:
       type: object

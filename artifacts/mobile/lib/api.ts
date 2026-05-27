@@ -145,10 +145,10 @@ export const api = {
     category?: string;
     count?: number;
   }) =>
-    fetchJson<Flashcard[]>("/api/flashcards/generate", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    fetchJson<{ cards: Flashcard[]; skipped: number; message?: string }>(
+      "/api/flashcards/generate",
+      { method: "POST", body: JSON.stringify(data) },
+    ),
 
   updateProgress: (id: number, known: boolean) =>
     fetchJson<Flashcard>(`/api/flashcards/${id}/progress`, {

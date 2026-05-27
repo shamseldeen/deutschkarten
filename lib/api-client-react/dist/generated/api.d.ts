@@ -1,5 +1,5 @@
 import type { QueryKey, UseMutationOptions, UseMutationResult, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
-import type { ApiError, AuthResponse, DeleteWorkspace200, Flashcard, FlashcardGenerateInput, FlashcardList, GetDailyFlashcardsParams, HealthStatus, LeaderboardResponse, LevelStats, ListFlashcardsParams, ProgressUpdate, QuizFinishInput, QuizFinishResponse, QuizHistoryRow, QuizStartInput, QuizStartResponse, QuizStats, SignInInput, SignUpInput, Workspace, WorkspaceCreateInput, WorkspaceList, WorkspaceSwitchResult } from './api.schemas';
+import type { ApiError, AuthResponse, DeleteWorkspace200, Flashcard, FlashcardGenerateInput, FlashcardGenerateResult, FlashcardList, GetDailyFlashcardsParams, HealthStatus, LeaderboardResponse, LevelStats, ListFlashcardsParams, ProgressUpdate, QuizFinishInput, QuizFinishResponse, QuizHistoryRow, QuizStartInput, QuizStartResponse, QuizStats, SignInInput, SignUpInput, Workspace, WorkspaceCreateInput, WorkspaceList, WorkspaceSwitchResult } from './api.schemas';
 import { customFetch } from '../custom-fetch';
 import type { ErrorType, BodyType } from '../custom-fetch';
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -109,7 +109,7 @@ export declare const getGenerateFlashcardsUrl: () => string;
 /**
  * @summary Generate new flashcards using AI for a specific level
  */
-export declare const generateFlashcards: (flashcardGenerateInput: FlashcardGenerateInput, options?: RequestInit) => Promise<Flashcard[]>;
+export declare const generateFlashcards: (flashcardGenerateInput: FlashcardGenerateInput, options?: RequestInit) => Promise<FlashcardGenerateResult>;
 export declare const getGenerateFlashcardsMutationOptions: <TError = ErrorType<unknown>, TContext = unknown>(options?: {
     mutation?: UseMutationOptions<Awaited<ReturnType<typeof generateFlashcards>>, TError, {
         data: BodyType<FlashcardGenerateInput>;

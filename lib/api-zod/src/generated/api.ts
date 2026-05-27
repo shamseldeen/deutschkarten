@@ -96,6 +96,27 @@ export const GenerateFlashcardsBody = zod.object({
   "count": zod.number().default(generateFlashcardsBodyCountDefault)
 })
 
+export const GenerateFlashcardsResponse = zod.object({
+  "cards": zod.array(zod.object({
+  "id": zod.number(),
+  "word": zod.string().describe('German word with article e.g. \"der Hund\"'),
+  "article": zod.string().nullable().describe('der \/ die \/ das \/ null for verbs\/adjectives'),
+  "baseWord": zod.string().describe('The word without article'),
+  "level": zod.enum(['A1', 'A2', 'B1', 'B2', 'C1']),
+  "category": zod.string(),
+  "englishTranslation": zod.string(),
+  "arabicTranslation": zod.string(),
+  "exampleSentenceDe": zod.string(),
+  "exampleSentenceEn": zod.string(),
+  "exampleSentenceAr": zod.string(),
+  "imageUrl": zod.string().nullable(),
+  "known": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})),
+  "skipped": zod.number().describe('Number of words skipped because they already exist in the card set'),
+  "message": zod.string().optional().describe('Human-readable message when all words were skipped')
+})
+
 
 /**
  * @summary Get study stats grouped by level

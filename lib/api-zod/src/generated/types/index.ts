@@ -12,6 +12,7 @@ export * from './deleteWorkspace200';
 export * from './flashcard';
 export * from './flashcardGenerateInput';
 export * from './flashcardGenerateInputLevel';
+export * from './flashcardGenerateResult';
 export * from './flashcardLevel';
 export * from './flashcardList';
 export * from './getDailyFlashcardsLevel';

@@ -189,6 +189,94 @@ export declare const GenerateFlashcardsBody: zod.ZodObject<{
     category?: string | undefined;
     count?: number | undefined;
 }>;
+export declare const GenerateFlashcardsResponse: zod.ZodObject<{
+    cards: zod.ZodArray<zod.ZodObject<{
+        id: zod.ZodNumber;
+        word: zod.ZodString;
+        article: zod.ZodNullable<zod.ZodString>;
+        baseWord: zod.ZodString;
+        level: zod.ZodEnum<["A1", "A2", "B1", "B2", "C1"]>;
+        category: zod.ZodString;
+        englishTranslation: zod.ZodString;
+        arabicTranslation: zod.ZodString;
+        exampleSentenceDe: zod.ZodString;
+        exampleSentenceEn: zod.ZodString;
+        exampleSentenceAr: zod.ZodString;
+        imageUrl: zod.ZodNullable<zod.ZodString>;
+        known: zod.ZodBoolean;
+        createdAt: zod.ZodDate;
+    }, "strip", zod.ZodTypeAny, {
+        level: "A1" | "A2" | "B1" | "B2" | "C1";
+        category: string;
+        id: number;
+        word: string;
+        article: string | null;
+        baseWord: string;
+        englishTranslation: string;
+        arabicTranslation: string;
+        exampleSentenceDe: string;
+        exampleSentenceEn: string;
+        exampleSentenceAr: string;
+        imageUrl: string | null;
+        known: boolean;
+        createdAt: Date;
+    }, {
+        level: "A1" | "A2" | "B1" | "B2" | "C1";
+        category: string;
+        id: number;
+        word: string;
+        article: string | null;
+        baseWord: string;
+        englishTranslation: string;
+        arabicTranslation: string;
+        exampleSentenceDe: string;
+        exampleSentenceEn: string;
+        exampleSentenceAr: string;
+        imageUrl: string | null;
+        known: boolean;
+        createdAt: Date;
+    }>, "many">;
+    skipped: zod.ZodNumber;
+    message: zod.ZodOptional<zod.ZodString>;
+}, "strip", zod.ZodTypeAny, {
+    cards: {
+        level: "A1" | "A2" | "B1" | "B2" | "C1";
+        category: string;
+        id: number;
+        word: string;
+        article: string | null;
+        baseWord: string;
+        englishTranslation: string;
+        arabicTranslation: string;
+        exampleSentenceDe: string;
+        exampleSentenceEn: string;
+        exampleSentenceAr: string;
+        imageUrl: string | null;
+        known: boolean;
+        createdAt: Date;
+    }[];
+    skipped: number;
+    message?: string | undefined;
+}, {
+    cards: {
+        level: "A1" | "A2" | "B1" | "B2" | "C1";
+        category: string;
+        id: number;
+        word: string;
+        article: string | null;
+        baseWord: string;
+        englishTranslation: string;
+        arabicTranslation: string;
+        exampleSentenceDe: string;
+        exampleSentenceEn: string;
+        exampleSentenceAr: string;
+        imageUrl: string | null;
+        known: boolean;
+        createdAt: Date;
+    }[];
+    skipped: number;
+    message?: string | undefined;
+}>;
 /**
  * @summary Get study stats grouped by level
  */
