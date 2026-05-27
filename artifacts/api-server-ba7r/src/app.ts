@@ -38,7 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check before any auth middleware so it never hangs
 app.get("/ba7r-api/healthz", (_req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", v: "2026-05-27-ws-fix" });
 });
 
 app.use(
