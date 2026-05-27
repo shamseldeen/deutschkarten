@@ -114,6 +114,7 @@ export default function GenerateScreen() {
 
   const handleGenerate = () => {
     setSuccess(false);
+    setErrorDetail(null);
     generate.mutate(
       {
         level: selectedLevel,
