@@ -8,10 +8,13 @@ import {
   getListFlashcardsQueryKey,
   getGetFlashcardStatsQueryKey,
 } from "@workspace/api-client-react";
+import { computeCardPoints } from "@workspace/content";
 import { Flashcard } from "@/components/flashcard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PartyPopper, ArrowRight, ArrowLeft, RefreshCw } from "lucide-react";
+import { GuestProgressBanner } from "@/components/GuestProgressBanner";
+import { recordGuestCard } from "@/lib/guestProgress";
+import { PartyPopper, ArrowRight, ArrowLeft, RefreshCw, Zap } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -29,6 +32,7 @@ export default function Study() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
+  const [sessionXp, setSessionXp] = useState(0);
   const [wrongIds, setWrongIds] = useState<number[]>([]);
   const [relearningCards, setRelearningCards] = useState<typeof allCards>([]);
   const [isRelearning, setIsRelearning] = useState(false);
@@ -37,16 +41,27 @@ export default function Study() {
   const cards = isRelearning ? relearningCards : allCards;
 
   const handleProgress = (id: number, known: boolean) => {
+    const wrongCount = wrongIds.filter((w) => w === id).length;
+    const xp = computeCardPoints({
+      level: levelParam,
+      currentStreak: 0,
+      wrongCount,
+      timesReviewed: Math.max(1, wrongCount),
+    });
+
     if (isSignedIn) {
       updateProgress.mutate({ id, data: { known } }, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetFlashcardStatsQueryKey() });
         },
       });
+    } else {
+      recordGuestCard(id, levelParam, known, xp);
     }
 
     if (known) {
       setKnownCount((n) => n + 1);
+      setSessionXp((n) => n + xp);
     } else if (!isRelearning) {
       setWrongIds((prev) => [...prev, id]);
     }
@@ -75,6 +90,7 @@ export default function Study() {
     setCurrentIndex(0);
     setIsDone(false);
     setKnownCount(0);
+    setSessionXp(0);
     setWrongIds([]);
     setRelearningCards([]);
     setIsRelearning(false);
@@ -113,9 +129,7 @@ export default function Study() {
 
   if (isDone) {
     const wrongCount = wrongIds.length;
-    const accuracy = cards.length > 0
-      ? Math.round((knownCount / cards.length) * 100)
-      : 0;
+    const accuracy = cards.length > 0 ? Math.round((knownCount / cards.length) * 100) : 0;
 
     return (
       <Layout>
@@ -127,7 +141,7 @@ export default function Study() {
             {isRelearning ? "Re-learning Done!" : "Level Complete!"}
           </h2>
 
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-3 justify-center flex-wrap">
             <div className="bg-green-50 dark:bg-green-950/30 px-4 py-2 rounded-lg">
               <div className="text-xl font-bold text-green-600">{knownCount}</div>
               <div className="text-xs text-slate-500">Got it</div>
@@ -142,13 +156,19 @@ export default function Study() {
               <div className="text-xl font-bold text-yellow-600">{accuracy}%</div>
               <div className="text-xs text-slate-500">Accuracy</div>
             </div>
+            {sessionXp > 0 && (
+              <div className="bg-purple-50 dark:bg-purple-950/30 px-4 py-2 rounded-lg">
+                <div className="text-xl font-bold text-purple-600 flex items-center gap-1">
+                  <Zap className="w-4 h-4" />{sessionXp}
+                </div>
+                <div className="text-xs text-slate-500">XP earned</div>
+              </div>
+            )}
           </div>
 
-          <p className="text-muted-foreground text-sm">
-            {isRelearning
-              ? "You re-reviewed the tricky cards. Each correct answer earned bonus XP!"
-              : "Your XP is calculated based on card difficulty × your streak."}
-          </p>
+          {!isSignedIn && sessionXp > 0 && (
+            <GuestProgressBanner variant="warning" sessionXp={sessionXp} />
+          )}
 
           <div className="flex flex-col gap-3 w-full">
             {!isRelearning && wrongCount > 0 && (
@@ -189,9 +209,16 @@ export default function Study() {
             </span>
             {isRelearning && <span className="text-xs text-orange-500">tricky cards</span>}
           </div>
-          <span className="text-sm font-medium bg-muted px-3 py-1 rounded-full">
-            {(isRelearning ? relearningIndex : currentIndex) + 1} / {cards.length}
-          </span>
+          <div className="flex items-center gap-2">
+            {sessionXp > 0 && (
+              <span className="text-xs font-semibold text-yellow-600 flex items-center gap-0.5">
+                <Zap className="w-3 h-3" />{sessionXp}
+              </span>
+            )}
+            <span className="text-sm font-medium bg-muted px-3 py-1 rounded-full">
+              {(isRelearning ? relearningIndex : currentIndex) + 1} / {cards.length}
+            </span>
+          </div>
         </div>
 
         <div className="w-full bg-muted rounded-full h-1.5 mb-4 px-2">

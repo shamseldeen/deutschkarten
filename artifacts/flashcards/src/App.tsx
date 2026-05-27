@@ -8,6 +8,7 @@ import { ClerkProvider, Show } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { useClerk } from "@clerk/react";
 import { useEffect, useRef } from "react";
+import { useMigrateGuestProgress } from "@/lib/useMigrateGuestProgress";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -61,6 +62,11 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
+function GuestMigrator() {
+  useMigrateGuestProgress();
+  return null;
+}
+
 function Router() {
   return (
     <Switch>
@@ -101,6 +107,7 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
+          <GuestMigrator />
           <Router />
           <Toaster />
         </TooltipProvider>
