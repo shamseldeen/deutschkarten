@@ -76,7 +76,8 @@ router.get("/flashcards", async (req, res) => {
   const { level, category, limit = 20, offset = 0 } = parsed.data;
 
   const userId = getAuth(req)?.userId ?? null;
-  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  let wsId: string | null = null;
+  try { wsId = userId ? await getCurrentWorkspaceId(userId) : null; } catch {}
   const visibility = workspaceVisibility(wsId);
 
   const conditions = [isNull(flashcardsTable.hiddenAt)];
@@ -106,7 +107,8 @@ router.get("/flashcards", async (req, res) => {
 router.get("/flashcards/stats", async (req, res) => {
   const userId = getAuth(req)?.userId ?? null;
   const levels = ["A1", "A2", "B1", "B2", "C1"];
-  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  let wsId: string | null = null;
+  try { wsId = userId ? await getCurrentWorkspaceId(userId) : null; } catch {}
   const visibility = workspaceVisibility(wsId);
 
   if (userId) {
@@ -169,7 +171,8 @@ router.get("/flashcards/daily", async (req, res) => {
   const { level } = parsed.data;
 
   const userId = getAuth(req)?.userId ?? null;
-  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  let wsId: string | null = null;
+  try { wsId = userId ? await getCurrentWorkspaceId(userId) : null; } catch {}
   const visibility = workspaceVisibility(wsId);
 
   const conditions = [isNull(flashcardsTable.hiddenAt)];
@@ -195,7 +198,8 @@ router.get("/flashcards/:id", async (req, res) => {
     return;
   }
   const userId = getAuth(req)?.userId ?? null;
-  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+  let wsId: string | null = null;
+  try { wsId = userId ? await getCurrentWorkspaceId(userId) : null; } catch {}
   const visibility = workspaceVisibility(wsId);
 
   const [card] = await db
@@ -253,10 +257,16 @@ router.post("/flashcards/generate", async (req, res) => {
   const { level, category = "general", count: wordCount = 10 } = parsed.data;
 
   const userId = getAuth(req)?.userId ?? null;
-  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
-  const secondaryLang = userId
-    ? await getWorkspaceSecondaryLang(userId, wsId)
-    : "AR";
+  let wsId: string | null = null;
+  let secondaryLang = "AR";
+  try {
+    wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+    secondaryLang = userId
+      ? await getWorkspaceSecondaryLang(userId, wsId)
+      : "AR";
+  } catch (wsErr) {
+    req.log.warn({ wsErr }, "workspace lookup failed, falling back to defaults");
+  }
   const langNames: Record<string, string> = {
     AR: "Arabic (in Arabic script)",
     EN: "English",
@@ -451,7 +461,8 @@ router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
     return;
   }
 
-  const wsIdForVisibility = await getCurrentWorkspaceId(userId);
+  let wsIdForVisibility: string | null = null;
+  try { wsIdForVisibility = await getCurrentWorkspaceId(userId); } catch {}
   const visPred = workspaceVisibility(wsIdForVisibility);
   const [card] = await db
     .select()
@@ -565,7 +576,8 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
   const known = bodyParsed.data.known;
 
   if (userId) {
-    const wsId = await getCurrentWorkspaceId(userId);
+    let wsId: string | null = null;
+    try { wsId = await getCurrentWorkspaceId(userId); } catch {}
     const visPred = workspaceVisibility(wsId);
     const [card] = await db
       .select()
