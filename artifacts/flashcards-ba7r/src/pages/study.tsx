@@ -6,6 +6,7 @@ import {
   useUpdateFlashcardProgress,
   FlashcardLevel,
   getListFlashcardsQueryKey,
+  getGetFlashcardStatsQueryKey,
 } from "@workspace/api-client-react";
 import { Flashcard } from "@/components/flashcard";
 import { Button } from "@/components/ui/button";
@@ -33,17 +34,21 @@ export default function Study() {
 
   const handleProgress = (id: number, known: boolean) => {
     if (isSignedIn) {
-      updateProgress.mutate({ id, data: { known } });
+      updateProgress.mutate({ id, data: { known } }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetFlashcardStatsQueryKey() });
+        },
+      });
     }
 
     if (currentIndex < cards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       setIsDone(true);
-      // Invalidate to update dashboard stats
       queryClient.invalidateQueries({
         queryKey: getListFlashcardsQueryKey({ level: levelParam, limit: 50 }),
       });
+      queryClient.invalidateQueries({ queryKey: getGetFlashcardStatsQueryKey() });
     }
   };
 

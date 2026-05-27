@@ -279,6 +279,27 @@ router.post("/flashcards/generate", async (req, res) => {
       "workspace lookup failed, falling back to defaults",
     );
   }
+  // Fetch all existing words at this level (visible to this user) so the AI
+  // doesn't regenerate cards that are already in the database.
+  const visibility = workspaceVisibility(wsId);
+  const existingAtLevel = await db
+    .select({ baseWord: flashcardsTable.baseWord })
+    .from(flashcardsTable)
+    .where(
+      and(
+        eq(flashcardsTable.level, level),
+        isNull(flashcardsTable.hiddenAt),
+        ...(visibility ? [visibility] : []),
+      ),
+    );
+  const existingWordsList = existingAtLevel
+    .map((r) => r.baseWord)
+    .filter(Boolean);
+  req.log.info(
+    { level, existingCount: existingWordsList.length },
+    "Existing words at level fetched for generate prompt",
+  );
+
   const langNames: Record<string, string> = {
     AR: "Arabic (in Arabic script)",
     EN: "English",
@@ -302,11 +323,16 @@ router.post("/flashcards/generate", async (req, res) => {
   };
   const levelHint = cefrGuidance[level] ?? `appropriate for ${level} learners`;
 
+  const existingWordsBlock =
+    existingWordsList.length > 0
+      ? `\nIMPORTANT — these words ALREADY EXIST for level ${level} — do NOT include any of them:\n${existingWordsList.join(", ")}\nGenerate only NEW words not listed above.\n`
+      : "";
+
   const prompt = `Generate ${wordCount} German vocabulary flashcards for CEFR level ${level}.
 Category: ${category}.
 
 IMPORTANT — level accuracy: ${level} means ${levelHint}
-Do NOT include words that clearly belong to a lower level.
+Do NOT include words that clearly belong to a lower level.${existingWordsBlock}
 
 Return a JSON array (no markdown, no code block) where each item has exactly these fields:
 - word: string (German word WITH article for nouns, e.g. "der Hund"; bare word for verbs/adjectives)
@@ -398,9 +424,14 @@ Return ONLY a valid JSON array, no explanation.`;
   const existingSet = new Set(
     existingWords.map((r) => r.baseWord?.trim().toLowerCase()),
   );
-  const uniqueCards = cards.filter(
-    (c) => !existingSet.has(c.baseWord?.trim().toLowerCase()),
-  );
+  // Deduplicate within the batch AND against the DB
+  const seenInBatch = new Set<string>();
+  const uniqueCards = cards.filter((c) => {
+    const key = c.baseWord?.trim().toLowerCase();
+    if (!key || existingSet.has(key) || seenInBatch.has(key)) return false;
+    seenInBatch.add(key);
+    return true;
+  });
   const skippedCount = cards.length - uniqueCards.length;
   if (skippedCount > 0) {
     req.log.info(
