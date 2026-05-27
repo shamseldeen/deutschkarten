@@ -5,7 +5,6 @@ import {
   userProgressTable,
   userStreaksTable,
 } from "@workspace/db";
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { ai as gemini } from "@workspace/integrations-gemini-ai";
 import { fetchPexelsImage } from "../lib/pexels.js";
 import { getAuth } from "@clerk/express";
@@ -416,8 +415,8 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
 
 // POST /api/flashcards/:id/translate  — translate a card to a target language on-demand
 // Result is cached on the card so every learner benefits ("community library").
-// Requires auth (prevents anonymous OpenAI billing-DoS).
-// Per-user rate-limited and in-flight deduped so concurrent callers share one OpenAI call.
+// Requires auth (prevents anonymous AI billing-DoS).
+// Per-user rate-limited and in-flight deduped so concurrent callers share one Gemini call.
 const translateLimits = new Map<string, { count: number; resetAt: number }>();
 const TRANSLATE_LIMIT_PER_MIN = 30;
 const inFlightTranslations = new Map<
@@ -479,7 +478,7 @@ router.post("/flashcards/:id/translate", requireAuth, async (req, res) => {
     return;
   }
 
-  // Dedupe concurrent translations for the same (cardId, lang) — share one OpenAI call.
+  // Dedupe concurrent translations for the same (cardId, lang) — share one Gemini call.
   const dedupeKey = `${id}:${lang}`;
   let job = inFlightTranslations.get(dedupeKey);
   if (!job) {
@@ -498,31 +497,15 @@ English example: ${card.exampleSentenceEn}
 
 Use the native script of the target language. Be concise and natural.`;
 
-      // Primary: Gemini 2.5 Flash (cheap, fast, great multilingual incl. RTL).
-      // Fallback: GPT-5.1 if Gemini errors so users never see a hard failure.
-      let text = "";
-      try {
-        const r = await gemini.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          config: {
-            responseMimeType: "application/json",
-            maxOutputTokens: 8192,
-          },
-        });
-        text = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      } catch (err) {
-        req.log?.warn(
-          { err, id, lang },
-          "gemini translate failed, falling back to openai",
-        );
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          max_completion_tokens: 400,
-          messages: [{ role: "user", content: prompt }],
-        });
-        text = completion.choices[0]?.message?.content ?? "{}";
-      }
+      const r = await gemini.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192,
+        },
+      });
+      const text = r.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       const cleaned = text
         .replace(/```json\n?/g, "")
         .replace(/```\n?/g, "")
@@ -558,7 +541,10 @@ Use the native script of the target language. Be concise and natural.`;
     res.json(updated);
   } catch (err) {
     req.log?.error({ err, id, lang }, "translation failed");
-    res.status(502).json({ error: "Translation failed" });
+    res.status(502).json({
+      error: "Translation failed",
+      detail: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
