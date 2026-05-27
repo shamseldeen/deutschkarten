@@ -21,7 +21,7 @@ const envSchema = z.object({
     .string()
     .min(16, "SESSION_SECRET must be at least 16 chars"),
   ADMIN_USER_IDS: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
+  // Optional — Gemini AI key; enables /api/flashcards/generate.
   GEMINI_API_KEY: z.string().optional(),
   NODE_ENV: z
     .enum(["development", "production", "test"])

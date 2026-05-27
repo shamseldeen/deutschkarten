@@ -11,8 +11,6 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/content/package.json ./lib/content/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY lib/integrations-gemini-ai/package.json ./lib/integrations-gemini-ai/
-COPY lib/integrations-openai-ai-react/package.json ./lib/integrations-openai-ai-react/
-COPY lib/integrations-openai-ai-server/package.json ./lib/integrations-openai-ai-server/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/flashcards/package.json ./artifacts/flashcards/
 RUN pnpm install --frozen-lockfile --filter @workspace/api-server... --filter @workspace/flashcards...
@@ -36,8 +34,6 @@ COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/content/package.json ./lib/content/
 COPY lib/api-client-react/package.json ./lib/api-client-react/
 COPY lib/integrations-gemini-ai/package.json ./lib/integrations-gemini-ai/
-COPY lib/integrations-openai-ai-react/package.json ./lib/integrations-openai-ai-react/
-COPY lib/integrations-openai-ai-server/package.json ./lib/integrations-openai-ai-server/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/flashcards/package.json ./artifacts/flashcards/
 RUN pnpm install --frozen-lockfile --filter @workspace/api-server... --prod

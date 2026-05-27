@@ -28,9 +28,7 @@ const envSchema = z.object({
     .min(16, "SESSION_SECRET must be at least 16 chars"),
   // Optional — comma-separated Clerk user IDs allowed into /api/admin/*.
   ADMIN_USER_IDS: z.string().optional(),
-  // Optional — enables /api/flashcards/generate (use your own key outside Replit).
-  OPENAI_API_KEY: z.string().optional(),
-  // Optional — Gemini AI key (use your own key outside Replit).
+  // Optional — Gemini AI key; enables /api/flashcards/generate.
   GEMINI_API_KEY: z.string().optional(),
   NODE_ENV: z
     .enum(["development", "production", "test"])
