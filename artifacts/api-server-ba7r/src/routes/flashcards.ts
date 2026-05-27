@@ -28,6 +28,7 @@ import {
   upsertProgress,
   workspaceVisibility,
 } from "../lib/workspace";
+import { correctLevel } from "@workspace/content";
 
 const router = Router();
 
@@ -292,21 +293,34 @@ router.post("/flashcards/generate", async (req, res) => {
     ? `\n- extraTranslation: string (translation in ${secondaryLangLabel})\n- extraExample: string (translation of the example sentence in ${secondaryLangLabel})`
     : "";
 
-  const prompt = `Generate ${wordCount} German vocabulary words for level ${level} (CEFR scale). 
+  const cefrGuidance: Record<string, string> = {
+    A1: "absolute beginner vocabulary: greetings, numbers, colors, basic family members (Mutter, Vater), common animals (Hund, Katze), everyday objects (Tisch, Buch), core verbs (sein, haben, gehen, essen). Sentences must be very short (4–6 words).",
+    A2: "elementary vocabulary: travel (Bahnhof, Fahrkarte), health (Arzt, Medikament), shopping (Preis, Rechnung), work basics (Beruf, Büro), simple adjectives (teuer, billig). Sentences 5–8 words.",
+    B1: "intermediate vocabulary: opinions, environment (Umwelt), work & career (Lebenslauf, Bewerbung, kündigen), society basics (Verantwortung, Möglichkeit), common verbs (entscheiden, entwickeln, planen). Sentences can be compound.",
+    B2: "upper-intermediate vocabulary: abstract concepts (Auswirkung, Einschätzung, Nachhaltigkeit), complex verbs (berücksichtigen, abwägen, bewältigen), nuanced adjectives (widersprüchlich, umfangreich, fundiert). Avoid very rare academic terms.",
+    C1: "advanced/academic vocabulary: scholarly or literary terms (Abhandlung, Evidenz, Empirie), rare verbs (validieren, extrapolieren, disambiguieren), nuanced concepts rarely seen below C1 level.",
+  };
+  const levelHint = cefrGuidance[level] ?? `appropriate for ${level} learners`;
+
+  const prompt = `Generate ${wordCount} German vocabulary flashcards for CEFR level ${level}.
 Category: ${category}.
+
+IMPORTANT — level accuracy: ${level} means ${levelHint}
+Do NOT include words that clearly belong to a lower level.
+
 Return a JSON array (no markdown, no code block) where each item has exactly these fields:
-- word: string (German word with its article, e.g. "der Hund" for nouns, or just the word for verbs/adjectives)
-- article: string or null (der/die/das for nouns, null for verbs, adjectives, etc.)
+- word: string (German word WITH article for nouns, e.g. "der Hund"; bare word for verbs/adjectives)
+- article: string or null (der/die/das for nouns, null for verbs/adjectives)
 - baseWord: string (the word without article)
 - level: "${level}"
 - category: "${category}"
 - englishTranslation: string
 - arabicTranslation: string (in Arabic script)
-- exampleSentenceDe: string (a simple German sentence using the word, appropriate for ${level})
-- exampleSentenceEn: string (English translation of the example sentence)
-- exampleSentenceAr: string (Arabic translation of the example sentence, in Arabic script)${extraTransField}
+- exampleSentenceDe: string (German example sentence appropriate for ${level})
+- exampleSentenceEn: string (English translation of the example)
+- exampleSentenceAr: string (Arabic translation of the example, in Arabic script)${extraTransField}
 
-Make sure the words and sentences are appropriate for ${level} learners. Return ONLY valid JSON array.`;
+Return ONLY a valid JSON array, no explanation.`;
 
   let r;
   try {
@@ -386,7 +400,7 @@ Make sure the words and sentences are appropriate for ${level} learners. Return 
             word: c.word,
             article: c.article ?? null,
             baseWord: c.baseWord,
-            level: c.level,
+            level: correctLevel(c.baseWord, c.level),
             category: c.category,
             englishTranslation: c.englishTranslation,
             arabicTranslation: c.arabicTranslation,

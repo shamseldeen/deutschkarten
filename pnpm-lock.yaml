@@ -178,6 +178,9 @@ importers:
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
+      '@workspace/content':
+        specifier: workspace:*
+        version: link:../../lib/content
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
@@ -248,6 +251,9 @@ importers:
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
+      '@workspace/content':
+        specifier: workspace:*
+        version: link:../../lib/content
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
