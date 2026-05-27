@@ -42,6 +42,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "trophy", selected: "trophy.fill" }} />
         <Label>Ranks</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="community">
+        <Icon sf={{ default: "person.3", selected: "person.3.fill" }} />
+        <Label>Community</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="generate">
         <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
         <Label>Generate</Label>
@@ -170,6 +174,18 @@ function ClassicTabLayout() {
               <SymbolView name="trophy" tintColor={color} size={24} />
             ) : (
               <Feather name="award" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: "Community",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="person.3" tintColor={color} size={24} />
+            ) : (
+              <Feather name="users" size={22} color={color} />
             ),
         }}
       />

@@ -187,3 +187,43 @@ export type WorkspaceList = {
   max: number;
   workspaces: Workspace[];
 };
+
+export type CommunityStats = {
+  totalCards: number;
+  members: number;
+  languages: number;
+  contributors: number;
+};
+
+export type CommunityPost = {
+  id: number;
+  content: string;
+  likeCount: number;
+  createdAt: string;
+  userId: string;
+  displayName: string | null;
+  imageUrl: string | null;
+  isOwn: boolean;
+  liked: boolean;
+};
+
+export const communityApi = {
+  getStats: () => fetchJson<CommunityStats>("/ba7r-api/community/stats"),
+  getPosts: () => fetchJson<CommunityPost[]>("/ba7r-api/community/posts"),
+  createPost: (content: string) =>
+    fetchJson<CommunityPost>("/ba7r-api/community/posts", {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    }),
+  likePost: (id: number) =>
+    fetchJson<{ liked: boolean; likeCount: number }>(
+      `/ba7r-api/community/posts/${id}/like`,
+      { method: "POST" },
+    ),
+  deletePost: (id: number) =>
+    fetchJson<{ deleted: number }>(`/ba7r-api/community/posts/${id}`, {
+      method: "DELETE",
+    }),
+  acceptConsent: () =>
+    fetchJson<{ ok: boolean }>("/ba7r-api/me/consent", { method: "POST" }),
+};
