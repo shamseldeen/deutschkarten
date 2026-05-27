@@ -17,7 +17,7 @@ import {
   UpdateFlashcardProgressBody,
   GetDailyFlashcardsQueryParams,
 } from "@workspace/api-zod";
-import { eq, and, count, sql, isNull } from "drizzle-orm";
+import { eq, and, count, sql, isNull, inArray } from "drizzle-orm";
 import { isSupportedLang } from "../lib/languages";
 import { requireAuth } from "../middlewares/requireAuth";
 import { invalidateCommunityStats } from "./community";
@@ -375,13 +375,54 @@ Return ONLY a valid JSON array, no explanation.`;
     return;
   }
 
+  // ── Deduplication: drop cards whose base word already exists in this scope ──
+  const baseWords = cards
+    .map((c) => c.baseWord?.trim().toLowerCase())
+    .filter(Boolean);
+
+  const existingWords =
+    baseWords.length > 0
+      ? await db
+          .select({ baseWord: flashcardsTable.baseWord })
+          .from(flashcardsTable)
+          .where(
+            and(
+              inArray(sql`lower(trim(${flashcardsTable.baseWord}))`, baseWords),
+              isNull(flashcardsTable.hiddenAt),
+            ),
+          )
+      : [];
+
+  const existingSet = new Set(
+    existingWords.map((r) => r.baseWord?.trim().toLowerCase()),
+  );
+  const uniqueCards = cards.filter(
+    (c) => !existingSet.has(c.baseWord?.trim().toLowerCase()),
+  );
+  const skippedCount = cards.length - uniqueCards.length;
+  if (skippedCount > 0) {
+    req.log.info(
+      { skipped: skippedCount },
+      "Skipped duplicate cards during generation",
+    );
+  }
+  if (uniqueCards.length === 0) {
+    res.status(200).json({
+      cards: [],
+      skipped: skippedCount,
+      message: `All ${skippedCount} generated words already exist in your card set.`,
+    });
+    return;
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   const extraLangKey = secondaryLang.toLowerCase();
   let inserted: (typeof flashcardsTable.$inferSelect)[];
   try {
     inserted = await db
       .insert(flashcardsTable)
       .values(
-        cards.map((c) => {
+        uniqueCards.map((c) => {
           const translations: Record<string, string> = {
             en: c.englishTranslation,
             ar: c.arabicTranslation,
@@ -445,7 +486,7 @@ Return ONLY a valid JSON array, no explanation.`;
     }),
   );
 
-  res.status(201).json(withImages);
+  res.status(201).json({ cards: withImages, skipped: skippedCount });
 });
 
 // POST /api/flashcards/:id/translate  — translate a card to a target language on-demand
