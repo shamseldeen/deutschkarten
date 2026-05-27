@@ -709,7 +709,21 @@ router.patch("/flashcards/:id/progress", async (req, res) => {
       return;
     }
 
-    await upsertProgress({ userId, workspaceId: wsId, flashcardId, known });
+    const [streakRow] = await db
+      .select({ currentStreak: userStreaksTable.currentStreak })
+      .from(userStreaksTable)
+      .where(eq(userStreaksTable.userId, userId))
+      .limit(1);
+    const currentStreak = streakRow?.currentStreak ?? 0;
+
+    await upsertProgress({
+      userId,
+      workspaceId: wsId,
+      flashcardId,
+      known,
+      cardLevel: card.level,
+      currentStreak,
+    });
     await bumpStreak(userId);
 
     res.json({ ...card, known });

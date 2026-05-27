@@ -71,6 +71,57 @@ export declare const usersTable: import("drizzle-orm/pg-core").PgTableWithColumn
             identity: undefined;
             generated: undefined;
         }, {}, {}>;
+        totalPoints: import("drizzle-orm/pg-core").PgColumn<{
+            name: "total_points";
+            tableName: "users";
+            dataType: "number";
+            columnType: "PgReal";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        friendCode: import("drizzle-orm/pg-core").PgColumn<{
+            name: "friend_code";
+            tableName: "users";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        publicLeaderboard: import("drizzle-orm/pg-core").PgColumn<{
+            name: "public_leaderboard";
+            tableName: "users";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
         createdAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "created_at";
             tableName: "users";
@@ -182,6 +233,23 @@ export declare const userProgressTable: import("drizzle-orm/pg-core").PgTableWit
         }, {}, {}>;
         known: import("drizzle-orm/pg-core").PgColumn<{
             name: "known";
+            tableName: "user_progress";
+            dataType: "number";
+            columnType: "PgInteger";
+            data: number;
+            driverParam: string | number;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        wrongCount: import("drizzle-orm/pg-core").PgColumn<{
+            name: "wrong_count";
             tableName: "user_progress";
             dataType: "number";
             columnType: "PgInteger";
@@ -343,6 +411,144 @@ export declare const userStreaksTable: import("drizzle-orm/pg-core").PgTableWith
     };
     dialect: "pg";
 }>;
+/**
+ * Friend groups for the friends leaderboard.
+ * A user joins a group by sharing their friendCode; the owner's code becomes
+ * the groupId. Members array is maintained by the API.
+ */
+export declare const friendGroupsTable: import("drizzle-orm/pg-core").PgTableWithColumns<{
+    name: "friend_groups";
+    schema: undefined;
+    columns: {
+        id: import("drizzle-orm/pg-core").PgColumn<{
+            name: "id";
+            tableName: "friend_groups";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        ownerId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "owner_id";
+            tableName: "friend_groups";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        name: import("drizzle-orm/pg-core").PgColumn<{
+            name: "name";
+            tableName: "friend_groups";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        createdAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "created_at";
+            tableName: "friend_groups";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
+export declare const friendGroupMembersTable: import("drizzle-orm/pg-core").PgTableWithColumns<{
+    name: "friend_group_members";
+    schema: undefined;
+    columns: {
+        groupId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "group_id";
+            tableName: "friend_group_members";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        userId: import("drizzle-orm/pg-core").PgColumn<{
+            name: "user_id";
+            tableName: "friend_group_members";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        joinedAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "joined_at";
+            tableName: "friend_group_members";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+    };
+    dialect: "pg";
+}>;
 export declare const insertUserSchema: import("drizzle-zod").BuildSchema<"insert", {
     id: import("drizzle-orm/pg-core").PgColumn<{
         name: "id";
@@ -412,6 +618,57 @@ export declare const insertUserSchema: import("drizzle-zod").BuildSchema<"insert
         identity: undefined;
         generated: undefined;
     }, {}, {}>;
+    totalPoints: import("drizzle-orm/pg-core").PgColumn<{
+        name: "total_points";
+        tableName: "users";
+        dataType: "number";
+        columnType: "PgReal";
+        data: number;
+        driverParam: string | number;
+        notNull: true;
+        hasDefault: true;
+        isPrimaryKey: false;
+        isAutoincrement: false;
+        hasRuntimeDefault: false;
+        enumValues: undefined;
+        baseColumn: never;
+        identity: undefined;
+        generated: undefined;
+    }, {}, {}>;
+    friendCode: import("drizzle-orm/pg-core").PgColumn<{
+        name: "friend_code";
+        tableName: "users";
+        dataType: "string";
+        columnType: "PgText";
+        data: string;
+        driverParam: string;
+        notNull: false;
+        hasDefault: false;
+        isPrimaryKey: false;
+        isAutoincrement: false;
+        hasRuntimeDefault: false;
+        enumValues: [string, ...string[]];
+        baseColumn: never;
+        identity: undefined;
+        generated: undefined;
+    }, {}, {}>;
+    publicLeaderboard: import("drizzle-orm/pg-core").PgColumn<{
+        name: "public_leaderboard";
+        tableName: "users";
+        dataType: "number";
+        columnType: "PgInteger";
+        data: number;
+        driverParam: string | number;
+        notNull: true;
+        hasDefault: true;
+        isPrimaryKey: false;
+        isAutoincrement: false;
+        hasRuntimeDefault: false;
+        enumValues: undefined;
+        baseColumn: never;
+        identity: undefined;
+        generated: undefined;
+    }, {}, {}>;
     createdAt: import("drizzle-orm/pg-core").PgColumn<{
         name: "created_at";
         tableName: "users";
@@ -450,5 +707,7 @@ export declare const insertUserSchema: import("drizzle-zod").BuildSchema<"insert
 export type User = typeof usersTable.$inferSelect;
 export type UserProgress = typeof userProgressTable.$inferSelect;
 export type UserStreak = typeof userStreaksTable.$inferSelect;
+export type FriendGroup = typeof friendGroupsTable.$inferSelect;
+export type FriendGroupMember = typeof friendGroupMembersTable.$inferSelect;
 export declare const _z: typeof z;
 //# sourceMappingURL=users.d.ts.map

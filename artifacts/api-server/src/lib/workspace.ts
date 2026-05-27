@@ -4,9 +4,11 @@ import {
   userProgressTable,
   userSettingsTable,
   userWorkspacesTable,
+  usersTable,
 } from "@workspace/db";
 import { and, eq, isNull, or, sql, type SQL } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { computeCardPoints } from "@workspace/content";
 
 export const SUPPORTED_SECONDARY_LANGS = [
   "EN",
@@ -35,11 +37,6 @@ export const LANG_LABELS: Record<string, string> = {
   TR: "Turkish",
 };
 
-/**
- * Returns the currently-active workspace id for the user, or null when the
- * user is in their default (virtual) Arabic workspace. Falls back to null
- * when the workspace was deleted out from under them.
- */
 export async function getCurrentWorkspaceId(
   userId: string,
 ): Promise<string | null> {
@@ -50,10 +47,6 @@ export async function getCurrentWorkspaceId(
     .limit(1);
   const id = settings?.currentWorkspaceId ?? null;
   if (!id) return null;
-  // Defense in depth: only honor the stored workspace id when it both
-  // exists AND is owned by the calling user. Prevents cross-user data
-  // bleed if user_settings ever gets a foreign workspace id written into
-  // it (data corruption, future bug, admin script gone wrong).
   const [owned] = await db
     .select({ id: userWorkspacesTable.id })
     .from(userWorkspacesTable)
@@ -67,11 +60,6 @@ export async function getCurrentWorkspaceId(
   return owned ? id : null;
 }
 
-/**
- * SQL predicate restricting flashcards to those visible in the given workspace.
- * - Default workspace (null): only global cards (owner_workspace_id IS NULL).
- * - User workspace: global cards OR cards owned by this workspace.
- */
 export function workspaceVisibility(
   currentWsId: string | null,
 ): SQL | undefined {
@@ -82,11 +70,6 @@ export function workspaceVisibility(
   );
 }
 
-/**
- * Returns true if the card is visible in the given workspace (i.e. global
- * cards or cards owned by that workspace). Used to gate per-card mutations
- * so users in workspace A cannot read/write cards private to workspace B.
- */
 export async function cardVisibleInWorkspace(
   flashcardId: number,
   currentWsId: string | null,
@@ -105,32 +88,64 @@ export async function cardVisibleInWorkspace(
 }
 
 /**
- * Upsert a (user, workspace, flashcard) progress row. Postgres treats NULL
- * as distinct in unique indexes, so for default-workspace rows we route
- * through a partial unique index on `(user_id, flashcard_id) WHERE
- * workspace_id IS NULL` to keep dedup correct.
+ * Upsert a (user, workspace, flashcard) progress row.
+ *
+ * When `known` is true, also awards XP points using the advanced formula:
+ *   points = CEFR_weight × streak_multiplier × difficulty_bonus
+ *
+ * The user's total_points in `users` is updated atomically.
  */
 export async function upsertProgress(args: {
   userId: string;
   workspaceId: string | null;
   flashcardId: number;
   known: boolean;
+  cardLevel?: string;
+  currentStreak?: number;
 }) {
-  const { userId, workspaceId, flashcardId, known } = args;
+  const { userId, workspaceId, flashcardId, known, cardLevel, currentStreak } =
+    args;
+
+  // Read existing progress to compute difficulty bonus correctly.
+  let existingWrongCount = 0;
+  let existingTimesReviewed = 0;
+  const existingRow = workspaceId === null
+    ? await db
+        .select({ wrongCount: userProgressTable.wrongCount, timesReviewed: userProgressTable.timesReviewed })
+        .from(userProgressTable)
+        .where(and(eq(userProgressTable.userId, userId), eq(userProgressTable.flashcardId, flashcardId), isNull(userProgressTable.workspaceId)))
+        .limit(1)
+        .then((r) => r[0])
+    : await db
+        .select({ wrongCount: userProgressTable.wrongCount, timesReviewed: userProgressTable.timesReviewed })
+        .from(userProgressTable)
+        .where(and(eq(userProgressTable.userId, userId), eq(userProgressTable.flashcardId, flashcardId), eq(userProgressTable.workspaceId, workspaceId)))
+        .limit(1)
+        .then((r) => r[0]);
+
+  existingWrongCount = existingRow?.wrongCount ?? 0;
+  existingTimesReviewed = existingRow?.timesReviewed ?? 0;
+
   const base = {
     id: randomUUID(),
     userId,
     workspaceId,
     flashcardId,
     known: known ? 1 : 0,
+    wrongCount: known ? existingWrongCount : existingWrongCount + 1,
     timesReviewed: 1,
     lastReviewedAt: new Date(),
   };
+
   const setClause = {
     known: known ? 1 : 0,
+    wrongCount: known
+      ? existingWrongCount
+      : sql`${userProgressTable.wrongCount} + 1`,
     timesReviewed: sql`${userProgressTable.timesReviewed} + 1`,
     lastReviewedAt: new Date(),
   };
+
   if (workspaceId === null) {
     await db
       .insert(userProgressTable)
@@ -153,6 +168,20 @@ export async function upsertProgress(args: {
         targetWhere: sql`${userProgressTable.workspaceId} IS NOT NULL`,
         set: setClause,
       });
+  }
+
+  // Award XP only on "Got it" events.
+  if (known && cardLevel) {
+    const pts = computeCardPoints({
+      level: cardLevel,
+      currentStreak: currentStreak ?? 0,
+      wrongCount: existingWrongCount,
+      timesReviewed: existingTimesReviewed,
+    });
+    await db
+      .update(usersTable)
+      .set({ totalPoints: sql`${usersTable.totalPoints} + ${pts}`, updatedAt: new Date() })
+      .where(eq(usersTable.id, userId));
   }
 }
 
