@@ -1,0 +1,8 @@
+**/node_modules/
+**/dist/
+**/.env
+**/.env.*
+**/*.log
+exports/
+attached_assets/
+**/.DS_Store
