@@ -11,6 +11,7 @@ import {
   BarChart3,
   Trophy,
   GraduationCap,
+  Users,
 } from "lucide-react";
 import { Show, useUser } from "@clerk/react";
 import { cn } from "@/lib/utils";
@@ -112,6 +113,9 @@ export function Layout({ children }: { children: ReactNode }) {
             <NavLink href="/leaderboard" icon={Trophy}>
               Leaderboard
             </NavLink>
+            <NavLink href="/community" icon={Users}>
+              Community
+            </NavLink>
             <NavLink href="/generate" icon={PlusCircle}>
               Generate
             </NavLink>
@@ -127,6 +131,12 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
+
+      <footer className="border-t py-4 text-center text-xs text-muted-foreground space-x-4">
+        <Link href="/terms" className="hover:underline">Terms of Service</Link>
+        <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
+        <span>© {new Date().getFullYear()} DeutschKarten</span>
+      </footer>
     </div>
   );
 }

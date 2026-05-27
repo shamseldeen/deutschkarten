@@ -7,6 +7,8 @@ import {
   uniqueIndex,
   index,
   real,
+  serial,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -18,13 +20,11 @@ export const usersTable = pgTable("users", {
   email: text("email"),
   displayName: text("display_name"),
   imageUrl: text("image_url"),
-  // Aggregate total XP points (updated on every progress PATCH).
-  // Derived from the advanced formula: CEFR_weight × streak_multiplier × difficulty_bonus.
   totalPoints: real("total_points").notNull().default(0),
-  // Invite code for friends leaderboard (nanoid-6, unique, generated on first use).
   friendCode: text("friend_code").unique(),
-  // Whether the user opts into the public leaderboard (default true).
   publicLeaderboard: integer("public_leaderboard").notNull().default(1),
+  // Timestamp when user accepted Terms of Service + Privacy Policy.
+  consentAcceptedAt: timestamp("consent_accepted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -112,10 +112,53 @@ export const friendGroupMembersTable = pgTable(
   }),
 );
 
+/**
+ * Community discussion posts.
+ * Each post is a short text message visible to all registered users.
+ * Users must accept ToS before posting.
+ */
+export const communityPostsTable = pgTable(
+  "community_posts",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    // Soft-delete: set by admins for moderation
+    hiddenAt: timestamp("hidden_at"),
+    // Simple reaction count (likes)
+    likeCount: integer("like_count").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    byUser: index("community_posts_user_idx").on(t.userId),
+    byCreated: index("community_posts_created_idx").on(t.createdAt),
+  }),
+);
+
+export const communityPostLikesTable = pgTable(
+  "community_post_likes",
+  {
+    postId: integer("post_id")
+      .notNull()
+      .references(() => communityPostsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: uniqueIndex("community_post_likes_pk").on(t.postId, t.userId),
+    byPost: index("community_post_likes_post_idx").on(t.postId),
+  }),
+);
+
 export const insertUserSchema = createInsertSchema(usersTable);
 export type User = typeof usersTable.$inferSelect;
 export type UserProgress = typeof userProgressTable.$inferSelect;
 export type UserStreak = typeof userStreaksTable.$inferSelect;
 export type FriendGroup = typeof friendGroupsTable.$inferSelect;
 export type FriendGroupMember = typeof friendGroupMembersTable.$inferSelect;
+export type CommunityPost = typeof communityPostsTable.$inferSelect;
 export const _z = z;
