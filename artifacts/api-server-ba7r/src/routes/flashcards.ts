@@ -253,10 +253,16 @@ router.post("/flashcards/generate", async (req, res) => {
   const { level, category = "general", count: wordCount = 10 } = parsed.data;
 
   const userId = getAuth(req)?.userId ?? null;
-  const wsId = userId ? await getCurrentWorkspaceId(userId) : null;
-  const secondaryLang = userId
-    ? await getWorkspaceSecondaryLang(userId, wsId)
-    : "AR";
+  let wsId: string | null = null;
+  let secondaryLang = "AR";
+  try {
+    wsId = userId ? await getCurrentWorkspaceId(userId) : null;
+    secondaryLang = userId
+      ? await getWorkspaceSecondaryLang(userId, wsId)
+      : "AR";
+  } catch (wsErr) {
+    req.log.warn({ wsErr }, "workspace lookup failed, falling back to defaults");
+  }
   const langNames: Record<string, string> = {
     AR: "Arabic (in Arabic script)",
     EN: "English",
