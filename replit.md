@@ -1,6 +1,6 @@
 # DeutschKarten
 
-A German vocabulary flashcard app (A1–C1 levels) with article gender coloring, English + Arabic (RTL) translations, AI-generated flashcards via OpenAI, card flip animations, images, and level-based progress tracking. Available as both a web app and a mobile app (Shams + Ba7r tenants).
+A German vocabulary flashcard app (A1–C1 levels) with article gender coloring, English + Arabic (RTL) translations, AI-generated flashcards via Gemini 2.5 Flash, card flip animations, images, and level-based progress tracking. Available as both a web app and a mobile app (Shams + Ba7r tenants).
 
 ## Bootstrap a fresh environment
 
@@ -22,7 +22,7 @@ Required secrets (managed via the environment-secrets workflow, never committed)
 - `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` — Clerk auth
 - `SESSION_SECRET` — ≥16 chars, used for session cookies
 - `ADMIN_USER_IDS` _(optional)_ — comma-separated Clerk user IDs allowed into `/api/admin/*`
-- `OPENAI_API_KEY` _(optional)_ — enables `/api/flashcards/generate`
+- `GEMINI_API_KEY` _(optional)_ — enables `/api/flashcards/generate` (Gemini 2.5 Flash via Replit integration)
 
 Both API servers validate their env via `src/env.ts` (Zod) at startup. Missing or malformed config fails fast with an aggregated error list instead of cryptic runtime 500s.
 
